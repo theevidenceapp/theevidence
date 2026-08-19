@@ -1,6 +1,29 @@
-import mongoose from "mongoose";
+import mongoose, {Schema} from "mongoose";
 
-const blogSchema = new mongoose.Schema(
+interface IPdf {
+  url: string;
+  publicId: string;
+  originalName: string
+}
+
+interface IBlog {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  coverImage: {
+    url: string;
+    publicId: string;
+  };
+  pdfs: IPdf[];
+  author: mongoose.Types.ObjectId;
+  category: string;
+  tags: string[];
+  status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
+  publishedAt: Date | null;
+}
+
+const blogSchema = new Schema<IBlog>(
   {
     // Blog title
     title: {
@@ -109,6 +132,6 @@ const blogSchema = new mongoose.Schema(
   }
 );
 
-const Blog = mongoose.model("Blog", blogSchema);
+const Blog = mongoose.model<IBlog>("Blog", blogSchema);
 
 export default Blog;
