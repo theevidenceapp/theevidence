@@ -3,10 +3,9 @@ import User from "../models/user.model.js";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { authProviderId, email, name, avatar } = req.body;
+    const { email, name, avatar } = req.body;
 
     const user = await User.create({
-      authProviderId,
       email,
       name,
       avatar,
