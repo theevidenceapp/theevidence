@@ -30,56 +30,60 @@ userRouter.get(
   }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accessToken = "abcd";
-      const refreshToken = "xyz";
+      const user = req.user;
 
-      if(!req.user){
-        return next(new ApiError(401,'Authentication failed'));
+      if (!user) {
+        return next(new ApiError(401, "Authentication failed"));
       }
 
-      const userExists = await User.findById(req.user._id.toString());
+      const accessToken = user.generateAuthToken();
+      const refreshToken = user.generateRefreshToken();
 
-      if(!userExists){
-        return res.status(500).json(new ApiError(500,'Authentication Failure'));
+      const userExists = await User.findById(user._id.toString());
+
+      if (!userExists) {
+        return res
+          .status(500)
+          .json(new ApiError(500, "Authentication Failure"));
       }
 
       await userExists.save();
 
-      res.cookie('refreshToken',refreshToken,{
+      res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? 'none' : 'lax',
+        sameSite: isProd ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.redirect(`${config.CLIENT_URL}/verify-token?token=${accessToken}`)
+      res.redirect(`${config.CLIENT_URL}/verify-token?token=${accessToken}`);
     } catch (error) {
-        console.error(error);
-        next(error);
+      console.error(error);
+      next(error);
     }
   },
 );
 
-userRouter.get('/auth/failure',(req,res)=>{
-    const error = req.session.messages?.[0];
+userRouter.get("/auth/failure", (req, res) => {
+  const error = req.session.messages?.[0];
 
-    if(error?.code === 'EMAIL_ALREADY_EXISTS'){
-        return res.status(409).json({
-            success:false,
-            error: {
-                code: 'EMAIL_ALREADY_EXISTS',
-                message:'Account already exists. Please log in instead.',
-            },
-        });
-    }
+  if (error?.code === "EMAIL_ALREADY_EXISTS") {
+    return res.status(409).json({
+      success: false,
+      error: {
+        code: "EMAIL_ALREADY_EXISTS",
+        message: "Account already exists. Please log in instead.",
+      },
+    });
+  }
 
-    return res.status(400).json({
-        success: false,
-        error: {
-            code: 'OAUTH_FAILED',
-            message: 'Google authentication failed'
-        }
-    })
-})
+  return res.status(400).json({
+    success: false,
+    error: {
+      code: "OAUTH_FAILED",
+      message: "Google authentication failed",
+    },
+  });
+});
 
 export default userRouter;
