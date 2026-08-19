@@ -30,6 +30,8 @@ const userSchema = new Schema<IUser>(
     googleId: {
       type: String,
       required: false,
+      unique: true,
+      sparse: true
     },
 
     isVerified: {
