@@ -1,0 +1,8 @@
+---
+export const prerender = false
+const token = Astro.url.searchParams.get("token");
+---
+
+<h1>Google Authentication successful!</h1>
+<h2>Verify Token</h2>
+<p>Token: {token}</p>
