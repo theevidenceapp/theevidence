@@ -60,15 +60,22 @@ if (!process.env.CLOUDINARY_API_SECRET) {
   );
 }
 
+if (!process.env.JWT_REFRESH_SECRET) {
+  throw new Error(
+    "JWT_REFRESH_SECRET is not defined in the environment variables.",
+  );
+}
+
 const config = {
   PORT: process.env.PORT || 5000,
-  NODE_ENV:process.env.NODE_ENV,
+  NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI as string,
   SESSION_SECRET: process.env.SESSION_SECRET as string,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
   JWT_SECRET: process.env.JWT_SECRET as string,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
   CLIENT_URL: process.env.CLIENT_URL as string,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
