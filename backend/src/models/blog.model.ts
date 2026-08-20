@@ -1,4 +1,4 @@
-import mongoose, {Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 interface IPdf {
   url: string;
@@ -21,6 +21,7 @@ interface IBlog {
   tags: string[];
   status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
   publishedAt: Date | null;
+  views: Number
 }
 
 const blogSchema = new Schema<IBlog>(
@@ -93,6 +94,11 @@ const blogSchema = new Schema<IBlog>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+
+    views: {
+      type: Number,
+      default: 0,
     },
 
     // Blog category
