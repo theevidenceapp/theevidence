@@ -130,10 +130,18 @@ export const getBlogBySlug = async (
   try {
     const { slug } = req.params;
 
-    const blog = await Blog.findOne({ slug }).populate(
-      "author",
-      "name email"
-    );
+    const blog = await Blog.findOneAndUpdate(
+      {
+        slug,
+        status: "PUBLISHED",
+      },
+      {
+        $inc: { views: 1 },
+      },
+      {
+        new: true,
+      }
+    ).populate("author", "name email");
 
     if (!blog) {
       return res.status(404).json({

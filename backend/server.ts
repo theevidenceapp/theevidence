@@ -9,6 +9,7 @@ import { sessionConfig } from "./src/config/session.js";
 // routers
 import userRouter from "./src/routes/user.router.js";
 import blogRouter from "./src/routes/blog.router.js";
+import { adminRouter } from "./src/routes/admin.router.js";
 //
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
+app.use("/admin",adminRouter)
 
 connectDB();
 
