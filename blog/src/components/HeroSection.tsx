@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react'
-import gsap  from 'gsap'
 
 import worldMap from '../assets/world-map.png'
 
@@ -10,54 +9,71 @@ const HeroSection = () => {
     const mapRef = useRef<HTMLImageElement>(null)
 
     useEffect(() => {
-        const ctx = gsap.context(() => {
-            const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+        let ctx: any
 
-            tl.from(headingRef.current?.children ?? [], {
-                y: 40,
-                opacity: 0,
-                duration: 1,
-                stagger: 0.15,
+        const initAnimation = async () => {
+            const { default: gsap } = await import('gsap')
+
+            ctx = gsap.context(() => {
+                const tl = gsap.timeline({
+                    defaults: {
+                        ease: 'power3.out',
+                    },
+                })
+
+                tl.from(headingRef.current?.children ?? [], {
+                    y: 40,
+                    opacity: 0,
+                    duration: 1,
+                    stagger: 0.15,
+                })
+                    .from(
+                        subTextRef.current,
+                        {
+                            y: 20,
+                            opacity: 0,
+                            duration: 0.8,
+                        },
+                        '-=0.6'
+                    )
+                    .from(
+                        buttonsRef.current?.children ?? [],
+                        {
+                            y: 20,
+                            opacity: 0,
+                            duration: 0.6,
+                            stagger: 0.1,
+                        },
+                        '-=0.4'
+                    )
+                    .from(
+                        mapRef.current,
+                        {
+                            y: 60,
+                            opacity: 0,
+                            duration: 1.2,
+                            ease: 'power2.out',
+                        },
+                        '-=0.3'
+                    )
             })
-                .from(
-                    subTextRef.current,
-                    {
-                        y: 20,
-                        opacity: 0,
-                        duration: 0.8,
-                    },
-                    '-=0.6'
-                )
-                .from(
-                    buttonsRef.current?.children ?? [],
-                    {
-                        y: 20,
-                        opacity: 0,
-                        duration: 0.6,
-                        stagger: 0.1,
-                    },
-                    '-=0.4'
-                )
-                .from(
-                    mapRef.current,
-                    {
-                        y: 60,
-                        opacity: 0,
-                        duration: 1.2,
-                        ease: 'power2.out',
-                    },
-                    '-=0.3'
-                )
-        })
+        }
 
-        return () => ctx.revert()
+        initAnimation()
+
+        return () => {
+            ctx?.revert()
+        }
     }, [])
 
     return (
         <div className="bg-white dark:bg-brand-dark">
             <div>
                 <div className="mt-[231px] flex flex-col gap-2 text-center">
-                    <div ref={headingRef} className="flex justify-center gap-2">
+                    <div
+                        ref={headingRef}
+                        className="flex justify-center gap-2"
+                    >
                         <h1 className="font-medium text-[64px] text-black dark:text-white">
                             Research, thoughtfully brought to
                         </h1>
@@ -77,7 +93,10 @@ const HeroSection = () => {
                     </div>
                 </div>
 
-                <div ref={buttonsRef} className="mt-15 flex justify-center gap-15">
+                <div
+                    ref={buttonsRef}
+                    className="mt-15 flex justify-center gap-15"
+                >
                     <button className="rounded-full bg-brand-primary px-8 py-4 text-white dark:bg-brand-primary dark:text-white">
                         Be a researcher
                     </button>
