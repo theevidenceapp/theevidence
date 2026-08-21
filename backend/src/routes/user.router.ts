@@ -14,12 +14,14 @@ userRouter.route("/getuser/:id").get(getUser);
 userRouter.get(
   "/auth/google",
   (req: Request, res: Response, next: NextFunction) => {
+    const { site } = req.query;
     console.log("Using callback:", config.GOOGLE_CALLBACK_URL);
-    next();
+    console.log("Captured site query parameter:", site);
+    passport.authenticate("google", {
+      scope: ["openid", "profile", "email"],
+      state: site ? String(site) : undefined,
+    })(req, res, next);
   },
-  passport.authenticate("google", {
-    scope: ["openid", "profile", "email"],
-  }),
 );
 
 userRouter.get(
@@ -30,10 +32,18 @@ userRouter.get(
   }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { state: site } = req.query;
       const user = req.user;
+      console.log("site:", site);
 
       if (!user) {
         return next(new ApiError(401, "Authentication failed"));
+      }
+
+      if (site === "admin" && user.role !== "ADMIN") {
+        return res.redirect(
+          `${config.ADMIN_CLIENT_URL}/auth/login?error=admin_access_denied`,
+        );
       }
 
       const accessToken = user.generateAuthToken();
@@ -56,7 +66,9 @@ userRouter.get(
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.redirect(`${config.CLIENT_URL}/verify-token?token=${accessToken}`);
+      res.redirect(
+        `${site === "admin" ? config.ADMIN_CLIENT_URL : config.CLIENT_URL}/verify-token?token=${accessToken}`,
+      );
     } catch (error) {
       console.error(error);
       next(error);
