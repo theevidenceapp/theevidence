@@ -1,8 +1,17 @@
 ---
-export const prerender = false
+import { ClientRouter } from "astro:transitions";
+import TokenCapture from "../components/token/TokenCapture";
+
+export const prerender = false;
 const token = Astro.url.searchParams.get("token");
 ---
 
-<h1>Google Authentication successful!</h1>
-<h2>Verify Token</h2>
-<p>Token: {token}</p>
+<html lang="en">
+  <head>
+    <ClientRouter />
+  </head>
+  <body>
+    <h1>Google Authentication successful!</h1>
+    <TokenCapture client:load />
+  </body>
+</html>

@@ -1,22 +1,57 @@
-import React from 'react'
-import darkLogo from "../assets/dark-logo.png"
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import darkLogo from "../assets/dark-logo.png";
+import { openAuthModal } from "../lib/authModal";
 
 const Navbar = () => {
-    return (
-        <div className='flex justify-center'>
-            <div className='border border-gray-400 dark:border-gray-700 w-299.75 h-17.5 rounded-full mt-10 flex justify-between items-center bg-white dark:bg-brand-dark z-10'>
-                <img className='w-20 h-12.25 ml-6.25 block dark:hidden' src="https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png" draggable='false' alt="the evidence" />
-                <img className='w-20 h-12.25 ml-6.25 hidden dark:block' src={darkLogo.src} draggable='false' alt="the evidence" />
-                <div className='mr-6'>
-                    <ul className='flex gap-8 items-center'>
-                        <li className='text-gray-800 dark:text-gray-200'>Home</li>
-                        <li className='text-gray-800 dark:text-gray-200'>About</li>
-                        <li className='bg-brand-primary text-white px-8 py-4 rounded-full'>Be a researcher</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    )
-}
+  const navRef = useRef<HTMLDivElement>(null);
 
-export default Navbar
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        navRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.8, ease: "power2.out" },
+      );
+    }, navRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div className="flex justify-center px-4 sm:px-6" ref={navRef}>
+      <div className="w-full max-w-299.75 shadow-[0_0_15px_0_rgba(0,0,0,0.05)] dark:border-gray-700 h-auto min-h-14 sm:h-17.5 rounded-full mt-6 sm:mt-8 md:mt-10 flex justify-between items-center bg-white dark:bg-[#262626] z-10 px-4 sm:px-0">
+        <img
+          className="w-14 h-8.5 sm:w-16 sm:h-9.75 md:w-20 md:h-12.25 sm:ml-6.25 block dark:hidden"
+          src="https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png"
+          draggable="false"
+          alt="the evidence"
+        />
+        <img
+          className="w-14 h-8.5 sm:w-16 sm:h-9.75 md:w-20 md:h-12.25 sm:ml-6.25 hidden dark:block"
+          src={darkLogo.src}
+          draggable="false"
+          alt="the evidence"
+        />
+        <div className="sm:mr-6">
+          <ul className="flex gap-3 sm:gap-5 md:gap-8 items-center">
+            <li className="hidden md:block text-gray-800 dark:text-gray-200 text-sm lg:text-base">
+              Home
+            </li>
+            <li className="hidden md:block text-gray-800 dark:text-gray-200 text-sm lg:text-base">
+              About
+            </li>
+            <li
+              onClick={() => openAuthModal("signup")}
+              className="bg-brand-primary text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-xs sm:text-sm md:text-base whitespace-nowrap"
+            >
+              Be a researcher
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Navbar;

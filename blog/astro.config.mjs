@@ -9,13 +9,5 @@ export default defineConfig({
   },
   output: "server",
   adapter: vercelAdapter(),
-  env: {
-    schema: {
-      API_URL: envField.string({
-        context: "client",
-        access: "public",
-      }),
-    },
-  },
   integrations: [react()],
 });

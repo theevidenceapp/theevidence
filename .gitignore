@@ -1,3 +1,4 @@
 .astro/
 .vercel/
 dist/
+.DS_Store
