@@ -1,21 +1,43 @@
 ---
-import Btn from "../components/Btn.tsx"
+import Btn from "../components/Btn.tsx";
+import Header from "../components/Header.astro";
+import GridBackground from "../components/GridBackground.tsx";
+import "../styles/globals.css";
+import HeroSection from "../components/HeroSection";
+import "lenis/dist/lenis.css";
+import SmoothScrollInit from "../components/SmoothScrollInit";
+import LatestBlogs from "../components/LatestBlogs.astro";
+import AuthModalController from "../components/modals/AuthModalController.tsx";
+import TokenLogger from "../components/token/TokenLogger.tsx";
+import { ClientRouter } from "astro:transitions";
 ---
 
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <ClientRouter />
     <title>The Evidence</title>
     <meta
       name="description"
       content="The Evidence - Read and discover insightful stories."
     />
+    <script is:inline>
+    const t =
+      localStorage.getItem("theme") ??
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", t === "dark");
+  </script>
   </head>
-
   <body>
-    <h1>The Evidence</h1>
-    <Btn client:load />
-    <p>Blog is working!</p>
+    <SmoothScrollInit client:load />
+    <GridBackground client:load />
+    <Header />
+    <div class="flex flex-col min-h-screen items-center px-4 sm:px-6 lg:px-8">
+      <HeroSection client:load />
+    </div>
+    <LatestBlogs />
+    <AuthModalController client:load />
+    <TokenLogger client:load />
   </body>
 </html>

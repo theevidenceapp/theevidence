@@ -66,6 +66,12 @@ if (!process.env.JWT_REFRESH_SECRET) {
   );
 }
 
+if (!process.env.ADMIN_CLIENT_URL) {
+  throw new Error(
+    "ADMIN_CLIENT_URL is not defined in the environment variables.",
+  );
+}
+
 const config = {
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV,
@@ -77,6 +83,7 @@ const config = {
   JWT_SECRET: process.env.JWT_SECRET as string,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
   CLIENT_URL: process.env.CLIENT_URL as string,
+  ADMIN_CLIENT_URL: process.env.ADMIN_CLIENT_URL as string,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string,

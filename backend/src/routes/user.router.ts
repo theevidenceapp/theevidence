@@ -1,5 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { createUser, getUser } from "../controllers/auth.controller.js";
+import {
+  authenticateWithPassport,
+  createUser,
+  getUser,
+  googleCallback,
+  handleAuthFailure,
+} from "../controllers/auth.controller.js";
 import config from "../config/config.js";
 import passport from "../config/passport-config.js";
 import User from "../models/user.model.js";
@@ -11,16 +17,7 @@ const isProd = config.NODE_ENV === "production";
 userRouter.route("/signup").post(createUser);
 userRouter.route("/getuser/:id").get(getUser);
 
-userRouter.get(
-  "/auth/google",
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log("Using callback:", config.GOOGLE_CALLBACK_URL);
-    next();
-  },
-  passport.authenticate("google", {
-    scope: ["openid", "profile", "email"],
-  }),
-);
+userRouter.get("/auth/google", authenticateWithPassport);
 
 userRouter.get(
   "/auth/google/callback",
@@ -28,63 +25,10 @@ userRouter.get(
     failureRedirect: "/api/user/auth/failure",
     failureMessage: true,
   }),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const user = req.user;
-
-      if (!user) {
-        return next(new ApiError(401, "Authentication failed"));
-      }
-
-      const accessToken = user.generateAuthToken();
-      const refreshToken = user.generateRefreshToken();
-
-      const userExists = await User.findById(user._id.toString());
-
-      if (!userExists) {
-        return res
-          .status(500)
-          .json(new ApiError(500, "Authentication Failure"));
-      }
-
-      await userExists.save();
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      res.redirect(`${config.CLIENT_URL}/verify-token?token=${accessToken}`);
-    } catch (error) {
-      console.error(error);
-      next(error);
-    }
-  },
+  googleCallback,
 );
 
-userRouter.get("/auth/failure", (req, res) => {
-  const error = req.session.messages?.[0];
-
-  if (error?.code === "EMAIL_ALREADY_EXISTS") {
-    return res.status(409).json({
-      success: false,
-      error: {
-        code: "EMAIL_ALREADY_EXISTS",
-        message: "Account already exists. Please log in instead.",
-      },
-    });
-  }
-
-  return res.status(400).json({
-    success: false,
-    error: {
-      code: "OAUTH_FAILED",
-      message: "Google authentication failed",
-    },
-  });
-});
+userRouter.get("/auth/failure", handleAuthFailure);
 
 
 export default userRouter;

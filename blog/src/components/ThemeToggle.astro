@@ -1,0 +1,7 @@
+<button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+<script>
+  import { getTheme, setTheme } from "../utils/theme";
+  document.getElementById("theme-toggle")!.addEventListener("click", () => {
+    setTheme(getTheme() === "dark" ? "light" : "dark");
+  });
+</script>
