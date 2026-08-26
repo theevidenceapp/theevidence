@@ -10,6 +10,7 @@ import { sessionConfig } from "./src/config/session.js";
 import userRouter from "./src/routes/user.router.js";
 import blogRouter from "./src/routes/blog.router.js";
 import { adminRouter } from "./src/routes/admin.router.js";
+import { authenticate, authorize } from "./src/middleware/auth.middleware.js";
 //
 
 dotenv.config();
@@ -35,8 +36,17 @@ app.use(sessionConfig);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
-app.use("/blog", blogRouter);
+app.use("/blog", authenticate, blogRouter);
 app.use("/admin",adminRouter)
+
+app.get(
+  "/admin",
+  authenticate,
+  authorize("ADMIN"),
+  (req: Request, res: Response) => {
+    return res.status(200).json({ msg: "Welcome Admin" });
+  },
+);
 
 connectDB();
 

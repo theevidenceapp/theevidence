@@ -1,10 +1,9 @@
 import {Types} from 'mongoose';
+import { IUser } from '../models/user.model.ts';
 
 declare global {
     namespace Express {
-        interface User {
-            _id: Types.ObjectId
-        }
+        interface User extends IUser {}
     }
 }
 

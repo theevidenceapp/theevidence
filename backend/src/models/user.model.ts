@@ -1,6 +1,25 @@
-import mongoose from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import config from "../config/config.js";
 
-const userSchema = new mongoose.Schema(
+export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
+  email: string;
+  googleId: string;
+  isVerified?: boolean;
+  name: string;
+  avatar: string;
+  accessToken: string;
+  phone_number?: string;
+  dob?: Date;
+  role: "READER" | "PUBLISHER" | "ADMIN" | "EDITOR";
+  isActive: boolean;
+
+  generateAuthToken(): string;
+  generateRefreshToken(): string;
+}
+
+const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
@@ -11,6 +30,8 @@ const userSchema = new mongoose.Schema(
     googleId: {
       type: String,
       required: false,
+      unique: true,
+      sparse: true
     },
 
     isVerified: {
@@ -23,6 +44,11 @@ const userSchema = new mongoose.Schema(
     },
 
     avatar: {
+      type: String,
+      default: "",
+    },
+
+    accessToken: {
       type: String,
       default: "",
     },
@@ -49,6 +75,33 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-const User = mongoose.model("User", userSchema);
+userSchema.methods.generateAuthToken = function (): string {
+  return jwt.sign(
+    {
+      userId: this._id.toString(),
+      fullname: this.name,
+      email: this.email,
+      role: this.role,
+    },
+    config.JWT_SECRET,
+    {
+      expiresIn: "15m",
+    },
+  );
+};
+
+userSchema.methods.generateRefreshToken = function (): string {
+  return jwt.sign(
+    {
+      userId: this._id.toString(),
+    },
+    config.JWT_REFRESH_SECRET,
+    {
+      expiresIn: "7d",
+    },
+  );
+};
+
+const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;
