@@ -4,6 +4,8 @@ node_modules/
 !.env.example
 
 dist/
+dist/client
+dist/server
 build/
 
 npm-debug.log*

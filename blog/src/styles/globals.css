@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-primary: #2563eb;
+  --color-brand-gray: #8c8c88;
+  --color-brand-dark: #17171c;
+  
+  --font-sans: "Public Sans", sans-serif;
+  --font-serif: "Literata", serif;
+}
+
+/* Set global base font */
+body {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+.dark body {
+  background-color: var(--color-brand-dark);
+  color: #ededed;
+}
+
+.font-literata {
+  font-family: var(--font-serif);
+}

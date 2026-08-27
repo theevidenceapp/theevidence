@@ -1,0 +1,84 @@
+---
+// src/layouts/DashboardLayout.astro
+import { ClientRouter } from "astro:transitions";
+import "../styles/globals.css";
+
+export interface Props {
+  title: string;
+  description: string;
+  pageName: "Discover" | "Desk";
+}
+
+const { title, description, pageName } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@1,7..72,400;1,7..72,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <ClientRouter />
+</head>
+  <body class="bg-[#f7f7f8] text-[#1a1a1a] antialiased min-h-screen flex">
+    
+    <!-- Left Icon Rail Navigation -->
+    <aside class="w-16 border-r border-[#e5e5e7] bg-[#fbfbfb] flex flex-col items-center py-5 shrink-0 select-none">
+      <!-- Logo Mark -->
+      <a href="/" class="mb-8" title="Home">
+        <span class="font-serif italic font-bold text-lg">TE</span>
+      </a>
+
+      <!-- Navigation Icons -->
+      <nav class="flex flex-col gap-6 items-center text-[#737373]">
+        <a href="/discover" class={`p-2 rounded-xl transition ${pageName === 'Discover' ? 'text-black bg-white shadow-sm' : 'hover:text-black'}`} title="Discover">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </a>
+        <a href="/desk" class={`p-2 rounded-xl transition ${pageName === 'Desk' ? 'text-black bg-white shadow-sm' : 'hover:text-black'}`} title="Desk">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </a>
+        <button class="p-2 rounded-xl hover:text-black transition" title="Discussions">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </button>
+        <button class="p-2 rounded-xl hover:text-black transition" title="Bookmarks">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Stage -->
+    <div class="flex-1 flex flex-col min-w-0">
+      
+      <!-- Top Search Header -->
+      <header class="h-16 px-8 border-b border-[#e5e5e7] bg-[#fbfbfb] flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm text-[#737373]">
+          <span class="font-serif italic font-semibold text-black">The Evidence</span>
+          <span>/</span>
+          <span class="font-medium text-black">{pageName}</span>
+        </div>
+
+        <!-- Central Global Search -->
+        <div class="relative w-full max-w-md">
+          <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8c8c8c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search research paper/researcher..."
+            class="w-full pl-10 pr-4 py-2 text-xs bg-[#f0f0f2] border-none rounded-full placeholder-[#8c8c8c] focus:outline-none focus:ring-1 focus:ring-neutral-400"
+          />
+        </div>
+
+        <div class="w-20"></div> <!-- Balance placeholder -->
+      </header>
+
+      <!-- Page Outlet -->
+      <main class="flex-1 overflow-y-auto p-8">
+        <slot />
+      </main>
+    </div>
+
+  </body>
+</html>
