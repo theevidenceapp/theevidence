@@ -7,6 +7,10 @@ import HeroSection from "../components/HeroSection";
 import "lenis/dist/lenis.css";
 import SmoothScrollInit from "../components/SmoothScrollInit";
 import LatestBlogs from "../components/LatestBlogs.astro";
+import FeatureBlocks from "../components/FeatureBlocks.astro";
+import EditorialProcess from "../components/EditorialProcess.astro";
+import CtaSection from "../components/CtaSection.astro";
+import Footer from "../components/Footer.astro";
 import AuthModalController from "../components/modals/AuthModalController.tsx";
 import TokenLogger from "../components/token/TokenLogger.tsx";
 import { ClientRouter } from "astro:transitions";
@@ -23,20 +27,24 @@ import { ClientRouter } from "astro:transitions";
       content="The Evidence - Read and discover insightful stories."
     />
     <script is:inline>
-    const t =
-      localStorage.getItem("theme") ??
-      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", t === "dark");
-  </script>
+      const t =
+        localStorage.getItem("theme") ??
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", t === "dark");
+    </script>
   </head>
-  <body>
+  <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 selection:bg-blue-600 selection:text-white">
     <SmoothScrollInit client:load />
     <GridBackground client:load />
     <Header />
-    <div class="flex flex-col min-h-screen items-center px-4 sm:px-6 lg:px-8">
+    <main class="flex flex-col min-h-screen items-center px-4 sm:px-6 lg:px-8">
       <HeroSection client:load />
-    </div>
-    <LatestBlogs />
+      <LatestBlogs />
+      <FeatureBlocks />
+      <EditorialProcess />
+      <CtaSection />
+    </main>
+    <Footer />
     <AuthModalController client:load />
     <TokenLogger client:load />
   </body>

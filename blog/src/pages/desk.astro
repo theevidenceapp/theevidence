@@ -1,0 +1,440 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "../styles/globals.css";
+
+const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+const GLOBE_THUMB = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
+
+let myPapers = [];
+let drafts = [];
+
+try {
+  const apiUrl = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
+  const [papersRes, draftsRes] = await Promise.all([
+    fetch(`${apiUrl}/api/desk/papers`),
+    fetch(`${apiUrl}/api/desk/drafts`),
+  ]);
+
+  if (papersRes.ok) myPapers = await papersRes.json();
+  if (draftsRes.ok) drafts = await draftsRes.json();
+} catch (e) {
+  // Silent fallback
+}
+
+const filterTabs = [
+  { name: "All", count: "12", active: true },
+  { name: "Drafts", count: "3", active: false },
+  { name: "Pending", count: "2", active: false },
+  { name: "Published", count: "5", active: false },
+  { name: "Rejected", count: "2", active: false },
+];
+
+if (drafts.length === 0) {
+  drafts = [
+    {
+      id: 1,
+      title: "The Future of Digital Diplomacy in a Multipolar World",
+      category: "International Relations",
+      lastEdited: "15:36PM Aug 20, 2026",
+    },
+    {
+      id: 2,
+      title: "The Future of Digital Diplomacy in a Multipolar World",
+      category: "International Relations",
+      lastEdited: "15:36PM Aug 20, 2026",
+    },
+    {
+      id: 3,
+      title: "The Future of Digital Diplomacy in a Multipolar World",
+      category: "International Relations",
+      lastEdited: "15:36PM Aug 20, 2026",
+    },
+  ];
+}
+
+if (myPapers.length === 0) {
+  myPapers = Array.from({ length: 8 }).map((_, i) => ({
+    id: i + 1,
+    title: "The Future of Digital Diplomacy in a Multipolar World",
+    category: "International Relations",
+    summary: "An examination of how emerging digital technologies are reshaping diplomatic practices, international cooperation, and geopolitical communication.",
+    publishedDate: "Aug 20, 2026",
+    viewsCount: "28.7k views",
+    readTime: "12 min read",
+    thumbnail: GLOBE_THUMB,
+  }));
+}
+---
+
+<!doctype html>
+<html lang="en" class="bg-[#f3f3f5]">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <ClientRouter />
+    <title>The Evidence - Desk</title>
+    <style>
+      html, body {
+        background-color: #f3f3f5 !important;
+      }
+      .no-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body class="bg-[#f3f3f5] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative">
+    
+    <!-- DESKTOP / TABLET HOVER DRAWER SIDEBAR (Contains the main logo) -->
+    <aside
+      class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f3f3f5] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
+    >
+      <!-- Big Logo Inside Drawer -->
+      <a href="/" class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full" title="The Evidence">
+        <img
+          src={THE_EVIDENCE_LOGO}
+          alt="The Evidence"
+          class="h-12 w-auto max-w-none object-contain shrink-0"
+        />
+      </a>
+
+      <!-- Navigation Items -->
+      <nav class="flex flex-col gap-3.5 w-full">
+        
+        <!-- 1. Discover -->
+        <a
+          href="/discover"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Discover"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Discover
+          </span>
+        </a>
+
+        <!-- 2. Desk (Active Blue Circle/Pill) -->
+        <a
+          href="/desk"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full bg-[#e8f0fe] text-[#0d0d0c] transition-all duration-300 overflow-hidden"
+          title="Desk"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px]  font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Desk
+          </span>
+        </a>
+
+<a
+          href="/notification"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Notification"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Notification
+          </span>
+        </a>
+
+        <!-- Account -->
+        <a
+          href="/account"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Account"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Account
+          </span>
+        </a>
+
+      </nav>
+    </aside>
+
+    <!-- Top Header -->
+    <header class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f3f3f5]">
+      
+      <!-- Logo for Mobile only + Desk Route Label -->
+      <div class="flex items-center gap-3 sm:gap-4 shrink-0 mr-2 sm:mr-4">
+        <a href="/" class="flex md:hidden items-center" title="The Evidence">
+          <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-8 w-auto object-contain" />
+        </a>
+        <span class="text-[16px] sm:text-[17px] font-normal text-[#2b2b2b] tracking-tight">Desk</span>
+      </div>
+
+      <!-- Center: Full Search Bar -->
+      <div class="flex-1 max-w-[560px]">
+        <div class="relative w-full">
+          <svg class="w-4 h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search research paper/researcher..."
+            class="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-[12.5px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border-none shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div class="hidden lg:block w-[180px]"></div>
+    </header>
+
+    <!-- Mobile Quick CTA Actions -->
+    <div class="flex md:hidden items-center justify-between gap-3 px-4 pb-2.5 shrink-0">
+      <a
+        href="/desk/new"
+        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-semibold text-neutral-900 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>New Research</span>
+      </a>
+
+      <button
+        type="button"
+        id="open-drafts-modal"
+        class="py-2 px-4 bg-white border border-neutral-200/60 rounded-full text-xs font-semibold text-neutral-800 shadow-sm flex items-center justify-center gap-1 active:bg-neutral-50"
+      >
+        <span>Drafts ({drafts.length})</span>
+      </button>
+    </div>
+
+    <!-- Main Viewport Layout -->
+    <div class="flex-1 flex px-4 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-1 gap-6 lg:gap-8 overflow-hidden max-w-[1600px] w-full mx-auto">
+      
+      <!-- 2-Column Content Stage -->
+      <div class="flex-1 flex gap-6 lg:gap-8 overflow-hidden">
+        
+        <!-- LEFT COLUMN: Main Desk Papers Feed (Independent Scroll) -->
+        <main class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5">
+          
+          <!-- Filter Tabs -->
+          <div class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f3f3f5]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll gap-2 sm:gap-2.5 shrink-0 px-1">
+            {filterTabs.map((tab) => (
+              <button
+                class={`px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center gap-1.5 rounded-full text-[12.5px] sm:text-[13px] transition whitespace-nowrap shrink-0 ${
+                  tab.active
+                    ? "bg-[#1b62f2] text-white font-normal shadow-sm"
+                    : "bg-white text-[#1a1a1a] hover:text-black border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                }`}
+              >
+                <span>{tab.name}</span>
+                <span class={`text-[11px] ${tab.active ? "text-white/80" : "text-neutral-400"}`}>{tab.count}</span>
+              </button>
+            ))}
+          </div>
+
+          <!-- Cards Feed -->
+          <div class="flex flex-col gap-3.5 pb-8">
+            {myPapers.map((item: any) => (
+              <article class="bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition hover:-translate-y-0.5 duration-200">
+                
+                <!-- Header with Thumbnail -->
+                <div class="flex items-start gap-3.5 sm:gap-4">
+                  <img
+                    src={item.thumbnail || GLOBE_THUMB}
+                    alt=""
+                    class="w-[60px] h-[60px] sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a]"
+                  />
+                  <div class="flex flex-col pt-0.5 min-w-0">
+                    <span class="text-[11px] sm:text-[11.5px] text-[#888] font-normal leading-none truncate">{item.category || "International Relations"}</span>
+                    <h3 class="text-[15px] sm:text-[16px] font-bold text-[#111] leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2">
+                      {item.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <!-- Summary Paragraph -->
+                <p class="text-[12px] sm:text-[12.5px] text-[#555] leading-relaxed">
+                  {item.summary}
+                </p>
+
+                <!-- Metadata Footer -->
+                <div class="flex items-center gap-4 sm:gap-5 text-[11px] sm:text-[11.5px] text-[#888] pt-1 flex-wrap font-normal">
+                  <div class="flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Published {item.publishedDate}</span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>{item.viewsCount}</span>
+                  </div>
+
+                  <span>{item.readTime}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+        </main>
+
+        <!-- RIGHT COLUMN: Actions & Drafts Section (Desktop only) -->
+        <aside class="hidden md:flex w-[340px] lg:w-[380px] shrink-0 h-full flex-col gap-3.5 overflow-hidden">
+          
+          <!-- + New Research Button -->
+          <a
+            href="/desk/new"
+            class="w-full h-[64px] bg-white rounded-[22px] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2.5 text-[14.5px] font-medium text-[#111] hover:bg-neutral-50 transition shrink-0"
+          >
+            <svg class="w-5 h-5 text-[#111]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>New Research</span>
+          </a>
+
+          <!-- Search Your Research Paper -->
+          <div class="w-full relative shrink-0">
+            <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#777]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              id="draft-search-input"
+              placeholder="Search your research paper"
+              class="w-full pl-11 pr-4 py-3 text-[12.5px] bg-white placeholder-[#777] rounded-full border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none"
+            />
+          </div>
+
+          <!-- Drafts Cards List -->
+          <div class="flex-1 overflow-y-auto no-scroll flex flex-col gap-3.5 pr-0.5">
+            {drafts.map((draft: any) => (
+              <div class="draft-item bg-white rounded-[22px] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 shrink-0">
+                <div class="flex items-start gap-3.5">
+                  <img
+                    src={GLOBE_THUMB}
+                    alt=""
+                    class="w-[58px] h-[58px] rounded-xl object-cover shrink-0 bg-[#0f172a]"
+                  />
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[10.5px] text-[#888] font-normal leading-tight">{draft.category}</span>
+                    <h4 class="text-[14px] font-bold text-[#111] leading-snug mt-1">
+                      {draft.title}
+                    </h4>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] pt-1">
+                  <a href={`/desk/edit/${draft.id}`} class="text-[#555] hover:text-[#1b62f2] font-medium flex items-center gap-1 transition">
+                    <span>Continue writing</span>
+                    <span>&gt;</span>
+                  </a>
+                  <span class="text-[#999] text-[10.5px]">Last edited on {draft.lastEdited}</span>
+                </div>
+              </div>
+            ))}
+
+            <!-- Show More Button -->
+            <button
+              type="button"
+              class="my-2 self-center flex items-center gap-1 text-[12px] text-[#444] hover:text-black font-medium transition"
+            >
+              <span>Show more</span>
+              <svg class="w-3.5 h-3.5 text-[#444]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f3f3f5]/95 backdrop-blur-lg border-t border-neutral-200/60 px-6 py-2 flex items-center justify-around">
+      
+      <!-- Discover -->
+      <a href="/discover" class="flex flex-col items-center gap-1 text-[#666]" title="Discover">
+        <div class="w-10 h-8 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Discover</span>
+      </a>
+
+      <!-- Desk (Active) -->
+      <a href="/desk" class="flex flex-col items-center gap-1 text-[#1b62f2]" title="Desk">
+        <div class="w-10 h-8 rounded-full bg-[#e8f0fe] flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px]  font-semibold">Desk</span>
+      </a>
+
+      <!-- Notification -->
+      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
+        <div class="w-10 h-8 flex items-center justify-center relative">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Alerts</span>
+      </button>
+
+      <!-- Account -->
+      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Account">
+        <div class="w-10 h-8 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Account</span>
+      </button>
+    </nav>
+
+    <!-- Client Scripts -->
+    <script>
+      const draftSearch = document.getElementById("draft-search-input") as HTMLInputElement;
+      draftSearch?.addEventListener("input", (e) => {
+        const q = (e.target as HTMLInputElement).value.toLowerCase();
+        const items = document.querySelectorAll(".draft-item");
+        items.forEach((item) => {
+          const text = item.textContent?.toLowerCase() || "";
+          (item as HTMLElement).style.display = text.includes(q) ? "flex" : "none";
+        });
+      });
+    </script>
+  </body>
+</html>
