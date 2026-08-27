@@ -12,11 +12,7 @@ const TokenCapture = () => {
 
         if (token) {
             setToken(token);
-
-            params.delete('token');
-            const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '') + window.location.hash;
-            window.history.replaceState({}, '', newUrl)
-            navigate("/")
+            navigate("/");
         }
     }, [setToken])
 

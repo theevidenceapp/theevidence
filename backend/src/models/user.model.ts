@@ -85,7 +85,7 @@ userSchema.methods.generateAuthToken = function (): string {
     },
     config.JWT_SECRET,
     {
-      expiresIn: "15m",
+      expiresIn: "15m", // 15 minutes
     },
   );
 };
@@ -97,7 +97,7 @@ userSchema.methods.generateRefreshToken = function (): string {
     },
     config.JWT_REFRESH_SECRET,
     {
-      expiresIn: "7d",
+      expiresIn: "7d", // 7 days
     },
   );
 };
