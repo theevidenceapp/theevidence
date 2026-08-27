@@ -37,7 +37,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
-app.use("/admin",adminRouter)
+app.use("/admin",adminRouter);
 
 app.use("/blog", authenticate, blogRouter);
 

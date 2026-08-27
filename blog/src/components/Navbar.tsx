@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import darkLogo from "../assets/dark-logo.png";
 import { openAuthModal } from "../lib/authModal";
+import { LOGO_URL } from "../constants";
 
 const Navbar = () => {
   const navRef = useRef<HTMLDivElement>(null);
@@ -18,12 +19,14 @@ const Navbar = () => {
     return () => ctx.revert();
   }, []);
 
+  const logoUrl = LOGO_URL
+
   return (
     <div className="flex justify-center px-4 sm:px-6" ref={navRef}>
       <div className="w-full max-w-299.75 shadow-[0_0_15px_0_rgba(0,0,0,0.05)] dark:border-gray-700 h-auto min-h-14 sm:h-17.5 rounded-full mt-6 sm:mt-8 md:mt-10 flex justify-between items-center bg-white dark:bg-[#262626] z-10 px-4 sm:px-0">
         <img
           className="w-14 h-8.5 sm:w-16 sm:h-9.75 md:w-20 md:h-12.25 sm:ml-6.25 block dark:hidden"
-          src="https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png"
+          src={logoUrl}
           draggable="false"
           alt="the evidence"
         />
