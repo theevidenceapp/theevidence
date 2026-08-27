@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "serve dist/client -l 8080",
+    "start": "node ./dist/server/entry.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"
