@@ -8,6 +8,8 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   output: "server",
-  adapter: vercelAdapter(),
+  adapter: node({
+    mode: "standalone",
+  }),
   integrations: [react()],
 });
