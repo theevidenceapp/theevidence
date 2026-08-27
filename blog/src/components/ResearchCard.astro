@@ -1,0 +1,47 @@
+---
+// src/components/ResearchCard.astro
+export interface Props {
+  category: string;
+  title: string;
+  description: string;
+  author?: string;
+  date: string;
+  views?: string;
+  readTime: string;
+  thumbnail?: string;
+}
+
+const {
+  category,
+  title,
+  description,
+  author,
+  date,
+  views,
+  readTime,
+  thumbnail = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80"
+} = Astro.props;
+---
+
+<article class="bg-white rounded-2xl p-5 border border-[#eaeaea] hover:border-neutral-300 transition shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex gap-4">
+  <img
+    src={thumbnail}
+    alt=""
+    class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shrink-0"
+    loading="lazy"
+  />
+  <div class="flex flex-col justify-between flex-1 min-w-0">
+    <div>
+      <span class="text-[11px] font-medium text-[#737373] tracking-wide uppercase">{category}</span>
+      <h3 class="font-bold text-base text-[#111] leading-snug mt-0.5 line-clamp-1">{title}</h3>
+      <p class="text-xs text-[#666] leading-relaxed mt-1.5 line-clamp-2">{description}</p>
+    </div>
+    
+    <div class="flex items-center gap-3 text-[11px] text-[#8c8c8c] mt-3">
+      {author && <span class="font-medium text-[#444]">{author}</span>}
+      <span>Published {date}</span>
+      {views && <span>• {views} views</span>}
+      <span>• {readTime} read</span>
+    </div>
+  </div>
+</article>

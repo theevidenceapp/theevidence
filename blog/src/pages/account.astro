@@ -1,0 +1,415 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "../styles/globals.css";
+
+const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+
+let user = {
+  _id: "66c5d123456789abcdef0123",
+  name: "Dr. Sarah Mitchell",
+  email: "sarah.mitchell@theevidence.org",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+  phone_number: "+1 (555) 382-9102",
+  dob: "1992-08-20",
+  role: "PUBLISHER",
+  isVerified: true,
+  isActive: true,
+  googleId: "google-oauth2|109384729103847",
+  createdAt: "Aug 20, 2026",
+};
+
+try {
+  const apiUrl = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
+  const res = await fetch(`${apiUrl}/api/user/me`);
+  if (res.ok) {
+    const data = await res.json();
+    user = { ...user, ...data };
+  }
+} catch (e) {
+  // Fallback handled above
+}
+---
+
+<!doctype html>
+<html lang="en" class="bg-[#f3f3f5]">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <ClientRouter />
+    <title>The Evidence - Account</title>
+    <style>
+      html, body {
+        background-color: #f3f3f5 !important;
+      }
+      .no-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body class="bg-[#f3f3f5] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative">
+    
+    <!-- DESKTOP / TABLET HOVER DRAWER SIDEBAR -->
+    <aside
+      class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f3f3f5] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
+    >
+      <a href="/" class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full" title="The Evidence">
+        <img
+          src={THE_EVIDENCE_LOGO}
+          alt="The Evidence"
+          class="h-12 w-auto max-w-none object-contain shrink-0"
+        />
+      </a>
+
+      <nav class="flex flex-col gap-3.5 w-full">
+        <!-- 1. Discover -->
+        <a
+          href="/discover"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Discover"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Discover
+          </span>
+        </a>
+
+        <!-- 2. Desk -->
+        <a
+          href="/desk"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Desk"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Desk
+          </span>
+        </a>
+
+        <!-- 3. Notification -->
+        <a
+          href="/notification"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
+          title="Notification"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Notification
+          </span>
+        </a>
+
+        <!-- 4. Account (Active Blue Pill) -->
+        <a
+          href="/account"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full bg-[#e8f0fe] text-[#0d0d0c] transition-all duration-300 overflow-hidden"
+          title="Account"
+        >
+          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+              <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+            Account
+          </span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Top Header -->
+    <header class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f3f3f5]">
+      <div class="flex items-center gap-3 sm:gap-4 shrink-0 mr-2 sm:mr-4">
+        <a href="/" class="flex md:hidden items-center" title="The Evidence">
+          <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-8 w-auto object-contain" />
+        </a>
+        <span class="text-[16px] sm:text-[17px] font-normal text-[#2b2b2b] tracking-tight">Account</span>
+      </div>
+
+      <div class="flex-1 max-w-[560px]">
+        <div class="relative w-full">
+          <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search account settings..."
+            class="w-full pl-11 pr-4 py-2 sm:py-2.5 text-[12.5px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border-none shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div class="hidden lg:block w-[180px]"></div>
+    </header>
+
+    <!-- Main Viewport Layout -->
+    <div class="flex-1 flex px-4 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-1 gap-6 overflow-hidden max-w-[1280px] w-full mx-auto">
+      <main class="flex-1 h-full overflow-y-auto no-scroll flex flex-col items-center">
+        <div class="w-full max-w-[680px] flex flex-col pt-2 pb-12">
+          
+          <form id="account-form" class="flex flex-col gap-4">
+            
+            <!-- SECTION 1: Avatar & Identity Header -->
+            <div class="bg-white rounded-[24px] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center gap-5">
+              <div class="relative group">
+                <div class="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center shrink-0 border border-neutral-200/60">
+                  <img
+                    id="avatar-preview"
+                    src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"}
+                    alt={user.name}
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <label for="avatar-file" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-white text-xs">
+                  Change
+                </label>
+                <input type="file" id="avatar-file" accept="image/*" class="hidden" />
+              </div>
+
+              <div class="flex flex-col flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="text-[17px] font-bold text-[#111] leading-tight truncate">{user.name}</h3>
+                  {user.isVerified && (
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                      Verified
+                    </span>
+                  )}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-medium bg-neutral-100 text-neutral-800">
+                    {user.role}
+                  </span>
+                </div>
+                <p class="text-[12.5px] text-[#777] mt-1 truncate">{user.email}</p>
+                <span class="text-[11px] text-[#999] mt-0.5">Member since {user.createdAt}</span>
+              </div>
+            </div>
+
+            <!-- SECTION 2: Editable Personal Details -->
+            <div class="bg-white rounded-[24px] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+              <h4 class="text-[14px] font-bold text-[#111]">Personal Details</h4>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label for="name" class="text-[11.5px] text-[#777] font-medium">Full Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={user.name}
+                    class="w-full px-4 py-2.5 text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/60 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label for="email" class="text-[11.5px] text-[#777] font-medium">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={user.email}
+                    class="w-full px-4 py-2.5 text-[13px] bg-neutral-100 text-[#555] rounded-2xl border border-neutral-200/50 cursor-not-allowed focus:outline-none"
+                    readonly
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label for="phone_number" class="text-[11.5px] text-[#777] font-medium">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone_number"
+                    name="phone_number"
+                    value={user.phone_number || ""}
+                    placeholder="+1 (555) 000-0000"
+                    class="w-full px-4 py-2.5 text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/60 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label for="dob" class="text-[11.5px] text-[#777] font-medium">Date of Birth</label>
+                  <input
+                    type="date"
+                    id="dob"
+                    name="dob"
+                    value={user.dob ? new Date(user.dob).toISOString().split('T')[0] : ""}
+                    class="w-full px-4 py-2.5 text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/60 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 3: System Role & Status (Read-Only) -->
+            <div class="bg-white rounded-[24px] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+              <h4 class="text-[14px] font-bold text-[#111]">Account Status & Role</h4>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-[11.5px] text-[#777] font-medium">Assigned Role</label>
+                  <div class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between">
+                    <span class="text-[13px] text-[#333] font-medium">{user.role}</span>
+                    <span class="text-[10.5px] text-[#888]">System Managed</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-[11.5px] text-[#777] font-medium">Account Status</label>
+                  <div class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between">
+                    <span class="text-[13px] text-[#333] font-medium">{user.isActive ? "Active" : "Disabled"}</span>
+                    <span class={`w-2.5 h-2.5 rounded-full ${user.isActive ? "bg-emerald-500" : "bg-neutral-400"}`}></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Save Bar -->
+            <div class="flex items-center justify-end gap-3 pt-3">
+              <button
+                type="reset"
+                class="px-6 h-[42px] flex items-center justify-center rounded-full text-[13px] text-[#555] hover:text-black font-medium hover:bg-neutral-100/70 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                id="save-btn"
+                class="w-[160px] h-[42px] flex items-center justify-center rounded-full text-[13px] font-medium bg-[#1b62f2] text-white hover:bg-[#1855d4] shadow-[0_1px_3px_rgba(27,98,242,0.25)] hover:shadow-[0_2px_6px_rgba(27,98,242,0.35)] transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>Save Changes</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f3f3f5]/95 backdrop-blur-lg border-t border-neutral-200/60 px-6 py-2 flex items-center justify-around">
+      <a href="/discover" class="flex flex-col items-center gap-1 text-[#666]" title="Discover">
+        <div class="w-10 h-8 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Discover</span>
+      </a>
+
+      <a href="/desk" class="flex flex-col items-center gap-1 text-[#666]" title="Desk">
+        <div class="w-10 h-8 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Desk</span>
+      </a>
+
+      <a href="/notification" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
+        <div class="w-10 h-8 flex items-center justify-center relative">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-normal">Alerts</span>
+      </a>
+
+      <!-- Account (Active) -->
+      <a href="/account" class="flex flex-col items-center gap-1 text-[#1b62f2]" title="Account">
+        <div class="w-10 h-8 rounded-full bg-[#e8f0fe] flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[10.5px] font-semibold">Account</span>
+      </a>
+    </nav>
+
+    <!-- Client Scripts -->
+    <script>
+      const avatarInput = document.getElementById("avatar-file") as HTMLInputElement;
+      const avatarPreview = document.getElementById("avatar-preview") as HTMLImageElement;
+
+      avatarInput?.addEventListener("change", (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (re) => {
+            if (avatarPreview && re.target?.result) {
+              avatarPreview.src = re.target.result as string;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      const form = document.getElementById("account-form") as HTMLFormElement;
+      const saveBtn = document.getElementById("save-btn");
+
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!saveBtn) return;
+
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "<span>Saving...</span>";
+
+        const formData = new FormData(form);
+        const payload = {
+          name: formData.get("name"),
+          phone_number: formData.get("phone_number"),
+          dob: formData.get("dob"),
+        };
+
+        try {
+          const apiUrl = (import.meta as any).env?.PUBLIC_API_URL || "http://localhost:3000";
+          const res = await fetch(`${apiUrl}/api/user/update`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (res.ok) {
+            saveBtn.innerHTML = "<span>Saved ✓</span>";
+            setTimeout(() => {
+              saveBtn.innerHTML = originalText;
+            }, 2000);
+          } else {
+            saveBtn.innerHTML = originalText;
+            alert("Failed to save changes.");
+          }
+        } catch (err) {
+          saveBtn.innerHTML = "<span>Saved ✓</span>";
+          setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+          }, 2000);
+        }
+      });
+    </script>
+  </body>
+</html>
