@@ -6,7 +6,7 @@ import { stopLenis, startLenis } from "../../lib/lenis";
 import illus from "../../assets/illus.png";
 import { LOGO_URL } from "../../constants";
 
-const THE_EVIDENCE_LOGO = LOGO_URL
+const THE_EVIDENCE_LIGHT_LOGO = LOGO_URL
 
 interface DisplayProps {
     display: boolean;
