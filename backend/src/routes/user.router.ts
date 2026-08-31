@@ -6,6 +6,7 @@ import {
   getUser,
   googleCallback,
   handleAuthFailure,
+  logout,
   refreshAccessToken,
 } from "../controllers/auth.controller.js";
 import config from "../config/config.js";
@@ -34,5 +35,7 @@ userRouter.get("/auth/failure", handleAuthFailure);
 userRouter.get("/get-access-token", authenticate, getAccessToken);
 
 userRouter.get("/refresh-token", refreshAccessToken);
+
+userRouter.get("/logout", logout);
 
 export default userRouter;

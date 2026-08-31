@@ -4,6 +4,8 @@ import passport from "../config/passport-config.js";
 import config from "../config/config.js";
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
+import emailService from "../services/email.service.js";
+import { loginNotificationTemplate } from "../templates/login-notification.template.js";
 
 const isProd = config.NODE_ENV === "production";
 
@@ -122,6 +124,24 @@ export const googleCallback = async (
 
     await userExists.save();
 
+    const loginTime = new Date().toLocaleString("en-US", {
+      dateStyle: "full",
+      timeStyle: "long",
+    });
+    const ipAddress =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      req.ip ||
+      "Unknown";
+    const userAgent = req.headers["user-agent"] || "Unknown device";
+
+    emailService
+      .sendEmail(
+        userExists.email,
+        "New Login to Your Account",
+        loginNotificationTemplate({ loginTime, ipAddress, userAgent }),
+      )
+      .catch((err) => console.error("Failed to send login email:", err));
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
@@ -236,5 +256,43 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     return res
       .status(401)
       .json(new ApiError(401, "Error refreshing access token", error));
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json(new ApiError(401, "No refresh token provided"));
+    }
+
+    const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as {
+      userId: string;
+    };
+
+    const userExists = await User.findById(decoded.userId);
+
+    if (!userExists) {
+      return res.status(404).json(new ApiError(404, "User not found"));
+    }
+
+    userExists.accessToken = undefined;
+    await userExists.save();
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error: any) {
+    return res.status(401).json(new ApiError(401, "Error logging out", error));
   }
 };
