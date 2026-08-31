@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { createBlog, getBlogs, getBlogBySlug, updateBlog, deleteBlog, updateBlogStatus,getPublishedBlogs } from "../controllers/blog.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import multer from "multer";
