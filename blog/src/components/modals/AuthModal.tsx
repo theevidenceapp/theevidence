@@ -4,9 +4,9 @@ import { X } from "lucide-react";
 import { stopLenis, startLenis } from "../../lib/lenis";
 
 import illus from "../../assets/illus.png";
+import { LOGO_URL } from "../../constants";
 
-const THE_EVIDENCE_LIGHT_LOGO =
-    "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+const THE_EVIDENCE_LIGHT_LOGO = LOGO_URL
 
 interface DisplayProps {
     display: boolean;

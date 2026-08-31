@@ -2,20 +2,21 @@ import { NextFunction, Request, Response, Router } from "express";
 import {
   authenticateWithPassport,
   createUser,
+  getAccessToken,
   getUser,
   googleCallback,
   handleAuthFailure,
+  refreshAccessToken,
 } from "../controllers/auth.controller.js";
 import config from "../config/config.js";
 import passport from "../config/passport-config.js";
-import User from "../models/user.model.js";
-import { ApiError } from "../utils/ApiError.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const userRouter = Router();
 const isProd = config.NODE_ENV === "production";
 
 userRouter.route("/signup").post(createUser);
-userRouter.route("/getuser/:id").get(getUser);
+userRouter.get("/getuser/:id", authenticate, getUser);
 
 userRouter.get("/auth/google", authenticateWithPassport);
 
@@ -30,5 +31,8 @@ userRouter.get(
 
 userRouter.get("/auth/failure", handleAuthFailure);
 
+userRouter.get("/get-access-token", authenticate, getAccessToken);
+
+userRouter.get("/refresh-token", refreshAccessToken);
 
 export default userRouter;

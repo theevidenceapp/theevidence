@@ -3,19 +3,27 @@ import { persist } from "zustand/middleware";
 
 interface AuthState {
   token: string | null;
+  isInitialized: boolean;
+
   setToken: (token: string | null) => void;
+  setInitialized: (value: boolean) => void;
+
   clear: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      setToken: (token) => set({ token }),
-      clear: () => set({ token: null }),
+export const useAuthStore = create<AuthState>((set) => ({
+  token: null,
+  isInitialized: false,
+
+  setToken: (token) => set({ token }),
+
+  setInitialized: (value) =>
+    set({
+      isInitialized: value,
     }),
-    {
-      name: "auth-storage", // Saves token to localStorage across reloads
-    }
-  )
-);
+
+  clear: () =>
+    set({
+      token: null,
+    }),
+}));
