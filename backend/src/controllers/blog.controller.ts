@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Blog from "../models/blog.model.js";
+import fs from 'fs'
 import {
   uploadoncloudinary,
   deleteCloudnery,
@@ -15,74 +16,131 @@ export const createBlog = async (req: Request, res: Response) => {
       category,
       tags,
       author,
+      status,
     } = req.body;
+
+    // Validate required fields
+    if (!title || !slug || !content || !author) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: title, slug, content, or author.",
+      });
+    }
 
     const files = req.files as {
       coverImage?: Express.Multer.File[];
       pdfs?: Express.Multer.File[];
+      csv?: Express.Multer.File[];
     };
 
     // -------------------------
-    // COVER IMAGE
+    // 1. COVER IMAGE UPLOAD
     // -------------------------
-
     let coverImage = {
       url: "",
       publicId: "",
     };
 
-    if (files.coverImage && files.coverImage.length > 0) {
-      const result = await uploadoncloudinary(
-        files.coverImage[0].path
-      );
+    if (files?.coverImage && files.coverImage.length > 0) {
+      const coverFile = files.coverImage[0];
+      const result = await uploadoncloudinary(coverFile.path);
 
-      if (!result) {
-        return res.status(500).json({
-          success: false,
-          message: "Cover image upload failed",
-        });
+      if (result) {
+        coverImage = {
+          url: result.secure_url,
+          publicId: result.public_id,
+        };
       }
 
-      coverImage = {
-        url: result.secure_url,
-        publicId: result.public_id,
-      };
+      // Cleanup local temp file
+      if (fs.existsSync(coverFile.path)) {
+        fs.unlinkSync(coverFile.path);
+      }
     }
 
     // -------------------------
-    // PDFS
+    // 2. CSV FILE UPLOAD (Matches Model Schema)
     // -------------------------
+    let csv = {
+      url: "",
+    };
 
-    const pdfs = [];
+    if (files?.csv && files.csv.length > 0) {
+      const csvFile = files.csv[0];
+      const result = await uploadoncloudinary(csvFile.path);
 
-    if (files.pdfs) {
-      for (const file of files.pdfs) {
+      if (result) {
+        csv = {
+          url: result.secure_url,
+        };
+      }
+
+      // Cleanup local temp file
+      if (fs.existsSync(csvFile.path)) {
+        fs.unlinkSync(csvFile.path);
+      }
+    }
+
+    // -------------------------
+    // 3. PDFS UPLOAD (Parallel Uploads, Max 3)
+    // -------------------------
+    let pdfs: { url: string; publicId: string; originalName: string }[] = [];
+
+    if (files?.pdfs && files.pdfs.length > 0) {
+      const uploadPromises = files.pdfs.slice(0, 3).map(async (file) => {
         const result = await uploadoncloudinary(file.path);
 
+        // Cleanup local temp file
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+
         if (result) {
-          pdfs.push({
+          return {
             url: result.secure_url,
             publicId: result.public_id,
             originalName: file.originalname,
-          });
+          };
         }
-      }
+        return null;
+      });
+
+      const uploadedResults = await Promise.all(uploadPromises);
+      pdfs = uploadedResults.filter(Boolean) as {
+        url: string;
+        publicId: string;
+        originalName: string;
+      }[];
     }
 
     // -------------------------
-    // CREATE BLOG
+    // 4. PARSE TAGS & STATUS
     // -------------------------
+    const parsedTags = Array.isArray(tags)
+      ? tags
+      : typeof tags === "string"
+      ? tags.split(",").map((t) => t.trim()).filter(Boolean)
+      : [];
 
+    const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
+    const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+
+    // -------------------------
+    // 5. CREATE & SAVE BLOG
+    // -------------------------
     const blog = await Blog.create({
-      title,
-      slug,
+      title: title.trim(),
+      slug: slug.trim(),
       content,
-      excerpt,
+      excerpt: excerpt ? excerpt.trim() : "",
       coverImage,
+      csv,
       pdfs,
       author,
-      category,
-      tags,
+      category: category ? category.trim() : "General",
+      tags: parsedTags,
+      status: finalStatus,
+      publishedAt,
     });
 
     return res.status(201).json({
@@ -92,14 +150,13 @@ export const createBlog = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Create blog error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to create blog",
+      error: error instanceof Error ? error.message : "Internal Server Error",
     });
   }
 };
-
 // Get all blogs
 export const getBlogs = async (req: Request, res: Response) => {
   try {

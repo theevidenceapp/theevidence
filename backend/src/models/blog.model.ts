@@ -15,6 +15,10 @@ interface IBlog {
     url: string;
     publicId: string;
   };
+  csv: {
+    url: string;
+    publicId: string;
+  };
   pdfs: IPdf[];
   author: mongoose.Types.ObjectId;
   category: string;
@@ -64,6 +68,13 @@ const blogSchema = new Schema<IBlog>(
       },
 
       publicId: {
+        type: String,
+        default: "",
+      },
+    },
+
+    csv :{
+      url: {
         type: String,
         default: "",
       },
