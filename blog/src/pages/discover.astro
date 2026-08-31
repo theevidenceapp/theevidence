@@ -5,23 +5,46 @@ import "../styles/globals.css";
 const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
 const GLOBE_THUMB = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
-let papers = [];
-let categories = [];
-let researchers = [];
+let papers: any[] = [];
+let categories: any[] = [];
+let researchers: any[] = [];
+
+const backendUri = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BACKEND_URI || "http://localhost:5000";
 
 try {
-  const apiUrl = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
-  const [papersRes, categoriesRes, researchersRes] = await Promise.all([
-    fetch(`${apiUrl}/api/papers`),
-    fetch(`${apiUrl}/api/categories`),
-    fetch(`${apiUrl}/api/researchers/top`),
-  ]);
-
-  if (papersRes.ok) papers = await papersRes.json();
-  if (categoriesRes.ok) categories = await categoriesRes.json();
-  if (researchersRes.ok) researchers = await researchersRes.json();
+  const blogsRes = await fetch(`${backendUri}/blog/published`);
+  
+  if (blogsRes.ok) {
+    const data = await blogsRes.json();
+    if (data.success && Array.isArray(data.blogs)) {
+      papers = data.blogs.map((b: any) => {
+        const rawContent = b.content ? b.content.replace(/<[^>]*>?/gm, "") : "";
+        const readMinutes = Math.max(1, Math.ceil((rawContent.length || 500) / 400));
+        
+        return {
+          id: b._id,
+          title: b.title || "Untitled Research Paper",
+          category: b.category || "International Relations",
+          summary: b.excerpt || (rawContent ? rawContent.slice(0, 160) + "..." : "No summary provided."),
+          authorName: b.author?.name || "Researcher",
+          authorAvatar: b.author?.avatar || "",
+          publishedDate: b.createdAt
+            ? new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : "Aug 20, 2026",
+          rawTimestamp: b.createdAt ? new Date(b.createdAt).getTime() : 0,
+          views: Number(b.views) || 0,
+          viewsCount: `${b.views ?? 0} views`,
+          readTimeMinutes: readMinutes,
+          readTime: `${readMinutes} min read`,
+          thumbnail: b.coverImage?.url || GLOBE_THUMB,
+          slug: b.slug,
+          pdfs: b.pdfs || []
+        };
+      });
+    }
+  }
 } catch (e) {
-  // Fallback
+  console.error("Error fetching published blogs:", e);
 }
 
 const initialAreas = [
@@ -62,17 +85,23 @@ if (researchers.length === 0) {
   ];
 }
 
+// Fallback items if backend is offline or empty
 if (papers.length === 0) {
-  papers = Array.from({ length: 12 }).map((_, i) => ({
+  papers = Array.from({ length: 6 }).map((_, i) => ({
     id: i + 1,
     title: "The Future of Digital Diplomacy in a Multipolar World",
     category: "International Relations",
     summary: "An examination of how emerging digital technologies are reshaping diplomatic practices, international cooperation, and geopolitical communication.",
     authorName: "Dr. Sarah Mitchell",
+    authorAvatar: "",
     publishedDate: "Aug 20, 2026",
-    viewsCount: "28.7k views",
-    readTime: "12 min read",
+    rawTimestamp: Date.now() - i * 86400000,
+    views: 28700 - i * 1200,
+    viewsCount: `${(28.7 - i * 1.2).toFixed(1)}k views`,
+    readTimeMinutes: 12 - i,
+    readTime: `${12 - i} min read`,
     thumbnail: GLOBE_THUMB,
+    slug: `future-of-digital-diplomacy-${i + 1}`
   }));
 }
 ---
@@ -99,7 +128,7 @@ if (papers.length === 0) {
   </head>
   <body class="bg-[#f9f9fb] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative">
     
-    <!-- DESKTOP / TABLET HOVER DRAWER SIDEBAR -->
+    <!-- DESKTOP HOVER DRAWER SIDEBAR -->
     <aside
       class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f9f9fb] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
     >
@@ -147,7 +176,8 @@ if (papers.length === 0) {
           </span>
         </a>
 
-<a
+        <!-- Notification -->
+        <a
           href="/notification"
           class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
           title="Notification"
@@ -192,6 +222,7 @@ if (papers.length === 0) {
 
       <div class="hidden lg:block w-[180px]"></div>
 
+      <!-- Search Input -->
       <div class="flex-1 max-w-[560px]">
         <div class="relative w-full">
           <svg class="w-4 h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -199,8 +230,9 @@ if (papers.length === 0) {
           </svg>
           <input
             type="text"
+            id="global-search-input"
             placeholder="Search research paper/researcher..."
-            class="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-[12.5px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none"
+            class="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-[12.5px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
           />
         </div>
       </div>
@@ -213,7 +245,7 @@ if (papers.length === 0) {
       <button
         type="button"
         id="open-areas-modal"
-        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-medium text-neutral-800 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50"
+        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-medium text-neutral-800 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50 cursor-pointer"
       >
         <span class="w-2 h-2 rounded-full bg-blue-600"></span>
         <span>Explore Areas</span>
@@ -222,7 +254,7 @@ if (papers.length === 0) {
       <button
         type="button"
         id="open-researchers-modal"
-        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-medium text-neutral-800 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50"
+        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-medium text-neutral-800 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50 cursor-pointer"
       >
         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         <span>Top Researchers</span>
@@ -235,7 +267,7 @@ if (papers.length === 0) {
       <!-- 3-Column Desktop Stage -->
       <div class="flex-1 flex gap-5 lg:gap-7 overflow-hidden">
         
-        <!-- COLUMN 1: Research Areas (Desktop only) -->
+        <!-- COLUMN 1: Research Areas (Desktop) -->
         <div class="hidden md:flex w-[220px] lg:w-[245px] shrink-0 flex-col items-center h-full">
           <h2 class="text-[14px] font-bold text-[#111] mb-3 text-center tracking-tight">Research Areas</h2>
           
@@ -247,7 +279,7 @@ if (papers.length === 0) {
               type="text"
               id="area-search-input"
               placeholder="Specific research area"
-              class="w-full pl-9 pr-3 py-2 text-[12px] bg-white placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none"
+              class="w-full pl-9 pr-3 py-2 text-[12px] bg-white placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -255,10 +287,10 @@ if (papers.length === 0) {
             {categories.map((area: any) => (
               <a
                 href={`/discover?area=${encodeURIComponent(area.name || area.title)}`}
-                class="area-item flex items-center justify-between px-4 py-2.5 bg-white hover:bg-neutral-50 rounded-full text-[12px] text-[#222] transition border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0"
+                class="area-item flex items-center justify-between px-4 py-2.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-full text-[12px] text-[#222] transition-colors border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0 group"
               >
-                <span class="truncate">{area.name || area.title}</span>
-                <span class="text-[11px] text-[#888] shrink-0 ml-2 font-normal">{area.count || area.papersCount || '0+'}</span>
+                <span class="truncate font-medium">{area.name || area.title}</span>
+                <span class="text-[11px] text-[#888] group-hover:text-[#1b62f2] shrink-0 ml-2 font-normal transition-colors">{area.count || area.papersCount || '0+'}</span>
               </a>
             ))}
 
@@ -266,10 +298,10 @@ if (papers.length === 0) {
               {extraAreas.map((area) => (
                 <a
                   href={`/discover?area=${encodeURIComponent(area.name)}`}
-                  class="flex items-center justify-between px-4 py-2.5 bg-white hover:bg-neutral-50 rounded-full text-[12px] text-[#222] transition border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0"
+                  class="flex items-center justify-between px-4 py-2.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-full text-[12px] text-[#222] transition-colors border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0 group"
                 >
-                  <span class="truncate">{area.name}</span>
-                  <span class="text-[11px] text-[#888] shrink-0 ml-2 font-normal">{area.count}</span>
+                  <span class="truncate font-medium">{area.name}</span>
+                  <span class="text-[11px] text-[#888] group-hover:text-[#1b62f2] shrink-0 ml-2 font-normal transition-colors">{area.count}</span>
                 </a>
               ))}
             </div>
@@ -278,7 +310,7 @@ if (papers.length === 0) {
           <button
             type="button"
             id="show-more-btn"
-            class="pt-2 pb-1 shrink-0 flex items-center gap-1.5 text-[12px] text-[#444] hover:text-black font-medium transition"
+            class="pt-2 pb-1 shrink-0 flex items-center gap-1.5 text-[12px] text-[#444] hover:text-black font-medium transition cursor-pointer"
           >
             <span id="show-more-text">Show more</span>
             <svg id="show-more-icon" class="w-3.5 h-3.5 transition-transform duration-200 text-[#444]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -287,72 +319,106 @@ if (papers.length === 0) {
           </button>
         </div>
 
-        <!-- COLUMN 2: Cards Feed -->
+        <!-- COLUMN 2: Cards Feed & Dynamic Interactive Filter -->
         <main class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5">
           
-          <!-- Filter Tabs -->
+          <!-- Interactive Filter Tabs -->
           <div class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f9f9fb]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll justify-start sm:justify-center gap-2 sm:gap-2.5 shrink-0 px-1">
-            <button class="px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal bg-[#1b62f2] text-white shadow-sm transition hover:bg-[#1855d4] whitespace-nowrap shrink-0">
+            
+            <button
+              type="button"
+              data-filter="all"
+              class="filter-tab px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal transition-all whitespace-nowrap shrink-0 cursor-pointer bg-[#1b62f2] text-white shadow-[0_2px_8px_rgba(27,98,242,0.25)] border border-transparent"
+            >
               All
             </button>
-            <button class="px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal bg-white text-[#1a1a1a] hover:text-black border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition whitespace-nowrap shrink-0">
+
+            <button
+              type="button"
+              data-filter="recent"
+              class="filter-tab px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal transition-all whitespace-nowrap shrink-0 cursor-pointer bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border border-neutral-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95"
+            >
               Most recent
             </button>
-            <button class="px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal bg-white text-[#1a1a1a] hover:text-black border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition whitespace-nowrap shrink-0">
+
+            <button
+              type="button"
+              data-filter="views"
+              class="filter-tab px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal transition-all whitespace-nowrap shrink-0 cursor-pointer bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border border-neutral-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95"
+            >
               Most viewed
             </button>
-            <button class="px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal bg-white text-[#1a1a1a] hover:text-black border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition whitespace-nowrap shrink-0">
+
+            <button
+              type="button"
+              data-filter="readtime"
+              class="filter-tab px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12.5px] sm:text-[13px] font-normal transition-all whitespace-nowrap shrink-0 cursor-pointer bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border border-neutral-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] active:scale-95"
+            >
               Least read time
             </button>
+
           </div>
 
-          <!-- Cards Loop -->
-          <div class="flex flex-col gap-3.5 pb-8">
-            {papers.map((item: any) => (
-              <article class="bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition hover:-translate-y-0.5 duration-200">
+          <!-- Cards Feed with Links to /papers/[slug] -->
+          <div id="papers-feed" class="flex flex-col gap-3.5 pb-8">
+            {papers.map((item: any, idx: number) => (
+              <a
+                href={`/papers/${item.slug || item.id}`}
+                class="paper-card bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] cursor-pointer group"
+                data-original-index={idx}
+                data-timestamp={item.rawTimestamp || 0}
+                data-views={item.views || 0}
+                data-readtime={item.readTimeMinutes || 1}
+                data-title={item.title ? item.title.toLowerCase() : ""}
+                data-author={item.authorName ? item.authorName.toLowerCase() : ""}
+              >
                 
                 <div class="flex items-start gap-3.5 sm:gap-4">
                   <img
-                    src={item.thumbnail || item.coverImage || GLOBE_THUMB}
+                    src={item.thumbnail || GLOBE_THUMB}
                     alt=""
-                    class="w-[60px] h-[60px] sm:w-[74px] sm:h-[74px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a]"
+                    class="w-[60px] h-[60px] sm:w-[74px] sm:h-[74px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a] border border-neutral-100"
                   />
                   <div class="flex flex-col pt-0.5 min-w-0">
-                    <span class="text-[11px] sm:text-[12px] text-[#6b7280] font-normal leading-none truncate">{item.category || "International Relations"}</span>
-                    <h3 class="text-[15px] sm:text-[17px] font-bold text-[#111] leading-[1.3] sm:leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2">
+                    <span class="text-[11px] sm:text-[12px] text-[#6b7280] font-normal leading-none truncate">{item.category}</span>
+                    <h3 class="text-[15px] sm:text-[17px] font-bold text-[#111] group-hover:text-[#1b62f2] leading-[1.3] sm:leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2 transition-colors">
                       {item.title}
                     </h3>
                   </div>
                 </div>
 
-                <p class="text-[12.5px] sm:text-[13.5px] text-[#222] leading-[1.45]">
-                  {item.summary || item.description || item.abstract}
+                <p class="text-[12.5px] sm:text-[13.5px] text-[#222] leading-[1.45] line-clamp-3">
+                  {item.summary}
                 </p>
 
                 <div class="flex items-center gap-3 sm:gap-5 text-[11px] sm:text-[12px] text-[#6b7280] pt-1 flex-wrap font-normal">
                   <div class="flex items-center gap-1.5 text-[#4b5563]">
-                    <div class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#d8d8d8] shrink-0"></div>
-                    <span class="truncate max-w-[110px] sm:max-w-none">{item.authorName || (item.author && item.author.name) || "Dr. Sarah Mitchell"}</span>
+                    <div class="w-4 h-4 rounded-full bg-[#d8d8d8] overflow-hidden flex items-center justify-center shrink-0">
+                      {item.authorAvatar ? (
+                        <img src={item.authorAvatar} alt="" class="w-full h-full object-cover" />
+                      ) : null}
+                    </div>
+                    <span class="truncate max-w-[110px] sm:max-w-none font-medium text-neutral-800">{item.authorName}</span>
                   </div>
 
                   <div class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Published {item.publishedDate || "Aug 20, 2026"}</span>
+                    <span>Published {item.publishedDate}</span>
                   </div>
 
                   <div class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    <span>{item.viewsCount || item.views || "28.7k views"}</span>
+                    <span>{item.viewsCount}</span>
                   </div>
 
-                  <span>{item.readTime || "12 min read"}</span>
+                  <span>{item.readTime}</span>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
 
@@ -365,18 +431,20 @@ if (papers.length === 0) {
           </h2>
           
           <div class="w-full bg-white rounded-[28px] p-4 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex-1 overflow-hidden flex flex-col">
-            <div class="flex-1 overflow-y-auto no-scroll flex flex-col gap-3 pr-0.5">
+            <div class="flex-1 overflow-y-auto no-scroll flex flex-col gap-2 pr-0.5">
               {researchers.map((res: any) => (
-                <div class="flex items-center justify-between hover:bg-neutral-50 p-1.5 rounded-2xl transition cursor-pointer shrink-0">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 rounded-full bg-[#d8d8d8] shrink-0 overflow-hidden flex items-center justify-center text-[10px] text-neutral-600">
+                <div class="flex items-center justify-between hover:bg-[#e8f0fe] p-2 rounded-2xl transition-colors cursor-pointer shrink-0 group">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-neutral-200 shrink-0 overflow-hidden flex items-center justify-center text-[10px] text-neutral-600 font-bold">
                       {res.avatarUrl ? (
                         <img src={res.avatarUrl} alt="" class="w-full h-full object-cover" />
-                      ) : null}
+                      ) : (
+                        <span>{res.name?.charAt(0) || "R"}</span>
+                      )}
                     </div>
                     <div class="flex flex-col min-w-0">
-                      <span class="text-[12.5px] font-medium text-[#111] truncate leading-tight">{res.name}</span>
-                      <div class="flex items-center gap-1 text-[10.5px] text-[#888] mt-0.5">
+                      <span class="text-[12px] font-medium text-[#111] group-hover:text-[#1b62f2] truncate leading-tight transition-colors">{res.name}</span>
+                      <div class="flex items-center gap-1 text-[10px] text-[#888] mt-0.5">
                         <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -385,7 +453,7 @@ if (papers.length === 0) {
                       </div>
                     </div>
                   </div>
-                  <svg class="w-4 h-4 text-[#888] shrink-0 ml-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#1b62f2] shrink-0 ml-1 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -420,7 +488,7 @@ if (papers.length === 0) {
         <span class="text-[10.5px] font-normal">Desk</span>
       </a>
 
-      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
+      <a href="/notification" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
         <div class="w-10 h-8 flex items-center justify-center relative">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -429,9 +497,9 @@ if (papers.length === 0) {
           </svg>
         </div>
         <span class="text-[10.5px] font-normal">Alerts</span>
-      </button>
+      </a>
 
-      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Account">
+      <a href="/account" class="flex flex-col items-center gap-1 text-[#666]" title="Account">
         <div class="w-10 h-8 flex items-center justify-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -440,7 +508,7 @@ if (papers.length === 0) {
           </svg>
         </div>
         <span class="text-[10.5px] font-normal">Account</span>
-      </button>
+      </a>
     </nav>
 
     <!-- MOBILE MODAL SHEET: RESEARCH AREAS -->
@@ -449,13 +517,13 @@ if (papers.length === 0) {
         <div class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"></div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-base font-bold text-neutral-900">Explore Research Areas</h3>
-          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1">Close</button>
+          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer">Close</button>
         </div>
         <div class="overflow-y-auto no-scroll flex flex-col gap-2 py-2">
           {[...categories, ...extraAreas].map((area: any) => (
             <a
               href={`/discover?area=${encodeURIComponent(area.name || area.title)}`}
-              class="flex items-center justify-between px-4 py-3 bg-white rounded-2xl text-xs font-medium text-neutral-900 border border-neutral-200/50 shadow-sm active:bg-neutral-50"
+              class="flex items-center justify-between px-4 py-3 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-xs font-medium text-neutral-900 border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors"
             >
               <span>{area.name || area.title}</span>
               <span class="text-neutral-400 font-normal">{area.count || '0+'}</span>
@@ -471,21 +539,21 @@ if (papers.length === 0) {
         <div class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"></div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-base font-bold text-neutral-900">Top 100 Researchers</h3>
-          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1">Close</button>
+          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer">Close</button>
         </div>
         <div class="overflow-y-auto no-scroll flex flex-col gap-2.5 py-2">
           {researchers.map((res: any) => (
-            <div class="flex items-center justify-between bg-white p-3 rounded-2xl border border-neutral-200/50 shadow-sm active:bg-neutral-50">
+            <div class="flex items-center justify-between bg-white hover:bg-[#e8f0fe] p-3 rounded-2xl border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors cursor-pointer group">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 shrink-0">
-                  {res.avatarUrl ? <img src={res.avatarUrl} alt="" class="w-full h-full object-cover" /> : null}
+                <div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 shrink-0 font-bold">
+                  {res.avatarUrl ? <img src={res.avatarUrl} alt="" class="w-full h-full object-cover" /> : res.name?.charAt(0)}
                 </div>
                 <div>
-                  <h4 class="text-xs font-semibold text-neutral-900">{res.name}</h4>
+                  <h4 class="text-xs font-semibold text-neutral-900 group-hover:text-[#1b62f2] transition-colors">{res.name}</h4>
                   <p class="text-[11px] text-neutral-400 mt-0.5">{res.views || res.viewsCount || '0'} views</p>
                 </div>
               </div>
-              <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-neutral-400 group-hover:text-[#1b62f2] transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </div>
@@ -494,73 +562,144 @@ if (papers.length === 0) {
       </div>
     </div>
 
-    <!-- Client Scripts -->
+    <!-- Client Script: Sorting, Filter Tabs & Search Logic -->
     <script>
-      // Desktop show more
-      const btn = document.getElementById("show-more-btn");
-      const extraAreas = document.getElementById("extra-areas");
-      const text = document.getElementById("show-more-text");
-      const icon = document.getElementById("show-more-icon");
+      function initDiscover() {
+        const filterTabs = document.querySelectorAll(".filter-tab");
+        const papersFeed = document.getElementById("papers-feed");
+        const globalSearch = document.getElementById("global-search-input") as HTMLInputElement;
 
-      btn?.addEventListener("click", () => {
-        if (extraAreas?.classList.contains("hidden")) {
-          extraAreas.classList.remove("hidden");
-          extraAreas.classList.add("flex");
-          if (text) text.textContent = "Show less";
-          if (icon) icon.style.transform = "rotate(180deg)";
-        } else {
-          extraAreas?.classList.add("hidden");
-          extraAreas?.classList.remove("flex");
-          if (text) text.textContent = "Show more";
-          if (icon) icon.style.transform = "rotate(0deg)";
-        }
-      });
+        // Interactive Filter Buttons
+        filterTabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            const filterType = tab.getAttribute("data-filter");
 
-      // Desktop Search Filter
-      const searchInput = document.getElementById("area-search-input") as HTMLInputElement;
-      searchInput?.addEventListener("input", (e) => {
-        const query = (e.target as HTMLInputElement).value.toLowerCase();
-        const items = document.querySelectorAll(".area-item");
-        items.forEach((item) => {
-          const textContent = item.textContent?.toLowerCase() || "";
-          (item as HTMLElement).style.display = textContent.includes(query) ? "flex" : "none";
+            // 1. Toggle Active Button Styles
+            filterTabs.forEach((t) => {
+              t.classList.remove("bg-[#1b62f2]", "text-white", "shadow-[0_2px_8px_rgba(27,98,242,0.25)]", "border-transparent");
+              t.classList.add("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]", "border-neutral-200/60");
+            });
+
+            tab.classList.remove("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]", "border-neutral-200/60");
+            tab.classList.add("bg-[#1b62f2]", "text-white", "shadow-[0_2px_8px_rgba(27,98,242,0.25)]", "border-transparent");
+
+            // 2. Client-Side Sort Feed
+            if (!papersFeed) return;
+            const cards = Array.from(papersFeed.querySelectorAll(".paper-card"));
+
+            cards.sort((a, b) => {
+              const cardA = a as HTMLElement;
+              const cardB = b as HTMLElement;
+
+              if (filterType === "recent") {
+                const timeA = Number(cardA.dataset.timestamp || 0);
+                const timeB = Number(cardB.dataset.timestamp || 0);
+                return timeB - timeA;
+              } else if (filterType === "views") {
+                const viewsA = Number(cardA.dataset.views || 0);
+                const viewsB = Number(cardB.dataset.views || 0);
+                return viewsB - viewsA;
+              } else if (filterType === "readtime") {
+                const timeA = Number(cardA.dataset.readtime || 0);
+                const timeB = Number(cardB.dataset.readtime || 0);
+                return timeA - timeB; // Ascending (least read time first)
+              } else {
+                // "all" - Default original order
+                const idxA = Number(cardA.dataset.originalIndex || 0);
+                const idxB = Number(cardB.dataset.originalIndex || 0);
+                return idxA - idxB;
+              }
+            });
+
+            cards.forEach((card) => papersFeed.appendChild(card));
+          });
         });
-      });
 
-      // Mobile Bottom Sheet Modals
-      const modalAreas = document.getElementById("modal-areas");
-      const modalResearchers = document.getElementById("modal-researchers");
-      const openAreasBtn = document.getElementById("open-areas-modal");
-      const openResearchersBtn = document.getElementById("open-researchers-modal");
-      const closeButtons = document.querySelectorAll(".close-modal");
+        // Global Top Bar Search Filter
+        globalSearch?.addEventListener("input", (e) => {
+          const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+          const cards = document.querySelectorAll(".paper-card");
 
-      openAreasBtn?.addEventListener("click", () => {
-        modalAreas?.classList.remove("hidden");
-        modalAreas?.classList.add("flex");
-      });
+          cards.forEach((c) => {
+            const card = c as HTMLElement;
+            const title = card.dataset.title || "";
+            const author = card.dataset.author || "";
+            const textContent = card.innerText.toLowerCase();
 
-      openResearchersBtn?.addEventListener("click", () => {
-        modalResearchers?.classList.remove("hidden");
-        modalResearchers?.classList.add("flex");
-      });
-
-      closeButtons.forEach((b) => {
-        b.addEventListener("click", () => {
-          modalAreas?.classList.add("hidden");
-          modalAreas?.classList.remove("flex");
-          modalResearchers?.classList.add("hidden");
-          modalResearchers?.classList.remove("flex");
+            const isMatch = title.includes(query) || author.includes(query) || textContent.includes(query);
+            card.style.display = isMatch ? "flex" : "none";
+          });
         });
-      });
 
-      [modalAreas, modalResearchers].forEach((m) => {
-        m?.addEventListener("click", (e) => {
-          if (e.target === m) {
-            m.classList.add("hidden");
-            m.classList.remove("flex");
+        // Desktop Show More / Less Areas
+        const btn = document.getElementById("show-more-btn");
+        const extraAreas = document.getElementById("extra-areas");
+        const text = document.getElementById("show-more-text");
+        const icon = document.getElementById("show-more-icon");
+
+        btn?.addEventListener("click", () => {
+          if (extraAreas?.classList.contains("hidden")) {
+            extraAreas.classList.remove("hidden");
+            extraAreas.classList.add("flex");
+            if (text) text.textContent = "Show less";
+            if (icon) icon.style.transform = "rotate(180deg)";
+          } else {
+            extraAreas?.classList.add("hidden");
+            extraAreas?.classList.remove("flex");
+            if (text) text.textContent = "Show more";
+            if (icon) icon.style.transform = "rotate(0deg)";
           }
         });
-      });
+
+        // Area Filter Search
+        const searchInput = document.getElementById("area-search-input") as HTMLInputElement;
+        searchInput?.addEventListener("input", (e) => {
+          const query = (e.target as HTMLInputElement).value.toLowerCase();
+          const items = document.querySelectorAll(".area-item");
+          items.forEach((item) => {
+            const textContent = item.textContent?.toLowerCase() || "";
+            (item as HTMLElement).style.display = textContent.includes(query) ? "flex" : "none";
+          });
+        });
+
+        // Mobile Sheet Modals
+        const modalAreas = document.getElementById("modal-areas");
+        const modalResearchers = document.getElementById("modal-researchers");
+        const openAreasBtn = document.getElementById("open-areas-modal");
+        const openResearchersBtn = document.getElementById("open-researchers-modal");
+        const closeButtons = document.querySelectorAll(".close-modal");
+
+        openAreasBtn?.addEventListener("click", () => {
+          modalAreas?.classList.remove("hidden");
+          modalAreas?.classList.add("flex");
+        });
+
+        openResearchersBtn?.addEventListener("click", () => {
+          modalResearchers?.classList.remove("hidden");
+          modalResearchers?.classList.add("flex");
+        });
+
+        closeButtons.forEach((b) => {
+          b.addEventListener("click", () => {
+            modalAreas?.classList.add("hidden");
+            modalAreas?.classList.remove("flex");
+            modalResearchers?.classList.add("hidden");
+            modalResearchers?.classList.remove("flex");
+          });
+        });
+
+        [modalAreas, modalResearchers].forEach((m) => {
+          m?.addEventListener("click", (e) => {
+            if (e.target === m) {
+              m.classList.add("hidden");
+              m.classList.remove("flex");
+            }
+          });
+        });
+      }
+
+      document.addEventListener("astro:page-load", initDiscover);
+      initDiscover();
     </script>
   </body>
 </html>
