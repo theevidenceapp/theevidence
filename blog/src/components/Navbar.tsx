@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import darkLogo from "../assets/dark-logo.png";
@@ -19,7 +20,7 @@ const Navbar = () => {
     return () => ctx.revert();
   }, []);
 
-  const logoUrl = LOGO_URL
+  const logoUrl = LOGO_URL;
 
   return (
     <div className="flex justify-center px-4 sm:px-6" ref={navRef}>
@@ -38,15 +39,15 @@ const Navbar = () => {
         />
         <div className="sm:mr-6">
           <ul className="flex gap-3 sm:gap-5 md:gap-8 items-center">
-            <li className="hidden md:block text-gray-800 dark:text-gray-200 text-sm lg:text-base">
+            <li className="hidden md:block text-blue-600 dark:text-blue-400 font-medium text-sm lg:text-base cursor-pointer">
               Home
             </li>
-            <li className="hidden md:block text-gray-800 dark:text-gray-200 text-sm lg:text-base">
+            <li className="hidden md:block text-gray-800 dark:text-gray-200 text-sm lg:text-base cursor-pointer hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
               About
             </li>
             <li
               onClick={() => openAuthModal("signup")}
-              className="bg-brand-primary text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-xs sm:text-sm md:text-base whitespace-nowrap"
+              className="bg-brand-primary text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-xs sm:text-sm md:text-base whitespace-nowrap cursor-pointer"
             >
               Be a researcher
             </li>
