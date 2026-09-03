@@ -17,6 +17,7 @@ import ExchangeAccessToken from "../components/token/ExchangeAccessToken";
 import AuthGate from "../components/token/AuthGate";
 ---
 
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -27,6 +28,12 @@ import AuthGate from "../components/token/AuthGate";
       name="description"
       content="The Evidence - Read and discover insightful stories."
     />
+
+    <!-- Preconnect to speed up cross-page font and image loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+
     <script is:inline>
       const t =
         localStorage.getItem("theme") ??
@@ -34,7 +41,7 @@ import AuthGate from "../components/token/AuthGate";
       document.documentElement.classList.toggle("dark", t === "dark");
     </script>
   </head>
-  <body>
+  <body class="bg-[#fcfcfd] text-[#111] antialiased min-h-screen">
     <AuthGate client:load />
     <SmoothScrollInit client:load />
     <GridBackground client:load />
@@ -42,6 +49,7 @@ import AuthGate from "../components/token/AuthGate";
     <Header />
     <main class="flex flex-col min-h-screen items-center px-4 sm:px-6 lg:px-8">
       <HeroSection client:load />
+      <!-- Ensure card links inside LatestBlogs use data-astro-prefetch="hover" -->
       <LatestBlogs />
       <FeatureBlocks />
       <EditorialProcess />
