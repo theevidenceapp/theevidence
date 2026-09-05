@@ -28,6 +28,7 @@ import AuthGate from "../components/token/AuthGate";
       name="description"
       content="The Evidence - Read and discover insightful stories."
     />
+    <!-- <script is:inline>
 
     <!-- Preconnect to speed up cross-page font and image loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -39,7 +40,7 @@ import AuthGate from "../components/token/AuthGate";
         localStorage.getItem("theme") ??
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       document.documentElement.classList.toggle("dark", t === "dark");
-    </script>
+    </script> -->
   </head>
   <body class="bg-[#fcfcfd] text-[#111] antialiased min-h-screen">
     <AuthGate client:load />
