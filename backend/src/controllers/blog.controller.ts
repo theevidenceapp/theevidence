@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import Blog from "../models/blog.model.js";
-import fs from 'fs'
+import fs from "fs";
 import {
   uploadoncloudinary,
   deleteCloudnery,
 } from "../services/cloudinary.service.js";
-
 
 // Helper to safely delete local temporary files
 const safeUnlink = (filePath?: string) => {
@@ -29,21 +28,14 @@ export const createBlog = async (req: Request, res: Response) => {
   };
 
   try {
-    const {
-      title,
-      slug,
-      content,
-      excerpt,
-      category,
-      tags,
-      author,
-      status,
-    } = req.body;
+    const { title, slug, content, excerpt, category, tags, author, status } =
+      req.body;
 
     // Validate required fields
     if (!title || !slug || !content || !author) {
       // Clean up uploaded files before early return
-      if (files?.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+      if (files?.coverImage)
+        files.coverImage.forEach((f) => safeUnlink(f.path));
       if (files?.csv) files.csv.forEach((f) => safeUnlink(f.path));
       if (files?.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
 
@@ -115,8 +107,11 @@ export const createBlog = async (req: Request, res: Response) => {
     const parsedTags = Array.isArray(tags)
       ? tags
       : typeof tags === "string"
-      ? tags.split(",").map((t) => t.trim()).filter(Boolean)
-      : [];
+        ? tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
 
     const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
     const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
@@ -172,7 +167,9 @@ export const createBlog = async (req: Request, res: Response) => {
 export const getBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find()
-      .select("title slug excerpt coverImage category status tags publishedAt createdAt author")
+      .select(
+        "title slug excerpt coverImage category status tags publishedAt createdAt author",
+      )
       .populate("author", "name email")
       .sort({ createdAt: -1 })
       .lean();
@@ -195,10 +192,14 @@ export const getBlogs = async (req: Request, res: Response) => {
 // 3. GET SINGLE BLOG (Fast Reader View + Cached Response)
 // ----------------------------------------------------
 
-
 export const getBlogBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
+
+    let slugTrimmed: string | undefined;
+    if (slug && typeof slug === "string") {
+      slugTrimmed = slug.trim();
+    }
 
     if (!slug) {
       return res.status(400).json({
@@ -209,7 +210,7 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
 
     // 1. Fast, read-only query (Zero database write-locks)
     const blog = await Blog.findOne({
-      slug: slug.trim(),
+      slug: slugTrimmed,
       status: "PUBLISHED",
     })
       .populate("author", "name email")
@@ -226,7 +227,10 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
     Blog.updateOne({ _id: blog._id }, { $inc: { views: 1 } }).exec();
 
     // 3. Cache header: Allows browser & edge cache to serve instantly
-    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=120, stale-while-revalidate=300",
+    );
 
     return res.status(200).json({
       success: true,
@@ -242,17 +246,10 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
   }
 };
 
-
 // 3. GET PUBLISHED BLOGS (Fast Discover Feed & Search)
 export const getPublishedBlogs = async (req: Request, res: Response) => {
   try {
-    const {
-      search,
-      category,
-      tag,
-      page = "1",
-      limit = "10",
-    } = req.query;
+    const { search, category, tag, page = "1", limit = "10" } = req.query;
 
     const currentPage = Math.max(Number(page) || 1, 1);
     const perPage = Math.min(Math.max(Number(limit) || 10, 1), 50);
@@ -293,7 +290,9 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
     const [blogs, totalBlogs] = await Promise.all([
       Blog.find(filter)
         // Select ONLY feed metadata - cuts response payload by up to 95%
-        .select("title slug excerpt coverImage category tags publishedAt author views")
+        .select(
+          "title slug excerpt coverImage category tags publishedAt author views",
+        )
         .populate("author", "name email")
         .sort({ publishedAt: -1 })
         .skip(skip)
@@ -329,14 +328,7 @@ export const updateBlog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const {
-      title,
-      slug,
-      content,
-      excerpt,
-      category,
-      tags,
-    } = req.body;
+    const { title, slug, content, excerpt, category, tags } = req.body;
 
     const files = req.files as {
       coverImage?: Express.Multer.File[];
@@ -375,9 +367,7 @@ export const updateBlog = async (req: Request, res: Response) => {
       }
 
       // Upload new cover image
-      const result = await uploadoncloudinary(
-        files.coverImage[0].path
-      );
+      const result = await uploadoncloudinary(files.coverImage[0].path);
 
       if (!result) {
         return res.status(500).json({
@@ -483,10 +473,7 @@ export const deleteBlog = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBlogStatus = async (
-  req: Request,
-  res: Response
-) => {
+export const updateBlogStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -543,4 +530,3 @@ export const updateBlogStatus = async (
     });
   }
 };
-
