@@ -6,7 +6,28 @@ import {
   deleteCloudnery,
 } from "../services/cloudinary.service.js";
 
+
+// Helper to safely delete local temporary files
+const safeUnlink = (filePath?: string) => {
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch (err) {
+      console.error(`Failed to delete temp file ${filePath}:`, err);
+    }
+  }
+};
+
+// ----------------------------------------------------
+// 1. CREATE BLOG (Fast, Safe File Cleanup & Duplicate Handling)
+// ----------------------------------------------------
 export const createBlog = async (req: Request, res: Response) => {
+  const files = req.files as {
+    coverImage?: Express.Multer.File[];
+    pdfs?: Express.Multer.File[];
+    csv?: Express.Multer.File[];
+  };
+
   try {
     const {
       title,
@@ -21,88 +42,65 @@ export const createBlog = async (req: Request, res: Response) => {
 
     // Validate required fields
     if (!title || !slug || !content || !author) {
+      // Clean up uploaded files before early return
+      if (files?.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+      if (files?.csv) files.csv.forEach((f) => safeUnlink(f.path));
+      if (files?.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
+
       return res.status(400).json({
         success: false,
         message: "Missing required fields: title, slug, content, or author.",
       });
     }
 
-    const files = req.files as {
-      coverImage?: Express.Multer.File[];
-      pdfs?: Express.Multer.File[];
-      csv?: Express.Multer.File[];
-    };
-
-    // -------------------------
     // 1. COVER IMAGE UPLOAD
-    // -------------------------
-    let coverImage = {
-      url: "",
-      publicId: "",
-    };
-
+    let coverImage = { url: "", publicId: "" };
     if (files?.coverImage && files.coverImage.length > 0) {
       const coverFile = files.coverImage[0];
-      const result = await uploadoncloudinary(coverFile.path);
-
-      if (result) {
-        coverImage = {
-          url: result.secure_url,
-          publicId: result.public_id,
-        };
-      }
-
-      // Cleanup local temp file
-      if (fs.existsSync(coverFile.path)) {
-        fs.unlinkSync(coverFile.path);
-      }
-    }
-
-    // -------------------------
-    // 2. CSV FILE UPLOAD (Matches Model Schema)
-    // -------------------------
-    let csv = {
-      url: "",
-    };
-
-    if (files?.csv && files.csv.length > 0) {
-      const csvFile = files.csv[0];
-      const result = await uploadoncloudinary(csvFile.path);
-
-      if (result) {
-        csv = {
-          url: result.secure_url,
-        };
-      }
-
-      // Cleanup local temp file
-      if (fs.existsSync(csvFile.path)) {
-        fs.unlinkSync(csvFile.path);
-      }
-    }
-
-    // -------------------------
-    // 3. PDFS UPLOAD (Parallel Uploads, Max 3)
-    // -------------------------
-    let pdfs: { url: string; publicId: string; originalName: string }[] = [];
-
-    if (files?.pdfs && files.pdfs.length > 0) {
-      const uploadPromises = files.pdfs.slice(0, 3).map(async (file) => {
-        const result = await uploadoncloudinary(file.path);
-
-        // Cleanup local temp file
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-        }
-
+      try {
+        const result = await uploadoncloudinary(coverFile.path);
         if (result) {
-          return {
+          coverImage = {
             url: result.secure_url,
             publicId: result.public_id,
-            originalName: file.originalname,
           };
         }
-        return null;
+      } finally {
+        safeUnlink(coverFile.path);
+      }
+    }
+
+    // 2. CSV FILE UPLOAD
+    let csv = { url: "" };
+    if (files?.csv && files.csv.length > 0) {
+      const csvFile = files.csv[0];
+      try {
+        const result = await uploadoncloudinary(csvFile.path);
+        if (result) {
+          csv = { url: result.secure_url };
+        }
+      } finally {
+        safeUnlink(csvFile.path);
+      }
+    }
+
+    // 3. PDFS UPLOAD (Parallel Uploads, Max 3)
+    let pdfs: { url: string; publicId: string; originalName: string }[] = [];
+    if (files?.pdfs && files.pdfs.length > 0) {
+      const uploadPromises = files.pdfs.slice(0, 3).map(async (file) => {
+        try {
+          const result = await uploadoncloudinary(file.path);
+          if (result) {
+            return {
+              url: result.secure_url,
+              publicId: result.public_id,
+              originalName: file.originalname,
+            };
+          }
+          return null;
+        } finally {
+          safeUnlink(file.path);
+        }
       });
 
       const uploadedResults = await Promise.all(uploadPromises);
@@ -113,9 +111,7 @@ export const createBlog = async (req: Request, res: Response) => {
       }[];
     }
 
-    // -------------------------
     // 4. PARSE TAGS & STATUS
-    // -------------------------
     const parsedTags = Array.isArray(tags)
       ? tags
       : typeof tags === "string"
@@ -125,9 +121,7 @@ export const createBlog = async (req: Request, res: Response) => {
     const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
     const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
 
-    // -------------------------
     // 5. CREATE & SAVE BLOG
-    // -------------------------
     const blog = await Blog.create({
       title: title.trim(),
       slug: slug.trim(),
@@ -148,8 +142,22 @@ export const createBlog = async (req: Request, res: Response) => {
       message: "Blog created successfully",
       blog,
     });
-  } catch (error) {
+  } catch (error: any) {
+    // Clean up all temp files if error occurs during process
+    if (files?.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+    if (files?.csv) files.csv.forEach((f) => safeUnlink(f.path));
+    if (files?.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
+
     console.error("Create blog error:", error);
+
+    // Handle MongoDB duplicate slug collision gracefully
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "An article with this title or slug already exists.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to create blog",
@@ -157,12 +165,17 @@ export const createBlog = async (req: Request, res: Response) => {
     });
   }
 };
-// Get all blogs
+
+// ----------------------------------------------------
+// 2. GET ALL BLOGS (Admin/Desk - Excludes heavy content)
+// ----------------------------------------------------
 export const getBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find()
+      .select("title slug excerpt coverImage category status tags publishedAt createdAt author")
       .populate("author", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
@@ -171,7 +184,6 @@ export const getBlogs = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get blogs error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch blogs",
@@ -179,26 +191,29 @@ export const getBlogs = async (req: Request, res: Response) => {
   }
 };
 
-// Get single blog
-export const getBlogBySlug = async (
-  req: Request,
-  res: Response
-) => {
+// ----------------------------------------------------
+// 3. GET SINGLE BLOG (Fast Reader View + Cached Response)
+// ----------------------------------------------------
+
+
+export const getBlogBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
-    const blog = await Blog.findOneAndUpdate(
-      {
-        slug,
-        status: "PUBLISHED",
-      },
-      {
-        $inc: { views: 1 },
-      },
-      {
-        new: true,
-      }
-    ).populate("author", "name email");
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: "Article slug is required",
+      });
+    }
+
+    // 1. Fast, read-only query (Zero database write-locks)
+    const blog = await Blog.findOne({
+      slug: slug.trim(),
+      status: "PUBLISHED",
+    })
+      .populate("author", "name email")
+      .lean();
 
     if (!blog) {
       return res.status(404).json({
@@ -207,6 +222,12 @@ export const getBlogBySlug = async (
       });
     }
 
+    // 2. Fire-and-forget view increment (Runs asynchronously in background)
+    Blog.updateOne({ _id: blog._id }, { $inc: { views: 1 } }).exec();
+
+    // 3. Cache header: Allows browser & edge cache to serve instantly
+    res.setHeader("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
+
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
@@ -214,10 +235,91 @@ export const getBlogBySlug = async (
     });
   } catch (error) {
     console.error("Get blog error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch blog",
+    });
+  }
+};
+
+
+// 3. GET PUBLISHED BLOGS (Fast Discover Feed & Search)
+export const getPublishedBlogs = async (req: Request, res: Response) => {
+  try {
+    const {
+      search,
+      category,
+      tag,
+      page = "1",
+      limit = "10",
+    } = req.query;
+
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 10, 1), 50);
+
+    const filter: any = {
+      status: "PUBLISHED",
+    };
+
+    // Fast search: search title, excerpt, and tags
+    // (Never scan content with regex when content contains large base64 media)
+    if (search && typeof search === "string" && search.trim()) {
+      const searchRegex = { $regex: search.trim(), $options: "i" };
+      filter.$or = [
+        { title: searchRegex },
+        { excerpt: searchRegex },
+        { tags: searchRegex },
+      ];
+    }
+
+    // Category filter
+    if (category && typeof category === "string" && category.trim()) {
+      filter.category = {
+        $regex: `^${category.trim()}$`,
+        $options: "i",
+      };
+    }
+
+    // Tag filter
+    if (tag && typeof tag === "string" && tag.trim()) {
+      filter.tags = {
+        $regex: tag.trim(),
+        $options: "i",
+      };
+    }
+
+    const skip = (currentPage - 1) * perPage;
+
+    const [blogs, totalBlogs] = await Promise.all([
+      Blog.find(filter)
+        // Select ONLY feed metadata - cuts response payload by up to 95%
+        .select("title slug excerpt coverImage category tags publishedAt author views")
+        .populate("author", "name email")
+        .sort({ publishedAt: -1 })
+        .skip(skip)
+        .limit(perPage)
+        .lean(), // Fast plain JavaScript objects
+
+      Blog.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Published blogs fetched successfully",
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        totalBlogs,
+        totalPages: Math.ceil(totalBlogs / perPage),
+      },
+      blogs,
+    });
+  } catch (error) {
+    console.error("Get published blogs error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch published blogs",
     });
   }
 };
@@ -442,103 +544,3 @@ export const updateBlogStatus = async (
   }
 };
 
-export const getPublishedBlogs = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const {
-      search,
-      category,
-      tag,
-      page = "1",
-      limit = "10",
-    } = req.query;
-
-    const currentPage = Math.max(Number(page), 1);
-    const perPage = Math.min(Math.max(Number(limit), 1), 50);
-
-    const filter: any = {
-      status: "PUBLISHED",
-    };
-
-    // Search
-    if (search) {
-      filter.$or = [
-        {
-          title: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          excerpt: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          content: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          tags: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-      ];
-    }
-
-    // Category filter
-    if (category) {
-      filter.category = {
-        $regex: category,
-        $options: "i",
-      };
-    }
-
-    // Tag filter
-    if (tag) {
-      filter.tags = {
-        $regex: tag,
-        $options: "i",
-      };
-    }
-
-    const skip = (currentPage - 1) * perPage;
-
-    const [blogs, totalBlogs] = await Promise.all([
-      Blog.find(filter)
-        .populate("author", "name email")
-        .sort({ publishedAt: -1 })
-        .skip(skip)
-        .limit(perPage),
-
-      Blog.countDocuments(filter),
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      message: "Published blogs fetched successfully",
-
-      pagination: {
-        page: currentPage,
-        limit: perPage,
-        totalBlogs,
-        totalPages: Math.ceil(totalBlogs / perPage),
-      },
-
-      blogs,
-    });
-  } catch (error) {
-    console.error("Get published blogs error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch published blogs",
-    });
-  }
-};

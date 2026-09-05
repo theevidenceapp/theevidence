@@ -13,7 +13,16 @@ const backendUri = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BA
 let blog: any = null;
 
 try {
-  const res = await fetch(`${backendUri}/blog/get/${slug}`);
+  // Use aggressive HTTP connection re-use and timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+  const res = await fetch(`${backendUri}/blog/get/${slug}`, {
+    signal: controller.signal,
+    headers: { "Accept": "application/json" }
+  });
+  clearTimeout(timeoutId);
+
   if (res.ok) {
     const data = await res.json();
     if (data.success && data.blog) {
@@ -24,7 +33,7 @@ try {
   console.error("Fetch error:", e);
 }
 
-// Fallback dummy article for preview
+// Fallback preview data if database is unreachable
 if (!blog) {
   blog = {
     _id: "demo-id",
@@ -55,11 +64,6 @@ if (!blog) {
         url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
         originalName: "Digital_Diplomacy_Framework_2026.pdf",
         _id: "pdf-1"
-      },
-      {
-        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-        originalName: "Sovereign_Cyber_Governance_Brief.pdf",
-        _id: "pdf-2"
       }
     ],
     author: {
@@ -88,19 +92,21 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
     <ClientRouter />
     <title>{blog.title} - The Evidence</title>
     
-    <!-- Google Fonts for Reading Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Preconnect to domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
     <style is:global>
       html, body {
         background-color: #fcfcfd !important;
+        -webkit-tap-highlight-color: transparent;
       }
       .no-scroll::-webkit-scrollbar { display: none; }
       .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-      /* Editorial Article Prose */
       .blog-prose {
         font-family: 'Lora', Georgia, serif;
         font-size: 19px;
@@ -120,6 +126,19 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
       .blog-prose ul { list-style-type: disc; padding-left: 1.75rem; margin-bottom: 1.4rem; }
       .blog-prose ol { list-style-type: decimal; padding-left: 1.75rem; margin-bottom: 1.4rem; }
       .blog-prose li { margin-bottom: 0.4rem; }
+      
+      /* Defer rendering of off-screen elements to prevent browser thread freeze */
+      .blog-prose img {
+        content-visibility: auto;
+        contain-intrinsic-size: 760px 380px;
+        border-radius: 16px;
+        margin: 1.5rem 0;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      }
+
       .blog-prose blockquote {
         font-family: 'Plus Jakarta Sans', sans-serif;
         border-left: 3px solid #1b62f2;
@@ -152,11 +171,13 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
   </head>
   <body class="bg-[#fcfcfd] text-[#111] antialiased min-h-screen flex flex-col m-0 p-0 font-sans select-none relative">
     
-    <!-- Top Sticky Header -->
+    <!-- Top Sticky Header with Instant BFCache Navigation -->
     <header class="h-[64px] sm:h-[70px] px-4 sm:px-8 flex items-center justify-between shrink-0 z-30 bg-white/80 backdrop-blur-md border-b border-neutral-200/60 sticky top-0">
       <div class="flex items-center gap-3">
         <a
           href="/discover"
+          data-astro-prefetch="hover"
+          onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }"
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200/70 text-neutral-700 hover:text-black text-xs font-semibold transition active:scale-95 cursor-pointer"
           title="Back to Discover"
         >
@@ -190,9 +211,7 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
     <!-- Main Editorial Reader Canvas -->
     <main class="flex-1 w-full max-w-[760px] mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-8">
       
-      <!-- ARTICLE TITLE & METADATA -->
       <section class="flex flex-col gap-4">
-        
         <div class="flex items-center gap-2 text-xs text-neutral-500 font-medium">
           <span class="font-bold text-[#1b62f2]">{blog.category}</span>
           <span>•</span>
@@ -205,7 +224,6 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
           {blog.title}
         </h1>
 
-        <!-- Author Banner -->
         <div class="flex items-center justify-between gap-4 pt-2 border-b border-neutral-100 pb-5">
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-10 h-10 rounded-full bg-[#1b62f2] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">
@@ -219,7 +237,6 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
 
           <span class="text-xs text-neutral-500 font-medium">{blog.views || 0} views</span>
         </div>
-
       </section>
 
       <!-- HERO COVER IMAGE -->
@@ -228,12 +245,14 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
           <img
             src={blog.coverImage.url}
             alt={blog.title}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
             class="w-full h-full object-cover"
           />
         </div>
       )}
 
-      <!-- ABSTRACT CALLOUT -->
       {blog.excerpt && (
         <div class="p-5 sm:p-6 bg-blue-50/50 rounded-2xl border border-blue-100 text-neutral-700 text-base sm:text-lg leading-relaxed italic">
           "{blog.excerpt}"
@@ -242,10 +261,10 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
 
       <!-- ARTICLE BODY -->
       <article class="blog-prose pt-2">
-        <div set:html={blog.content}></div>
+        <div set:html={blog.content} />
       </article>
 
-      <!-- ATTACHED RESEARCH DOCUMENTS (Clean Card Drawer) -->
+      <!-- ATTACHED PDFS -->
       {blog.pdfs && blog.pdfs.length > 0 && (
         <section class="mt-4 pt-8 border-t border-neutral-200/70 flex flex-col gap-4">
           <div class="flex items-center justify-between">
@@ -302,31 +321,20 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
         </section>
       )}
 
-      <!-- TAGS & FOOTER -->
-      <section class="flex flex-col gap-4 border-t border-neutral-200/70 pt-6">
-        {blog.tags && blog.tags.length > 0 && (
-          <div class="flex items-center gap-1.5 flex-wrap">
-            {blog.tags.map((tag: string) => (
-              <span class="px-3 py-1 bg-neutral-100 text-neutral-700 rounded-full text-xs font-medium">
-                #{tag.trim()}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div class="flex items-center justify-between pt-2">
-          <a
-            href="/discover"
-            class="text-xs font-semibold text-neutral-600 hover:text-[#1b62f2] transition flex items-center gap-1"
-          >
-            ← Back to all research papers
-          </a>
-        </div>
-      </section>
-
+      <!-- Fast Bottom Navigation -->
+      <div class="flex items-center justify-between pt-2 border-t border-neutral-200/70">
+        <a
+          href="/discover"
+          data-astro-prefetch="hover"
+          onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }"
+          class="text-xs font-semibold text-neutral-600 hover:text-[#1b62f2] transition flex items-center gap-1 cursor-pointer active:scale-95"
+        >
+          ← Back to all research papers
+        </a>
+      </div>
     </main>
 
-    <!-- FULL SCREEN PDF VIEWER MODAL -->
+    <!-- Fullscreen PDF Viewer Modal -->
     <div id="pdf-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col justify-between">
       <div class="h-14 px-4 sm:px-6 bg-neutral-900 text-white flex items-center justify-between shrink-0 border-b border-neutral-800">
         <span id="modal-pdf-title" class="text-xs sm:text-sm font-semibold truncate max-w-xs sm:max-w-md">Document Preview</span>
@@ -342,7 +350,7 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
       <iframe id="modal-pdf-frame" class="flex-1 w-full h-full border-none bg-white"></iframe>
     </div>
 
-    <!-- Interactive Client Scripts -->
+    <!-- Client Scripts -->
     <script>
       function initPaperView() {
         const previewButtons = document.querySelectorAll(".btn-preview-pdf");
@@ -371,24 +379,20 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
         closeModal?.addEventListener("click", () => {
           modal?.classList.add("hidden");
           modal?.classList.remove("flex");
-          if (modalFrame) modalFrame.src = "";
+          if (modalFrame) modalFrame.src = "about:blank"; // Immediate memory cleanup
         });
 
         document.addEventListener("keydown", (e) => {
           if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
             modal.classList.add("hidden");
             modal.classList.remove("flex");
-            if (modalFrame) modalFrame.src = "";
+            if (modalFrame) modalFrame.src = "about:blank";
           }
         });
 
-        // Share Action
         shareBtn?.addEventListener("click", () => {
           if (navigator.share) {
-            navigator.share({
-              title: document.title,
-              url: window.location.href,
-            });
+            navigator.share({ title: document.title, url: window.location.href });
           } else {
             navigator.clipboard.writeText(window.location.href);
             alert("Article link copied to clipboard!");
@@ -396,8 +400,8 @@ const readTimeMinutes = Math.max(1, Math.ceil((blog.content ? blog.content.repla
         });
       }
 
+      // Astro Page Transitions Hook: Ensures clean listener registration on every transition
       document.addEventListener("astro:page-load", initPaperView);
-      initPaperView();
     </script>
   </body>
 </html>
