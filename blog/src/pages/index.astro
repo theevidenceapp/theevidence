@@ -27,12 +27,12 @@ import AuthGate from "../components/token/AuthGate";
       name="description"
       content="The Evidence - Read and discover insightful stories."
     />
-    <script is:inline>
+    <!-- <script is:inline>
       const t =
         localStorage.getItem("theme") ??
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       document.documentElement.classList.toggle("dark", t === "dark");
-    </script>
+    </script> -->
   </head>
   <body>
     <AuthGate client:load />
