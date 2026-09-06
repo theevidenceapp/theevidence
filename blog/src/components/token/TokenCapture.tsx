@@ -12,7 +12,7 @@ const TokenCapture = () => {
 
         if (token) {
             setToken(token);
-            navigate("/");
+            navigate("/discover");
         }
     }, [setToken])
 
