@@ -2,8 +2,6 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "jsx": "react",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "paths": {
       "@/*": [
         "./src/*"
