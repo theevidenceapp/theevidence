@@ -1,6 +1,6 @@
 .astro/
 .vercel/
-dist/
+# dist/
 .DS_Store
 
 /blog/.astro/
