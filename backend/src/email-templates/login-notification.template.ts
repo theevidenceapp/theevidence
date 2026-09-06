@@ -9,7 +9,7 @@ interface LoginNotificationParams {
   userAgent: string;
 }
 
-const escapeHtml = (value: string) =>
+const escapeHtml = (value: string): string =>
   value.replace(
     /[&<>"']/g,
     (ch) =>
@@ -21,9 +21,6 @@ const escapeHtml = (value: string) =>
         "'": "&#39;",
       })[ch] as string,
   );
-// Loaded once at module init — this is Bootstrap's own unmodified, official
-// compiled stylesheet (from the `bootstrap` npm package). No custom CSS is
-// authored anywhere; we only read Bootstrap's real bootstrap.min.css.
 
 const require = createRequire(import.meta.url);
 
@@ -31,7 +28,6 @@ const bootstrapCss = fs.readFileSync(
   require.resolve("bootstrap/dist/css/bootstrap.min.css"),
   "utf-8",
 );
-
 const buildLoginNotificationMarkup = ({
   loginTime,
   ipAddress,
@@ -49,16 +45,13 @@ const buildLoginNotificationMarkup = ({
       <div class="row justify-content-center">
         <div class="col-12 col-md-9 col-lg-7">
 
-          <!-- Main Card -->
           <div class="bg-white rounded-3 shadow-sm overflow-hidden">
 
-            <!-- Header -->
             <div class="d-flex justify-content-between align-items-center px-4 px-md-5 pt-4 pb-3 border-bottom border-2 border-dark">
               <span class="fs-4 fw-bold text-dark">The Evidence</span>
               <a href="#" class="fw-bold text-dark text-decoration-none small">Settings</a>
             </div>
 
-            <!-- Body -->
             <div class="text-center px-4 px-md-5 py-5">
 
               <h1 class="fw-semibold text-dark mb-4">New sign-in detected</h1>
@@ -98,7 +91,6 @@ const buildLoginNotificationMarkup = ({
             </div>
           </div>
 
-          <!-- Footer -->
           <div class="text-center px-4 py-4">
             <p class="text-muted small mb-2">
               You're receiving this email because we want to keep you updated about your
@@ -108,7 +100,6 @@ const buildLoginNotificationMarkup = ({
             <p class="text-muted small mb-0">Gandhinagar, Gujarat, India</p>
           </div>
 
-          <!-- Sub-footer -->
           <div class="d-flex justify-content-between align-items-center px-2 pt-3">
             <a href="#" class="text-muted small text-decoration-underline">Unsubscribe</a>
             <span class="text-muted small">Secured by The Evidence</span>
@@ -121,14 +112,6 @@ const buildLoginNotificationMarkup = ({
   </html>
 `;
 
-/**
- * Production-ready login notification email.
- * Uses ONLY Bootstrap's own official CSS (no custom rules authored) — but
- * instead of a CDN <link> (stripped by Gmail/Outlook/Apple Mail), Bootstrap's
- * classes are resolved into inline style="" attributes at generation time via
- * `juice`, so the final HTML is self-contained and renders identically
- * everywhere with zero external requests.
- */
 export const loginNotificationTemplate = (
   params: LoginNotificationParams,
 ): string => {
