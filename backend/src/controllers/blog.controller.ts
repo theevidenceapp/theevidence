@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import Blog from "../models/blog.model.js";
-import fs from 'fs'
+import fs from "fs";
 import {
   uploadoncloudinary,
   deleteCloudnery,
 } from "../services/cloudinary.service.js";
 
-
+// Helper to safely delete local temporary files
 const safeUnlink = (filePath?: string) => {
   if (filePath && fs.existsSync(filePath)) {
     try {
@@ -20,9 +20,18 @@ const safeUnlink = (filePath?: string) => {
 export const createBlog = async (req: Request, res: Response) => {
 
   try {
-    const { title, content, category, excerpt, status, slug } = req.body;
     const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
     const authorId = (req as any).user?._id;
+    const { title, slug, content, excerpt, category, tags, author, status } =
+      req.body;
+
+    // Validate required fields
+    if (!title || !slug || !content || !author) {
+      // Clean up uploaded files before early return
+      if (files?.coverImage)
+        files.coverImage.forEach((f) => safeUnlink(f.path));
+      if (files?.csv) files.csv.forEach((f) => safeUnlink(f.path));
+      if (files?.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
 
     if (!authorId) {
       return res.status(401).json({ success: false, message: "No user found in token" });
@@ -39,6 +48,28 @@ export const createBlog = async (req: Request, res: Response) => {
 
     
 
+      const uploadedResults = await Promise.all(uploadPromises);
+      pdfs = uploadedResults.filter(Boolean) as {
+        url: string;
+        publicId: string;
+        originalName: string;
+      }[];
+    }
+
+    // 4. PARSE TAGS & STATUS
+    const parsedTags = Array.isArray(tags)
+      ? tags
+      : typeof tags === "string"
+        ? tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+
+    const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
+    const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+
+    // 5. CREATE & SAVE BLOG
     const blog = await Blog.create({
       title,
       slug,
@@ -72,7 +103,9 @@ export const createBlog = async (req: Request, res: Response) => {
 export const getBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find()
-      .select("title slug excerpt coverImage category status tags publishedAt createdAt author")
+      .select(
+        "title slug excerpt coverImage category status tags publishedAt createdAt author",
+      )
       .populate("author", "name email")
       .sort({ createdAt: -1 })
       .lean();
@@ -95,7 +128,6 @@ export const getBlogs = async (req: Request, res: Response) => {
 // 3. GET SINGLE BLOG (Fast Reader View + Cached Response)
 // ----------------------------------------------------
 
-
 export const getBlogBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
@@ -108,6 +140,7 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
       });
     }
 
+
     // Find by slug, populate author info
     const blog = await Blog.findOne({ slug: slug.trim() })
       .populate("author", "name username avatar bio")
@@ -119,6 +152,15 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
         message: "Paper or blog post not found",
       });
     }
+
+    // 2. Fire-and-forget view increment (Runs asynchronously in background)
+    Blog.updateOne({ _id: blog._id }, { $inc: { views: 1 } }).exec();
+
+    // 3. Cache header: Allows browser & edge cache to serve instantly
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=120, stale-while-revalidate=300",
+    );
 
     return res.status(200).json({
       success: true,
@@ -134,17 +176,10 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
   }
 };
 
-
 // 3. GET PUBLISHED BLOGS (Fast Discover Feed & Search)
 export const getPublishedBlogs = async (req: Request, res: Response) => {
   try {
-    const {
-      search,
-      category,
-      tag,
-      page = "1",
-      limit = "12",
-    } = req.query;
+    const { search, category, tag, page = "1", limit = "12" } = req.query;
 
     const currentPage = Math.max(Number(page) || 1, 1);
     const perPage = Math.min(Math.max(Number(limit) || 12, 1), 50);
@@ -259,14 +294,7 @@ export const updateBlog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const {
-      title,
-      slug,
-      content,
-      excerpt,
-      category,
-      tags,
-    } = req.body;
+    const { title, slug, content, excerpt, category, tags } = req.body;
 
     const files = req.files as {
       coverImage?: Express.Multer.File[];
@@ -305,9 +333,7 @@ export const updateBlog = async (req: Request, res: Response) => {
       }
 
       // Upload new cover image
-      const result = await uploadoncloudinary(
-        files.coverImage[0].path
-      );
+      const result = await uploadoncloudinary(files.coverImage[0].path);
 
       if (!result) {
         return res.status(500).json({
@@ -413,10 +439,7 @@ export const deleteBlog = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBlogStatus = async (
-  req: Request,
-  res: Response
-) => {
+export const updateBlogStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -473,4 +496,3 @@ export const updateBlogStatus = async (
     });
   }
 };
-

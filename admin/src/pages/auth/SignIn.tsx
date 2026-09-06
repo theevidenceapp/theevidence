@@ -1,9 +1,10 @@
+import { Button } from "@/components/ui/button"
+
 export default function SignIn() {
 
     const handleGoogleSignIn = () => {
         window.location.href = `${import.meta.env.VITE_API_URL}/user/auth/google?site=admin`
     }
-
 
     return (
         <>
@@ -21,59 +22,10 @@ export default function SignIn() {
 
                     <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
                         <form action="#" method="POST" className="space-y-6">
-                            <div>
-                                <label htmlFor="email" className="block text-sm/6 font-medium ">
-                                    Email address
-                                </label>
-                                <div className="mt-2">
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        required
-                                        autoComplete="email"
-                                        className="block border w-full rounded-md bg-white/5 px-3 py-1.5 text-base  outline-1 -outline-offset-1 outline-white/10 placeholder: focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex items-center justify-between">
-                                    <label htmlFor="password" className="block text-sm/6 font-medium ">
-                                        Password
-                                    </label>
-                                    <div className="text-sm">
-                                        <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
-                                            Forgot password?
-                                        </a>
-                                    </div>
-                                </div>
-                                <div className="mt-2">
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        required
-                                        autoComplete="current-password"
-                                        className="block border w-full rounded-md bg-white/5 px-3 py-1.5 text-base  outline-1 -outline-offset-1 outline-white/10 placeholder: focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
-                                    />
-                                </div>
-                            </div>
-
                             <div className="flex gap-2 flex-col">
-                                <button
-                                    type="submit"
-                                    className="flex w-full justify-center rounded-md bg-indigo-500 text-white px-3 py-1.5 text-sm/6 font-semibold  hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                                >
-                                    Sign in
-                                </button>
-                                <button
-                                    onClick={handleGoogleSignIn}
-                                    type="button"
-                                    className="flex w-full justify-center place-content-center items-center rounded-md bg-indigo-500 text-white px-3 py-1.5 text-sm/6 font-semibold  hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                                >
+                                <Button className='text-lg py-7' onClick={handleGoogleSignIn} type="button">
                                     Sign in with Google
-                                </button>
+                                </Button>
                             </div>
                         </form>
 

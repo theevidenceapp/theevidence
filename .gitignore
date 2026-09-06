@@ -2,7 +2,9 @@
 .vercel/
 dist/
 .DS_Store
+
+/blog/.astro/
 .DS_Store
-.DS_Store
-.DS_Store
-.DS_Store
+backend/package-lock.json
+blog/.astro/dev.json
+blog/.astro/settings.json
