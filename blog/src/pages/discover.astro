@@ -2,8 +2,10 @@
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
 
-const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
-const GLOBE_THUMB = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
+const THE_EVIDENCE_LOGO =
+  "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+const GLOBE_THUMB =
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
 // Exact category list synchronized with new.astro
 const categoriesList = [
@@ -21,7 +23,7 @@ const categoriesList = [
   "Risk Management",
   "Environmental Policy",
   "Global Security",
-  "Macroeconomics"
+  "Macroeconomics",
 ];
 
 let papers: any[] = [];
@@ -45,14 +47,17 @@ let researchers: any[] = [
   { name: "Matthew Brown", views: "29.0k views" },
 ];
 
-const backendUri = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BACKEND_URI || "http://localhost:5000";
+const backendUri =
+  import.meta.env.VITE_BACKEND_URI ||
+  import.meta.env.PUBLIC_BACKEND_URI ||
+  "http://localhost:5000";
 
 try {
   // Request page 1 with 12 items
   const blogsRes = await fetch(`${backendUri}/blog/published?page=1&limit=12`, {
-    headers: { "Accept": "application/json" }
+    headers: { Accept: "application/json" },
   });
-  
+
   if (blogsRes.ok) {
     const data = await blogsRes.json();
     if (data.success && Array.isArray(data.blogs)) {
@@ -61,8 +66,11 @@ try {
       }
       papers = data.blogs.map((b: any) => {
         const rawExcerpt = b.excerpt || "";
-        const readMinutes = Math.max(1, Math.ceil((rawExcerpt.length || 500) / 400));
-        
+        const readMinutes = Math.max(
+          1,
+          Math.ceil((rawExcerpt.length || 500) / 400),
+        );
+
         return {
           id: b._id,
           title: b.title || "Untitled Research Paper",
@@ -70,17 +78,24 @@ try {
           summary: rawExcerpt || "No abstract provided for this paper.",
           authorName: b.author?.name || "Researcher",
           authorAvatar: b.author?.avatar || "",
-          publishedDate: b.publishedAt || b.createdAt
-            ? new Date(b.publishedAt || b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-            : "Aug 20, 2026",
-          rawTimestamp: b.publishedAt || b.createdAt ? new Date(b.publishedAt || b.createdAt).getTime() : 0,
+          publishedDate:
+            b.publishedAt || b.createdAt
+              ? new Date(b.publishedAt || b.createdAt).toLocaleDateString(
+                  "en-US",
+                  { month: "short", day: "numeric", year: "numeric" },
+                )
+              : "Aug 20, 2026",
+          rawTimestamp:
+            b.publishedAt || b.createdAt
+              ? new Date(b.publishedAt || b.createdAt).getTime()
+              : 0,
           views: Number(b.views) || 0,
           viewsCount: `${b.views ?? 0} views`,
           readTimeMinutes: readMinutes,
           readTime: `${readMinutes} min read`,
           thumbnail: b.coverImage?.url || GLOBE_THUMB,
           slug: b.slug,
-          pdfs: b.pdfs || []
+          pdfs: b.pdfs || [],
         };
       });
     }
@@ -95,7 +110,8 @@ if (papers.length === 0) {
     id: i + 1,
     title: "The Future of Digital Diplomacy in a Multipolar World",
     category: categoriesList[i % categoriesList.length],
-    summary: "An examination of how emerging digital technologies are reshaping diplomatic practices, international cooperation, and geopolitical communication.",
+    summary:
+      "An examination of how emerging digital technologies are reshaping diplomatic practices, international cooperation, and geopolitical communication.",
     authorName: "Dr. Sarah Mitchell",
     authorAvatar: "",
     publishedDate: "Aug 20, 2026",
@@ -105,13 +121,15 @@ if (papers.length === 0) {
     readTimeMinutes: 12 - i,
     readTime: `${12 - i} min read`,
     thumbnail: GLOBE_THUMB,
-    slug: `future-of-digital-diplomacy-${i + 1}`
+    slug: `future-of-digital-diplomacy-${i + 1}`,
   }));
 }
 
 // Count categories
 const categoryCounts: Record<string, number> = {};
-categoriesList.forEach((c) => { categoryCounts[c] = 0; });
+categoriesList.forEach((c) => {
+  categoryCounts[c] = 0;
+});
 papers.forEach((p) => {
   if (categoryCounts[p.category] !== undefined) {
     categoryCounts[p.category]++;
@@ -123,22 +141,35 @@ papers.forEach((p) => {
 <html lang="en" class="bg-[#f9f9fb]">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <ClientRouter />
     <title>The Evidence - Discover</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=account_circle"
+    />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
 
     <style>
-      html, body {
+      html,
+      body {
         background-color: #f9f9fb !important;
         -webkit-tap-highlight-color: transparent;
       }
-      .no-scroll::-webkit-scrollbar { display: none; }
-      .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
     </style>
   </head>
   <body
@@ -148,12 +179,15 @@ papers.forEach((p) => {
     data-current-page={paginationMeta.page}
     data-has-more={paginationMeta.hasMore ? "true" : "false"}
   >
-    
     <!-- DESKTOP HOVER DRAWER SIDEBAR -->
     <aside
       class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f9f9fb] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
     >
-      <a href="/" class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full" title="The Evidence">
+      <a
+        href="/"
+        class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full"
+        title="The Evidence"
+      >
         <img
           src={THE_EVIDENCE_LOGO}
           alt="The Evidence"
@@ -169,12 +203,30 @@ papers.forEach((p) => {
           title="Discover"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0">
-              <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+          >
             Discover
           </span>
         </a>
@@ -186,13 +238,36 @@ papers.forEach((p) => {
           title="Desk"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0">
-              <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M9 17C11 11.5 12.9604 9.63636 15 8"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+          >
             Desk
           </span>
         </a>
@@ -204,13 +279,33 @@ papers.forEach((p) => {
           title="Notification"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0">
-              <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z"
+                fill="#2563EB"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+          >
             Notification
           </span>
         </a>
@@ -222,13 +317,36 @@ papers.forEach((p) => {
           title="Account"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0">
-              <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+          >
             Account
           </span>
         </a>
@@ -236,9 +354,19 @@ papers.forEach((p) => {
     </aside>
 
     <!-- Top Header -->
-    <header class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f9f9fb]">
-      <a href="/" class="flex md:hidden items-center shrink-0 mr-3" title="The Evidence">
-        <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-8 w-auto object-contain" />
+    <header
+      class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f9f9fb]"
+    >
+      <a
+        href="/"
+        class="flex md:hidden items-center shrink-0 mr-3"
+        title="The Evidence"
+      >
+        <img
+          src={THE_EVIDENCE_LOGO}
+          alt="The Evidence"
+          class="h-8 w-auto object-contain"
+        />
       </a>
 
       <div class="hidden lg:block w-[180px]"></div>
@@ -246,8 +374,17 @@ papers.forEach((p) => {
       <!-- Search Input -->
       <div class="flex-1 max-w-[560px]">
         <div class="relative w-full">
-          <svg class="w-4 h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            class="w-4 h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           <input
             type="text"
@@ -262,7 +399,9 @@ papers.forEach((p) => {
     </header>
 
     <!-- MOBILE QUICK ACCESS ACTION BADGES -->
-    <div class="flex md:hidden items-center justify-center gap-3 px-4 pb-2 shrink-0">
+    <div
+      class="flex md:hidden items-center justify-center gap-3 px-4 pb-2 shrink-0"
+    >
       <button
         type="button"
         id="open-areas-modal"
@@ -283,15 +422,19 @@ papers.forEach((p) => {
     </div>
 
     <!-- Main Viewport Area -->
-    <div class="flex-1 flex px-4 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-0 gap-5 lg:gap-7 overflow-hidden max-w-[1600px] w-full mx-auto">
-      
+    <div
+      class="flex-1 flex px-4 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-0 gap-5 lg:gap-7 overflow-hidden max-w-[1600px] w-full mx-auto"
+    >
       <!-- 3-Column Desktop Stage -->
       <div class="flex-1 flex gap-5 lg:gap-7 overflow-hidden">
-        
         <!-- COLUMN 1: Research Areas (Desktop) -->
-        <div class="hidden md:flex w-[220px] lg:w-[245px] shrink-0 flex-col items-center h-full">
+        <div
+          class="hidden md:flex w-[220px] lg:w-[245px] shrink-0 flex-col items-center h-full"
+        >
           <div class="w-full flex items-center justify-between mb-3 px-1">
-            <h2 class="text-[14px] font-bold text-[#111] tracking-tight">Research Areas</h2>
+            <h2 class="text-[14px] font-bold text-[#111] tracking-tight">
+              Research Areas
+            </h2>
             <button
               type="button"
               id="btn-clear-area-filter"
@@ -300,10 +443,19 @@ papers.forEach((p) => {
               Reset
             </button>
           </div>
-          
+
           <div class="w-full relative mb-3 shrink-0">
-            <svg class="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              class="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             <input
               type="text"
@@ -313,28 +465,35 @@ papers.forEach((p) => {
             />
           </div>
 
-          <div id="areas-list" class="w-full flex-1 overflow-y-auto no-scroll flex flex-col gap-1.5 py-0.5">
-            {categoriesList.map((catName) => (
-              <button
-                type="button"
-                class="area-item w-full flex items-center justify-between px-3.5 py-2.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-[12px] text-[#222] transition-colors border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0 group cursor-pointer text-left"
-                data-category={catName}
-              >
-                <span class="truncate font-medium">{catName}</span>
-                <span class="text-[11px] text-[#888] group-hover:text-[#1b62f2] shrink-0 ml-1.5 font-normal transition-colors">
-                  {categoryCounts[catName] || 0}
-                </span>
-              </button>
-            ))}
+          <div
+            id="areas-list"
+            class="w-full flex-1 overflow-y-auto no-scroll flex flex-col gap-1.5 py-0.5"
+          >
+            {
+              categoriesList.map((catName) => (
+                <button
+                  type="button"
+                  class="area-item w-full flex items-center justify-between px-3.5 py-2.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-[12px] text-[#222] transition-colors border border-neutral-200/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)] shrink-0 group cursor-pointer text-left"
+                  data-category={catName}
+                >
+                  <span class="truncate font-medium">{catName}</span>
+                  <span class="text-[11px] text-[#888] group-hover:text-[#1b62f2] shrink-0 ml-1.5 font-normal transition-colors">
+                    {categoryCounts[catName] || 0}
+                  </span>
+                </button>
+              ))
+            }
           </div>
         </div>
 
         <!-- COLUMN 2: Cards Feed & Dynamic Interactive Filter -->
-        <main class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5">
-          
+        <main
+          class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5"
+        >
           <!-- Interactive Filter Tabs -->
-          <div class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f9f9fb]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll justify-start sm:justify-center gap-2 sm:gap-2.5 shrink-0 px-1">
-            
+          <div
+            class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f9f9fb]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll justify-start sm:justify-center gap-2 sm:gap-2.5 shrink-0 px-1"
+          >
             <button
               type="button"
               data-filter="all"
@@ -366,194 +525,363 @@ papers.forEach((p) => {
             >
               Least read time
             </button>
-
           </div>
 
           <!-- Active Category Indicator Badge -->
-          <div id="active-category-pill" class="hidden items-center justify-between px-4 py-2 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-[#1b62f2] shrink-0">
+          <div
+            id="active-category-pill"
+            class="hidden items-center justify-between px-4 py-2 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-[#1b62f2] shrink-0"
+          >
             <div class="flex items-center gap-1.5 font-bold">
               <span>Category:</span>
               <span id="active-category-name" class="underline">None</span>
             </div>
-            <button type="button" id="btn-dismiss-category-pill" class="font-bold text-neutral-500 hover:text-rose-600 px-1">✕</button>
+            <button
+              type="button"
+              id="btn-dismiss-category-pill"
+              class="font-bold text-neutral-500 hover:text-rose-600 px-1"
+              >✕</button
+            >
           </div>
 
           <!-- Cards Feed -->
           <div id="papers-feed" class="flex flex-col gap-3.5">
-            {papers.map((item: any, idx: number) => (
-              <a
-                href={`/papers/${item.slug || item.id}`}
-                data-astro-prefetch="viewport"
-                class="paper-card bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] cursor-pointer group"
-                data-original-index={idx}
-                data-timestamp={item.rawTimestamp || 0}
-                data-views={item.views || 0}
-                data-readtime={item.readTimeMinutes || 1}
-                data-category={item.category || ""}
-                data-title={item.title ? item.title.toLowerCase() : ""}
-                data-author={item.authorName ? item.authorName.toLowerCase() : ""}
-              >
-                
-                <div class="flex items-start gap-3.5 sm:gap-4">
-                  <img
-                    src={item.thumbnail || GLOBE_THUMB}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    class="w-[60px] h-[60px] sm:w-[74px] sm:h-[74px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a] border border-neutral-100"
-                  />
-                  <div class="flex flex-col pt-0.5 min-w-0">
-                    <span class="text-[11px] sm:text-[12px] text-[#6b7280] font-normal leading-none truncate">{item.category}</span>
-                    <h3 class="text-[15px] sm:text-[17px] font-bold text-[#111] group-hover:text-[#1b62f2] leading-[1.3] sm:leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2 transition-colors">
-                      {item.title}
-                    </h3>
-                  </div>
-                </div>
-
-                <p class="text-[12.5px] sm:text-[13.5px] text-[#222] leading-[1.45] line-clamp-3">
-                  {item.summary}
-                </p>
-
-                <div class="flex items-center gap-3 sm:gap-5 text-[11px] sm:text-[12px] text-[#6b7280] pt-1 flex-wrap font-normal">
-                  <div class="flex items-center gap-1.5 text-[#4b5563]">
-                    <div class="w-4 h-4 rounded-full bg-[#d8d8d8] overflow-hidden flex items-center justify-center shrink-0 text-[9px] font-bold text-neutral-600">
-                      {item.authorAvatar ? (
-                        <img src={item.authorAvatar} alt="" class="w-full h-full object-cover" />
-                      ) : (
-                        item.authorName?.charAt(0) || "R"
-                      )}
+            {
+              papers.map((item: any, idx: number) => (
+                <a
+                  href={`/papers/${item.slug || item.id}`}
+                  data-astro-prefetch="viewport"
+                  class="paper-card bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] cursor-pointer group"
+                  data-original-index={idx}
+                  data-timestamp={item.rawTimestamp || 0}
+                  data-views={item.views || 0}
+                  data-readtime={item.readTimeMinutes || 1}
+                  data-category={item.category || ""}
+                  data-title={item.title ? item.title.toLowerCase() : ""}
+                  data-author={
+                    item.authorName ? item.authorName.toLowerCase() : ""
+                  }
+                >
+                  <div class="flex items-start gap-3.5 sm:gap-4">
+                    <img
+                      src={item.thumbnail || GLOBE_THUMB}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      class="w-[60px] h-[60px] sm:w-[74px] sm:h-[74px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a] border border-neutral-100"
+                    />
+                    <div class="flex flex-col pt-0.5 min-w-0">
+                      <span class="text-[11px] sm:text-[12px] text-[#6b7280] font-normal leading-none truncate">
+                        {item.category}
+                      </span>
+                      <h3 class="text-[15px] sm:text-[17px] font-bold text-[#111] group-hover:text-[#1b62f2] leading-[1.3] sm:leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2 transition-colors">
+                        {item.title}
+                      </h3>
                     </div>
-                    <span class="truncate max-w-[110px] sm:max-w-none font-medium text-neutral-800">{item.authorName}</span>
                   </div>
 
-                  <div class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Published {item.publishedDate}</span>
-                  </div>
+                  <p class="text-[12.5px] sm:text-[13.5px] text-[#222] leading-[1.45] line-clamp-3">
+                    {item.summary}
+                  </p>
 
-                  <div class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>{item.viewsCount}</span>
-                  </div>
+                  <div class="flex items-center gap-3 sm:gap-5 text-[11px] sm:text-[12px] text-[#6b7280] pt-1 flex-wrap font-normal">
+                    <div class="flex items-center gap-1.5 text-[#4b5563]">
+                      <div class="w-4 h-4 rounded-full bg-[#d8d8d8] overflow-hidden flex items-center justify-center shrink-0 text-[9px] font-bold text-neutral-600">
+                        {item.authorAvatar ? (
+                          <span class="material-symbols-outlined">
+                            account_circle
+                          </span>
+                        ) : (
+                          item.authorName?.charAt(0) || "R"
+                        )}
+                      </div>
+                      <span class="truncate max-w-[110px] sm:max-w-none font-medium text-neutral-800">
+                        {item.authorName}
+                      </span>
+                    </div>
 
-                  <span>{item.readTime}</span>
-                </div>
-              </a>
-            ))}
+                    <div class="flex items-center gap-1">
+                      <svg
+                        class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span>Published {item.publishedDate}</span>
+                    </div>
+
+                    <div class="flex items-center gap-1">
+                      <svg
+                        class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888]"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <span>{item.viewsCount}</span>
+                    </div>
+
+                    <span>{item.readTime}</span>
+                  </div>
+                </a>
+              ))
+            }
 
             <!-- Empty Search / Filter State -->
-            <div id="no-papers-msg" class="hidden flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-neutral-200/50">
+            <div
+              id="no-papers-msg"
+              class="hidden flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-neutral-200/50"
+            >
               <span class="text-3xl mb-2">🔍</span>
-              <h4 class="font-bold text-neutral-900 text-sm">No research papers found</h4>
-              <p class="text-neutral-500 text-xs mt-1">Try selecting another category or clearing your search keywords.</p>
+              <h4 class="font-bold text-neutral-900 text-sm">
+                No research papers found
+              </h4>
+              <p class="text-neutral-500 text-xs mt-1">
+                Try selecting another category or clearing your search keywords.
+              </p>
             </div>
           </div>
 
           <!-- DYNAMIC PAGINATION SECTION (Load More Button) -->
-          <div class="flex flex-col items-center justify-center pt-2 pb-12 shrink-0">
+          <div
+            class="flex flex-col items-center justify-center pt-2 pb-12 shrink-0"
+          >
             <button
               type="button"
               id="btn-load-more"
               class={`px-6 py-2.5 rounded-full bg-white border border-neutral-200/80 text-xs font-bold text-neutral-800 hover:bg-[#e8f0fe] hover:text-[#1b62f2] hover:border-[#1b62f2] shadow-sm transition active:scale-95 cursor-pointer flex items-center gap-2 ${paginationMeta.hasMore ? "flex" : "hidden"}`}
             >
               <span id="load-more-text">Load More Research Papers</span>
-              <svg id="load-more-spinner" class="hidden animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg
+                id="load-more-spinner"
+                class="hidden animate-spin w-3.5 h-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
               </svg>
             </button>
-            <p id="all-loaded-msg" class={`text-xs text-neutral-400 font-medium mt-2 ${paginationMeta.hasMore ? "hidden" : "block"}`}>
+            <p
+              id="all-loaded-msg"
+              class={`text-xs text-neutral-400 font-medium mt-2 ${paginationMeta.hasMore ? "hidden" : "block"}`}
+            >
               Showing all available research papers.
             </p>
           </div>
-
         </main>
 
         <!-- COLUMN 3: Top 100 Researchers (Desktop) -->
-        <aside class="hidden lg:flex w-[240px] xl:w-[260px] shrink-0 h-full flex-col items-center">
-          <h2 class="text-[14px] font-bold text-[#111] mb-3 text-center tracking-tight shrink-0">
+        <aside
+          class="hidden lg:flex w-[240px] xl:w-[260px] shrink-0 h-full flex-col items-center"
+        >
+          <h2
+            class="text-[14px] font-bold text-[#111] mb-3 text-center tracking-tight shrink-0"
+          >
             Top 100 Researchers
           </h2>
-          
-          <div class="w-full bg-white rounded-[28px] p-4 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex-1 overflow-hidden flex flex-col">
-            <div class="flex-1 overflow-y-auto no-scroll flex flex-col gap-2 pr-0.5">
-              {researchers.map((res: any) => (
-                <div class="flex items-center justify-between hover:bg-[#e8f0fe] p-2 rounded-2xl transition-colors cursor-pointer shrink-0 group">
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-full bg-neutral-200 shrink-0 overflow-hidden flex items-center justify-center text-[10px] text-neutral-600 font-bold">
-                      {res.avatarUrl ? (
-                        <img src={res.avatarUrl} alt="" class="w-full h-full object-cover" />
-                      ) : (
-                        <span>{res.name?.charAt(0) || "R"}</span>
-                      )}
-                    </div>
-                    <div class="flex flex-col min-w-0">
-                      <span class="text-[12px] font-medium text-[#111] group-hover:text-[#1b62f2] truncate leading-tight transition-colors">{res.name}</span>
-                      <div class="flex items-center gap-1 text-[10px] text-[#888] mt-0.5">
-                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        <span class="truncate">{res.views}</span>
+
+          <div
+            class="w-full bg-white rounded-[28px] p-4 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex-1 overflow-hidden flex flex-col"
+          >
+            <div
+              class="flex-1 overflow-y-auto no-scroll flex flex-col gap-2 pr-0.5"
+            >
+              {
+                researchers.map((res: any) => (
+                  <div class="flex items-center justify-between hover:bg-[#e8f0fe] p-2 rounded-2xl transition-colors cursor-pointer shrink-0 group">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <div class="w-8 h-8 rounded-full bg-neutral-200 shrink-0 overflow-hidden flex items-center justify-center text-[10px] text-neutral-600 font-bold">
+                        {res.avatarUrl ? (
+                          <img
+                            src={res.avatarUrl}
+                            alt=""
+                            class="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span>{res.name?.charAt(0) || "R"}</span>
+                        )}
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-[12px] font-medium text-[#111] group-hover:text-[#1b62f2] truncate leading-tight transition-colors">
+                          {res.name}
+                        </span>
+                        <div class="flex items-center gap-1 text-[10px] text-[#888] mt-0.5">
+                          <svg
+                            class="w-3 h-3 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          <span class="truncate">{res.views}</span>
+                        </div>
                       </div>
                     </div>
+                    <svg
+                      class="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#1b62f2] shrink-0 ml-1 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
-                  <svg class="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#1b62f2] shrink-0 ml-1 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              ))}
+                ))
+              }
             </div>
           </div>
         </aside>
-
       </div>
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION DOCK -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#f9f9fb]/95 backdrop-blur-lg border-t border-neutral-200/60 px-6 py-2 flex items-center justify-around">
-      <a href="/discover" class="flex flex-col items-center gap-1 text-[#1b62f2]" title="Discover">
-        <div class="w-10 h-8 rounded-full bg-[#e8f0fe] flex items-center justify-center">
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#f9f9fb]/95 backdrop-blur-lg border-t border-neutral-200/60 px-6 py-2 flex items-center justify-around"
+    >
+      <a
+        href="/discover"
+        class="flex flex-col items-center gap-1 text-[#1b62f2]"
+        title="Discover"
+      >
+        <div
+          class="w-10 h-8 rounded-full bg-[#e8f0fe] flex items-center justify-center"
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z"
+              stroke="#1B62F2"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10"
+              stroke="#1B62F2"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
         </div>
         <span class="text-[10.5px] font-semibold">Discover</span>
       </a>
 
-      <a href="/desk" class="flex flex-col items-center gap-1 text-[#666]" title="Desk">
+      <a
+        href="/desk"
+        class="flex flex-col items-center gap-1 text-[#666]"
+        title="Desk"
+      >
         <div class="w-10 h-8 flex items-center justify-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M9 17C11 11.5 12.9604 9.63636 15 8"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
         </div>
         <span class="text-[10.5px] font-normal">Desk</span>
       </a>
 
-      <a href="/notification" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
+      <a
+        href="/notification"
+        class="flex flex-col items-center gap-1 text-[#666]"
+        title="Notification"
+      >
         <div class="w-10 h-8 flex items-center justify-center relative">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            <path
+              d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z"
+              fill="#2563EB"></path>
           </svg>
         </div>
         <span class="text-[10.5px] font-normal">Alerts</span>
       </a>
 
-      <a href="/account" class="flex flex-col items-center gap-1 text-[#666]" title="Account">
+      <a
+        href="/account"
+        class="flex flex-col items-center gap-1 text-[#666]"
+        title="Account"
+      >
         <div class="w-10 h-8 flex items-center justify-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+              stroke="#666"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
         </div>
         <span class="text-[10.5px] font-normal">Account</span>
@@ -561,53 +889,101 @@ papers.forEach((p) => {
     </nav>
 
     <!-- MOBILE MODAL SHEET: RESEARCH AREAS -->
-    <div id="modal-areas" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end transition-opacity duration-200">
-      <div class="bg-[#f9f9fb] w-full max-h-[80vh] rounded-t-[28px] p-5 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200">
-        <div class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"></div>
+    <div
+      id="modal-areas"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end transition-opacity duration-200"
+    >
+      <div
+        class="bg-[#f9f9fb] w-full max-h-[80vh] rounded-t-[28px] p-5 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200"
+      >
+        <div
+          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"
+        >
+        </div>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-base font-bold text-neutral-900">Explore Research Areas</h3>
-          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer">Close</button>
+          <h3 class="text-base font-bold text-neutral-900">
+            Explore Research Areas
+          </h3>
+          <button
+            type="button"
+            class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer"
+            >Close</button
+          >
         </div>
         <div class="overflow-y-auto no-scroll flex flex-col gap-2 py-2">
-          {categoriesList.map((catName) => (
-            <button
-              type="button"
-              class="mobile-area-item flex items-center justify-between px-4 py-3 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-xs font-medium text-neutral-900 border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors text-left cursor-pointer"
-              data-category={catName}
-            >
-              <span>{catName}</span>
-              <span class="text-neutral-400 font-normal">{categoryCounts[catName] || 0}</span>
-            </button>
-          ))}
+          {
+            categoriesList.map((catName) => (
+              <button
+                type="button"
+                class="mobile-area-item flex items-center justify-between px-4 py-3 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-xs font-medium text-neutral-900 border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors text-left cursor-pointer"
+                data-category={catName}
+              >
+                <span>{catName}</span>
+                <span class="text-neutral-400 font-normal">
+                  {categoryCounts[catName] || 0}
+                </span>
+              </button>
+            ))
+          }
         </div>
       </div>
     </div>
 
     <!-- MOBILE MODAL SHEET: TOP 100 RESEARCHERS -->
-    <div id="modal-researchers" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end transition-opacity duration-200">
-      <div class="bg-[#f9f9fb] w-full max-h-[80vh] rounded-t-[28px] p-5 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200">
-        <div class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"></div>
+    <div
+      id="modal-researchers"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end transition-opacity duration-200"
+    >
+      <div
+        class="bg-[#f9f9fb] w-full max-h-[80vh] rounded-t-[28px] p-5 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200"
+      >
+        <div
+          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"
+        >
+        </div>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-base font-bold text-neutral-900">Top 100 Researchers</h3>
-          <button type="button" class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer">Close</button>
+          <h3 class="text-base font-bold text-neutral-900">
+            Top 100 Researchers
+          </h3>
+          <button
+            type="button"
+            class="close-modal text-xs font-semibold text-neutral-500 p-1 cursor-pointer"
+            >Close</button
+          >
         </div>
         <div class="overflow-y-auto no-scroll flex flex-col gap-2.5 py-2">
-          {researchers.map((res: any) => (
-            <div class="flex items-center justify-between bg-white hover:bg-[#e8f0fe] p-3 rounded-2xl border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors cursor-pointer group">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 shrink-0 font-bold">
-                  {res.name?.charAt(0) || "R"}
+          {
+            researchers.map((res: any) => (
+              <div class="flex items-center justify-between bg-white hover:bg-[#e8f0fe] p-3 rounded-2xl border border-neutral-200/50 shadow-sm active:bg-neutral-50 transition-colors cursor-pointer group">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 shrink-0 font-bold">
+                    {res.name?.charAt(0) || "R"}
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-semibold text-neutral-900 group-hover:text-[#1b62f2] transition-colors">
+                      {res.name}
+                    </h4>
+                    <p class="text-[11px] text-neutral-400 mt-0.5">
+                      {res.views}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 class="text-xs font-semibold text-neutral-900 group-hover:text-[#1b62f2] transition-colors">{res.name}</h4>
-                  <p class="text-[11px] text-neutral-400 mt-0.5">{res.views}</p>
-                </div>
+                <svg
+                  class="w-4 h-4 text-neutral-400 group-hover:text-[#1b62f2] transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </div>
-              <svg class="w-4 h-4 text-neutral-400 group-hover:text-[#1b62f2] transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          ))}
+            ))
+          }
         </div>
       </div>
     </div>
@@ -615,22 +991,38 @@ papers.forEach((p) => {
     <!-- Client Script: Sorting, Category Filter & Pagination Logic -->
     <script>
       function initDiscover() {
-        const backendUri = document.body.getAttribute("data-backend-uri") || "http://localhost:5000";
-        let currentPage = Number(document.body.getAttribute("data-current-page")) || 1;
-        let totalPages = Number(document.body.getAttribute("data-total-pages")) || 1;
+        const backendUri =
+          document.body.getAttribute("data-backend-uri") ||
+          "http://localhost:5000";
+        let currentPage =
+          Number(document.body.getAttribute("data-current-page")) || 1;
+        let totalPages =
+          Number(document.body.getAttribute("data-total-pages")) || 1;
         let hasMore = document.body.getAttribute("data-has-more") === "true";
         let isLoading = false;
 
         const filterTabs = document.querySelectorAll(".filter-tab");
         const papersFeed = document.getElementById("papers-feed");
-        const globalSearch = document.getElementById("global-search-input") as HTMLInputElement;
-        const areaButtons = document.querySelectorAll(".area-item, .mobile-area-item");
+        const globalSearch = document.getElementById(
+          "global-search-input",
+        ) as HTMLInputElement;
+        const areaButtons = document.querySelectorAll(
+          ".area-item, .mobile-area-item",
+        );
         const clearAreaBtn = document.getElementById("btn-clear-area-filter");
-        const activeCategoryPill = document.getElementById("active-category-pill");
-        const activeCategoryName = document.getElementById("active-category-name");
-        const dismissPillBtn = document.getElementById("btn-dismiss-category-pill");
+        const activeCategoryPill = document.getElementById(
+          "active-category-pill",
+        );
+        const activeCategoryName = document.getElementById(
+          "active-category-name",
+        );
+        const dismissPillBtn = document.getElementById(
+          "btn-dismiss-category-pill",
+        );
         const noPapersMsg = document.getElementById("no-papers-msg");
-        const mobileAreaLabel = document.getElementById("mobile-area-btn-label");
+        const mobileAreaLabel = document.getElementById(
+          "mobile-area-btn-label",
+        );
 
         const loadMoreBtn = document.getElementById("btn-load-more");
         const loadMoreText = document.getElementById("load-more-text");
@@ -642,7 +1034,9 @@ papers.forEach((p) => {
 
         // Filter and update visibility
         function applyFilters() {
-          const query = globalSearch ? globalSearch.value.toLowerCase().trim() : "";
+          const query = globalSearch
+            ? globalSearch.value.toLowerCase().trim()
+            : "";
           const cards = document.querySelectorAll(".paper-card");
           let visibleCount = 0;
 
@@ -653,8 +1047,14 @@ papers.forEach((p) => {
             const category = card.dataset.category || "";
             const textContent = card.innerText.toLowerCase();
 
-            const matchesSearch = !query || title.includes(query) || author.includes(query) || textContent.includes(query);
-            const matchesCategory = !activeCategory || category.toLowerCase() === activeCategory.toLowerCase();
+            const matchesSearch =
+              !query ||
+              title.includes(query) ||
+              author.includes(query) ||
+              textContent.includes(query);
+            const matchesCategory =
+              !activeCategory ||
+              category.toLowerCase() === activeCategory.toLowerCase();
 
             if (matchesSearch && matchesCategory) {
               card.style.display = "flex";
@@ -679,13 +1079,25 @@ papers.forEach((p) => {
             const cardB = b as HTMLElement;
 
             if (currentSort === "recent") {
-              return Number(cardB.dataset.timestamp || 0) - Number(cardA.dataset.timestamp || 0);
+              return (
+                Number(cardB.dataset.timestamp || 0) -
+                Number(cardA.dataset.timestamp || 0)
+              );
             } else if (currentSort === "views") {
-              return Number(cardB.dataset.views || 0) - Number(cardA.dataset.views || 0);
+              return (
+                Number(cardB.dataset.views || 0) -
+                Number(cardA.dataset.views || 0)
+              );
             } else if (currentSort === "readtime") {
-              return Number(cardA.dataset.readtime || 0) - Number(cardB.dataset.readtime || 0);
+              return (
+                Number(cardA.dataset.readtime || 0) -
+                Number(cardB.dataset.readtime || 0)
+              );
             } else {
-              return Number(cardA.dataset.originalIndex || 0) - Number(cardB.dataset.originalIndex || 0);
+              return (
+                Number(cardA.dataset.originalIndex || 0) -
+                Number(cardB.dataset.originalIndex || 0)
+              );
             }
           });
 
@@ -698,10 +1110,21 @@ papers.forEach((p) => {
 
           areaButtons.forEach((btn) => {
             const btnCat = btn.getAttribute("data-category");
-            if (activeCategory && btnCat?.toLowerCase() === activeCategory.toLowerCase()) {
-              btn.classList.add("bg-[#e8f0fe]", "text-[#1b62f2]", "border-[#1b62f2]");
+            if (
+              activeCategory &&
+              btnCat?.toLowerCase() === activeCategory.toLowerCase()
+            ) {
+              btn.classList.add(
+                "bg-[#e8f0fe]",
+                "text-[#1b62f2]",
+                "border-[#1b62f2]",
+              );
             } else {
-              btn.classList.remove("bg-[#e8f0fe]", "text-[#1b62f2]", "border-[#1b62f2]");
+              btn.classList.remove(
+                "bg-[#e8f0fe]",
+                "text-[#1b62f2]",
+                "border-[#1b62f2]",
+              );
             }
           });
 
@@ -743,12 +1166,34 @@ papers.forEach((p) => {
             currentSort = tab.getAttribute("data-filter") || "all";
 
             filterTabs.forEach((t) => {
-              t.classList.remove("bg-[#1b62f2]", "text-white", "shadow-[0_2px_8px_rgba(27,98,242,0.25)]", "border-transparent");
-              t.classList.add("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]", "border-neutral-200/60");
+              t.classList.remove(
+                "bg-[#1b62f2]",
+                "text-white",
+                "shadow-[0_2px_8px_rgba(27,98,242,0.25)]",
+                "border-transparent",
+              );
+              t.classList.add(
+                "bg-white",
+                "text-[#1a1a1a]",
+                "hover:bg-[#e8f0fe]",
+                "hover:text-[#1b62f2]",
+                "border-neutral-200/60",
+              );
             });
 
-            tab.classList.remove("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]", "border-neutral-200/60");
-            tab.classList.add("bg-[#1b62f2]", "text-white", "shadow-[0_2px_8px_rgba(27,98,242,0.25)]", "border-transparent");
+            tab.classList.remove(
+              "bg-white",
+              "text-[#1a1a1a]",
+              "hover:bg-[#e8f0fe]",
+              "hover:text-[#1b62f2]",
+              "border-neutral-200/60",
+            );
+            tab.classList.add(
+              "bg-[#1b62f2]",
+              "text-white",
+              "shadow-[0_2px_8px_rgba(27,98,242,0.25)]",
+              "border-transparent",
+            );
 
             applySort();
           });
@@ -757,12 +1202,16 @@ papers.forEach((p) => {
         globalSearch?.addEventListener("input", applyFilters);
 
         // Sidebar search input
-        const searchInput = document.getElementById("area-search-input") as HTMLInputElement;
+        const searchInput = document.getElementById(
+          "area-search-input",
+        ) as HTMLInputElement;
         searchInput?.addEventListener("input", (e) => {
           const query = (e.target as HTMLInputElement).value.toLowerCase();
           document.querySelectorAll(".area-item").forEach((item) => {
             const textContent = item.textContent?.toLowerCase() || "";
-            (item as HTMLElement).style.display = textContent.includes(query) ? "flex" : "none";
+            (item as HTMLElement).style.display = textContent.includes(query)
+              ? "flex"
+              : "none";
           });
         });
 
@@ -776,9 +1225,12 @@ papers.forEach((p) => {
 
           try {
             const nextPage = currentPage + 1;
-            const res = await fetch(`${backendUri}/blog/published?page=${nextPage}&limit=12`, {
-              headers: { "Accept": "application/json" }
-            });
+            const res = await fetch(
+              `${backendUri}/blog/published?page=${nextPage}&limit=12`,
+              {
+                headers: { Accept: "application/json" },
+              },
+            );
             const data = await res.json();
 
             if (res.ok && data.success && Array.isArray(data.blogs)) {
@@ -787,25 +1239,42 @@ papers.forEach((p) => {
               } else {
                 currentPage = nextPage;
                 totalPages = data.pagination?.totalPages || totalPages;
-                hasMore = data.pagination?.hasMore ?? (currentPage < totalPages);
+                hasMore = data.pagination?.hasMore ?? currentPage < totalPages;
 
                 const baseIndex = (currentPage - 1) * 12;
 
                 data.blogs.forEach((b: any, index: number) => {
                   const rawExcerpt = b.excerpt || "";
-                  const readMinutes = Math.max(1, Math.ceil((rawExcerpt.length || 500) / 400));
-                  const pubDate = b.publishedAt || b.createdAt
-                    ? new Date(b.publishedAt || b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                    : "Aug 20, 2026";
-                  const thumb = b.coverImage?.url || "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
+                  const readMinutes = Math.max(
+                    1,
+                    Math.ceil((rawExcerpt.length || 500) / 400),
+                  );
+                  const pubDate =
+                    b.publishedAt || b.createdAt
+                      ? new Date(
+                          b.publishedAt || b.createdAt,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "Aug 20, 2026";
+                  const thumb =
+                    b.coverImage?.url ||
+                    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
                   const card = document.createElement("a");
                   card.href = `/papers/${b.slug || b._id}`;
                   card.setAttribute("data-astro-prefetch", "viewport");
-                  card.className = "paper-card bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] cursor-pointer group";
+                  card.className =
+                    "paper-card bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-neutral-200/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.05)] cursor-pointer group";
 
                   card.dataset.originalIndex = String(baseIndex + index);
-                  card.dataset.timestamp = String(b.publishedAt || b.createdAt ? new Date(b.publishedAt || b.createdAt).getTime() : 0);
+                  card.dataset.timestamp = String(
+                    b.publishedAt || b.createdAt
+                      ? new Date(b.publishedAt || b.createdAt).getTime()
+                      : 0,
+                  );
                   card.dataset.views = String(b.views || 0);
                   card.dataset.readtime = String(readMinutes);
                   card.dataset.category = b.category || "";
@@ -828,7 +1297,7 @@ papers.forEach((p) => {
                     <div class="flex items-center gap-3 sm:gap-5 text-[11px] sm:text-[12px] text-[#6b7280] pt-1 flex-wrap font-normal">
                       <div class="flex items-center gap-1.5 text-[#4b5563]">
                         <div class="w-4 h-4 rounded-full bg-[#d8d8d8] overflow-hidden flex items-center justify-center shrink-0 text-[9px] font-bold text-neutral-600">
-                          ${b.author?.avatar ? `<img src="${b.author.avatar}" alt="" class="w-full h-full object-cover" />` : (b.author?.name?.charAt(0) || "R")}
+                          ${b.author?.avatar ? `<img src="${b.author.avatar}" alt="" class="w-full h-full object-cover" />` : b.author?.name?.charAt(0) || "R"}
                         </div>
                         <span class="truncate max-w-[110px] sm:max-w-none font-medium text-neutral-800">${b.author?.name || "Researcher"}</span>
                       </div>
@@ -861,7 +1330,8 @@ papers.forEach((p) => {
           } finally {
             isLoading = false;
             if (loadMoreSpinner) loadMoreSpinner.classList.add("hidden");
-            if (loadMoreText) loadMoreText.textContent = "Load More Research Papers";
+            if (loadMoreText)
+              loadMoreText.textContent = "Load More Research Papers";
 
             if (!hasMore) {
               loadMoreBtn?.classList.remove("flex");
@@ -878,7 +1348,9 @@ papers.forEach((p) => {
         const modalAreas = document.getElementById("modal-areas");
         const modalResearchers = document.getElementById("modal-researchers");
         const openAreasBtn = document.getElementById("open-areas-modal");
-        const openResearchersBtn = document.getElementById("open-researchers-modal");
+        const openResearchersBtn = document.getElementById(
+          "open-researchers-modal",
+        );
         const closeButtons = document.querySelectorAll(".close-modal");
 
         openAreasBtn?.addEventListener("click", () => {
