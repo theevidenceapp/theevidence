@@ -49,7 +49,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
-app.use("/admin", authorize("ADMIN"), adminRouter);
+app.use("/admin", authenticate, authorize("ADMIN"), adminRouter);
 
 app.use("/blog", authenticate, blogRouter);
 
