@@ -6,3 +6,5 @@ dist/
 /blog/.astro/
 .DS_Store
 backend/package-lock.json
+blog/.astro/dev.json
+blog/.astro/settings.json
