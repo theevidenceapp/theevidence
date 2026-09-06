@@ -10,7 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 import { apiClient } from "@/api/api-client";
 import { useAuthStore } from "@/store/authStore";
-import UserManagement from "@/pages/user/Usermanagement";
+import UserManagement from "@/pages/user/UserManagement";
 
 const App = () => {
   useEffect(() => {
