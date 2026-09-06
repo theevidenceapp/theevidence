@@ -1,7 +1,7 @@
 // email.service.ts
 
 import { google } from "googleapis";
-import MailComposer from "nodemailer/lib/mail-composer";
+import MailComposer from "nodemailer/lib/mail-composer/index.js";
 
 class EmailService {
   private readonly oauth2Client;
