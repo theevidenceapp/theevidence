@@ -5,7 +5,7 @@ import config from "../config/config.js";
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 
-const isProd = config.NODE_ENV === "production";
+const isProd = config.NODE_ENV === "development";
 
 export const createUser = async (req: Request, res: Response) => {
   try {

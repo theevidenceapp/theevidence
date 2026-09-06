@@ -2,80 +2,35 @@
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
 
-const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
-const GLOBE_THUMB = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
-
-let myPapers = [];
-let drafts = [];
-
-try {
-  const apiUrl = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
-  const [papersRes, draftsRes] = await Promise.all([
-    fetch(`${apiUrl}/api/desk/papers`),
-    fetch(`${apiUrl}/api/desk/drafts`),
-  ]);
-
-  if (papersRes.ok) myPapers = await papersRes.json();
-  if (draftsRes.ok) drafts = await draftsRes.json();
-} catch (e) {
-  // Silent fallback
-}
+const THE_EVIDENCE_LOGO =
+  "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+const GLOBE_THUMB =
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
 const filterTabs = [
-  { name: "All", count: "12", active: true },
-  { name: "Drafts", count: "3", active: false },
-  { name: "Pending", count: "2", active: false },
-  { name: "Published", count: "5", active: false },
-  { name: "Rejected", count: "2", active: false },
+  { key: "ALL", name: "All", count: "0" },
+  { key: "DRAFT", name: "Drafts", count: "0" },
+  { key: "PENDING", name: "Pending", count: "0" },
+  { key: "PUBLISHED", name: "Published", count: "0" },
+  { key: "REJECTED", name: "Rejected", count: "0" },
 ];
-
-if (drafts.length === 0) {
-  drafts = [
-    {
-      id: 1,
-      title: "The Future of Digital Diplomacy in a Multipolar World",
-      category: "International Relations",
-      lastEdited: "15:36PM Aug 20, 2026",
-    },
-    {
-      id: 2,
-      title: "The Future of Digital Diplomacy in a Multipolar World",
-      category: "International Relations",
-      lastEdited: "15:36PM Aug 20, 2026",
-    },
-    {
-      id: 3,
-      title: "The Future of Digital Diplomacy in a Multipolar World",
-      category: "International Relations",
-      lastEdited: "15:36PM Aug 20, 2026",
-    },
-  ];
-}
-
-if (myPapers.length === 0) {
-  myPapers = Array.from({ length: 8 }).map((_, i) => ({
-    id: i + 1,
-    title: "The Future of Digital Diplomacy in a Multipolar World",
-    category: "International Relations",
-    summary: "An examination of how emerging digital technologies are reshaping diplomatic practices, international cooperation, and geopolitical communication.",
-    publishedDate: "Aug 20, 2026",
-    viewsCount: "28.7k views",
-    readTime: "12 min read",
-    thumbnail: GLOBE_THUMB,
-  }));
-}
 ---
 
 <!doctype html>
 <html lang="en" class="bg-[#f3f3f5]">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <ClientRouter />
     <title>The Evidence - Desk</title>
     <style>
-      html, body {
+      html,
+      body {
         background-color: #f3f3f5 !important;
+        -webkit-tap-highlight-color: transparent;
       }
       .no-scroll::-webkit-scrollbar {
         display: none;
@@ -84,16 +39,24 @@ if (myPapers.length === 0) {
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      /* Safe padding for bottom home bars on modern Android & iOS */
+      .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
     </style>
   </head>
-  <body class="bg-[#f3f3f5] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative">
-    
-    <!-- DESKTOP / TABLET HOVER DRAWER SIDEBAR (Contains the main logo) -->
+  <body
+    class="bg-[#f3f3f5] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative"
+  >
+    <!-- DESKTOP SIDEBAR -->
     <aside
       class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f3f3f5] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
     >
-      <!-- Big Logo Inside Drawer -->
-      <a href="/" class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full" title="The Evidence">
+      <a
+        href="/"
+        class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full"
+        title="The Evidence"
+      >
         <img
           src={THE_EVIDENCE_LOGO}
           alt="The Evidence"
@@ -101,103 +64,194 @@ if (myPapers.length === 0) {
         />
       </a>
 
-      <!-- Navigation Items -->
       <nav class="flex flex-col gap-3.5 w-full">
-        
-        <!-- 1. Discover -->
         <a
           href="/discover"
+          data-astro-prefetch="hover"
           class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
           title="Discover"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-              <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
-            Discover
-          </span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Discover</span
+          >
         </a>
 
-        <!-- 2. Desk (Active Blue Circle/Pill) -->
         <a
           href="/desk"
           class="flex items-center h-11 w-11 group-hover:w-full rounded-full bg-[#e8f0fe] text-[#0d0d0c] transition-all duration-300 overflow-hidden"
           title="Desk"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-              <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M9 17C11 11.5 12.9604 9.63636 15 8"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px]  font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
-            Desk
-          </span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Desk</span
+          >
         </a>
 
-<a
+        <a
           href="/notification"
           class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
           title="Notification"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-              <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z"
+                fill="#2563EB"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
-            Notification
-          </span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Notification</span
+          >
         </a>
 
-        <!-- Account -->
         <a
           href="/account"
           class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden"
           title="Account"
         >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-              <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0"
+            >
+              <path
+                d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">
-            Account
-          </span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Account</span
+          >
         </a>
-
       </nav>
     </aside>
 
-    <!-- Top Header -->
-    <header class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f3f3f5]">
-      
-      <!-- Logo for Mobile only + Desk Route Label -->
-      <div class="flex items-center gap-3 sm:gap-4 shrink-0 mr-2 sm:mr-4">
+    <!-- TOP HEADER -->
+    <header
+      class="h-[64px] sm:h-[76px] px-3.5 sm:px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f3f3f5]"
+    >
+      <div class="flex items-center gap-2.5 sm:gap-4 shrink-0 mr-2 sm:mr-4">
         <a href="/" class="flex md:hidden items-center" title="The Evidence">
-          <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-8 w-auto object-contain" />
+          <img
+            src={THE_EVIDENCE_LOGO}
+            alt="The Evidence"
+            class="h-8 w-auto object-contain"
+          />
         </a>
-        <span class="text-[16px] sm:text-[17px] font-normal text-[#2b2b2b] tracking-tight">Desk</span>
+        <span
+          class="text-[15px] sm:text-[17px] font-bold text-[#111] tracking-tight"
+          >Researcher Desk</span
+        >
       </div>
 
-      <!-- Center: Full Search Bar -->
       <div class="flex-1 max-w-[560px]">
         <div class="relative w-full">
-          <svg class="w-4 h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            class="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           <input
             type="text"
-            placeholder="Search research paper/researcher..."
-            class="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 text-[12.5px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border-none shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+            id="desk-search-input"
+            placeholder="Search your papers or blogs..."
+            class="w-full pl-9 sm:pl-11 pr-3.5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border-none shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -205,236 +259,680 @@ if (myPapers.length === 0) {
       <div class="hidden lg:block w-[180px]"></div>
     </header>
 
-    <!-- Mobile Quick CTA Actions -->
-    <div class="flex md:hidden items-center justify-between gap-3 px-4 pb-2.5 shrink-0">
-      <a
-        href="/desk/new"
-        class="flex-1 py-2 px-3 bg-white border border-neutral-200/60 rounded-full text-xs font-semibold text-neutral-900 shadow-sm flex items-center justify-center gap-1.5 active:bg-neutral-50"
+    <!-- MOBILE QUICK ACTIONS -->
+    <div
+      class="flex md:hidden items-center justify-between gap-2.5 px-3.5 pb-2 shrink-0"
+    >
+      <button
+        type="button"
+        class="btn-trigger-new-creation flex-1 py-2 px-3 bg-white border border-neutral-200/80 rounded-full text-xs font-bold text-neutral-900 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
       >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        <svg
+          class="w-3.5 h-3.5 text-[#1b62f2]"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 4v16m8-8H4"></path>
         </svg>
-        <span>New Research</span>
-      </a>
+        <span>New Creation</span>
+      </button>
 
       <button
         type="button"
         id="open-drafts-modal"
-        class="py-2 px-4 bg-white border border-neutral-200/60 rounded-full text-xs font-semibold text-neutral-800 shadow-sm flex items-center justify-center gap-1 active:bg-neutral-50"
+        class="py-2 px-3.5 bg-white border border-neutral-200/80 rounded-full text-xs font-bold text-neutral-800 shadow-sm flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
       >
-        <span>Drafts ({drafts.length})</span>
+        <span>Drafts (<span id="mobile-draft-count">0</span>)</span>
       </button>
     </div>
 
-    <!-- Main Viewport Layout -->
-    <div class="flex-1 flex px-4 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-1 gap-6 lg:gap-8 overflow-hidden max-w-[1600px] w-full mx-auto">
-      
-      <!-- 2-Column Content Stage -->
+    <!-- MAIN BODY -->
+    <div
+      class="flex-1 flex px-3.5 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-1 gap-6 lg:gap-8 overflow-hidden max-w-[1600px] w-full mx-auto"
+    >
       <div class="flex-1 flex gap-6 lg:gap-8 overflow-hidden">
         
-        <!-- LEFT COLUMN: Main Desk Papers Feed (Independent Scroll) -->
-        <main class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5">
-          
-          <!-- Filter Tabs -->
-          <div class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f3f3f5]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll gap-2 sm:gap-2.5 shrink-0 px-1">
-            {filterTabs.map((tab) => (
-              <button
-                class={`px-4 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center gap-1.5 rounded-full text-[12.5px] sm:text-[13px] transition whitespace-nowrap shrink-0 ${
-                  tab.active
-                    ? "bg-[#1b62f2] text-white font-normal shadow-sm"
-                    : "bg-white text-[#1a1a1a] hover:text-black border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
-                }`}
-              >
-                <span>{tab.name}</span>
-                <span class={`text-[11px] ${tab.active ? "text-white/80" : "text-neutral-400"}`}>{tab.count}</span>
-              </button>
-            ))}
+        <!-- LEFT: FEED CONTAINER -->
+        <main
+          class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3 sm:gap-3.5 pb-16 md:pb-4"
+        >
+          <!-- Status Tabs Filter -->
+          <div
+            class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f3f3f5]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll gap-2 sm:gap-2.5 shrink-0 px-0.5"
+          >
+            {
+              filterTabs.map((tab, idx) => (
+                <button
+                  type="button"
+                  data-status={tab.key}
+                  class={`desk-filter-tab px-3.5 sm:px-5 h-[32px] sm:h-[36px] flex items-center justify-center gap-1.5 rounded-full text-[12px] sm:text-[13px] transition whitespace-nowrap shrink-0 cursor-pointer ${
+                    idx === 0
+                      ? "bg-[#1b62f2] text-white font-medium shadow-sm"
+                      : "bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                  }`}
+                >
+                  <span>{tab.name}</span>
+                  <span
+                    class={`filter-count-badge text-[10.5px] sm:text-[11px] font-semibold ${idx === 0 ? "text-white/80" : "text-neutral-400"}`}
+                  >
+                    0
+                  </span>
+                </button>
+              ))
+            }
           </div>
 
-          <!-- Cards Feed -->
-          <div class="flex flex-col gap-3.5 pb-8">
-            {myPapers.map((item: any) => (
-              <article class="bg-white rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 sm:gap-3.5 transition hover:-translate-y-0.5 duration-200">
-                
-                <!-- Header with Thumbnail -->
-                <div class="flex items-start gap-3.5 sm:gap-4">
-                  <img
-                    src={item.thumbnail || GLOBE_THUMB}
-                    alt=""
-                    class="w-[60px] h-[60px] sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a]"
-                  />
-                  <div class="flex flex-col pt-0.5 min-w-0">
-                    <span class="text-[11px] sm:text-[11.5px] text-[#888] font-normal leading-none truncate">{item.category || "International Relations"}</span>
-                    <h3 class="text-[15px] sm:text-[16px] font-bold text-[#111] leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2">
-                      {item.title}
-                    </h3>
-                  </div>
-                </div>
-
-                <!-- Summary Paragraph -->
-                <p class="text-[12px] sm:text-[12.5px] text-[#555] leading-relaxed">
-                  {item.summary}
-                </p>
-
-                <!-- Metadata Footer -->
-                <div class="flex items-center gap-4 sm:gap-5 text-[11px] sm:text-[11.5px] text-[#888] pt-1 flex-wrap font-normal">
-                  <div class="flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>Published {item.publishedDate}</span>
-                  </div>
-
-                  <div class="flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>{item.viewsCount}</span>
-                  </div>
-
-                  <span>{item.readTime}</span>
-                </div>
-              </article>
-            ))}
+          <!-- Loading Skeleton -->
+          <div id="desk-loading-skeleton" class="flex flex-col gap-3.5">
+            <div class="bg-white rounded-2xl sm:rounded-3xl p-6 h-28 sm:h-32 animate-pulse"></div>
+            <div class="bg-white rounded-2xl sm:rounded-3xl p-6 h-28 sm:h-32 animate-pulse"></div>
           </div>
 
+          <!-- Actual Articles Feed -->
+          <div id="desk-papers-feed" class="flex flex-col gap-3 sm:gap-3.5 pb-8 hidden">
+          </div>
+
+          <!-- Empty State -->
+          <div
+            id="no-desk-papers-msg"
+            class="hidden flex-col items-center justify-center p-8 sm:p-12 text-center bg-white rounded-3xl border border-neutral-200/50"
+          >
+            <span class="text-3xl mb-2">📄</span>
+            <h4 class="font-bold text-neutral-900 text-sm">
+              No creations found
+            </h4>
+            <p class="text-neutral-500 text-xs mt-1">
+              Start by choosing to publish a Research Paper or a Blog.
+            </p>
+          </div>
         </main>
 
-        <!-- RIGHT COLUMN: Actions & Drafts Section (Desktop only) -->
-        <aside class="hidden md:flex w-[340px] lg:w-[380px] shrink-0 h-full flex-col gap-3.5 overflow-hidden">
-          
-          <!-- + New Research Button -->
-          <a
-            href="/desk/new"
-            class="w-full h-[64px] bg-white rounded-[22px] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2.5 text-[14.5px] font-medium text-[#111] hover:bg-neutral-50 transition shrink-0"
+        <!-- RIGHT: SIDEBAR (DESKTOP DRAFTS & ACTIONS) -->
+        <aside
+          class="hidden md:flex w-[340px] lg:w-[380px] shrink-0 h-full flex-col gap-3.5 overflow-hidden"
+        >
+          <button
+            type="button"
+            class="btn-trigger-new-creation w-full h-[64px] bg-white rounded-[22px] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2.5 text-[14.5px] font-bold text-[#111] hover:bg-neutral-50 border border-neutral-200/60 transition shrink-0 active:scale-98 cursor-pointer"
           >
-            <svg class="w-5 h-5 text-[#111]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            <svg
+              class="w-5 h-5 text-[#1b62f2]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 4v16m8-8H4"></path>
             </svg>
-            <span>New Research</span>
-          </a>
+            <span>New Creation</span>
+          </button>
 
-          <!-- Search Your Research Paper -->
           <div class="w-full relative shrink-0">
-            <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#777]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#777]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             <input
               type="text"
               id="draft-search-input"
-              placeholder="Search your research paper"
+              placeholder="Search your draft manuscripts..."
               class="w-full pl-11 pr-4 py-3 text-[12.5px] bg-white placeholder-[#777] rounded-full border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none"
             />
           </div>
 
-          <!-- Drafts Cards List -->
-          <div class="flex-1 overflow-y-auto no-scroll flex flex-col gap-3.5 pr-0.5">
-            {drafts.map((draft: any) => (
-              <div class="draft-item bg-white rounded-[22px] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-3 shrink-0">
-                <div class="flex items-start gap-3.5">
-                  <img
-                    src={GLOBE_THUMB}
-                    alt=""
-                    class="w-[58px] h-[58px] rounded-xl object-cover shrink-0 bg-[#0f172a]"
-                  />
-                  <div class="flex flex-col min-w-0">
-                    <span class="text-[10.5px] text-[#888] font-normal leading-tight">{draft.category}</span>
-                    <h4 class="text-[14px] font-bold text-[#111] leading-snug mt-1">
-                      {draft.title}
-                    </h4>
-                  </div>
-                </div>
-
-                <div class="flex items-center justify-between text-[11px] pt-1">
-                  <a href={`/desk/edit/${draft.id}`} class="text-[#555] hover:text-[#1b62f2] font-medium flex items-center gap-1 transition">
-                    <span>Continue writing</span>
-                    <span>&gt;</span>
-                  </a>
-                  <span class="text-[#999] text-[10.5px]">Last edited on {draft.lastEdited}</span>
-                </div>
-              </div>
-            ))}
-
-            <!-- Show More Button -->
-            <button
-              type="button"
-              class="my-2 self-center flex items-center gap-1 text-[12px] text-[#444] hover:text-black font-medium transition"
-            >
-              <span>Show more</span>
-              <svg class="w-3.5 h-3.5 text-[#444]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+          <div
+            id="desktop-drafts-list"
+            class="flex-1 overflow-y-auto no-scroll flex flex-col gap-3.5 pr-0.5 pb-8"
+          >
+            <div class="text-xs text-neutral-400 text-center py-6">
+              Loading drafts...
+            </div>
           </div>
-
         </aside>
-
       </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f3f3f5]/95 backdrop-blur-lg border-t border-neutral-200/60 px-6 py-2 flex items-center justify-around">
-      
-      <!-- Discover -->
-      <a href="/discover" class="flex flex-col items-center gap-1 text-[#666]" title="Discover">
-        <div class="w-10 h-8 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="text-[10.5px] font-normal">Discover</span>
+    <!-- MOBILE BOTTOM NAVIGATION (RESTORED TO MATCH DISCOVER / ACCOUNT / NOTIFICATION) -->
+    <nav
+      class="flex md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 items-center justify-around h-[58px] safe-bottom"
+    >
+      <a
+        href="/discover"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+      >
+        <svg
+          class="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M8 14l3-3 2 2 3-3"></path>
+        </svg>
+        <span class="text-[10px] font-medium tracking-tight">Discover</span>
       </a>
 
-      <!-- Desk (Active) -->
-      <a href="/desk" class="flex flex-col items-center gap-1 text-[#1b62f2]" title="Desk">
-        <div class="w-10 h-8 rounded-full bg-[#e8f0fe] flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#1B62F2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Active: Desk -->
+      <a
+        href="/desk"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-[#1b62f2]"
+      >
+        <div class="relative">
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#1b62f2"
+            stroke-width="2"
+          >
+            <path
+              d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
         </div>
-        <span class="text-[10.5px]  font-semibold">Desk</span>
+        <span class="text-[10px] font-bold tracking-tight">Desk</span>
       </a>
 
-      <!-- Notification -->
-      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Notification">
-        <div class="w-10 h-8 flex items-center justify-center relative">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+      <a
+        href="/notification"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+      >
+        <div class="relative">
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path
+              d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M13.73 21a2 2 0 0 1-3.46 0"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-600 absolute top-0 right-0"></span>
         </div>
-        <span class="text-[10.5px] font-normal">Alerts</span>
-      </button>
+        <span class="text-[10px] font-medium tracking-tight">Alerts</span>
+      </a>
 
-      <!-- Account -->
-      <button type="button" class="flex flex-col items-center gap-1 text-[#666]" title="Account">
-        <div class="w-10 h-8 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="text-[10.5px] font-normal">Account</span>
-      </button>
+      <a
+        href="/account"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+      >
+        <svg
+          class="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <circle cx="12" cy="7" r="4"></circle>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        </svg>
+        <span class="text-[10px] font-medium tracking-tight">Account</span>
+      </a>
     </nav>
 
-    <!-- Client Scripts -->
+    <!-- MODAL: CHOOSE BETWEEN WRITING RESEARCH PAPER OR BLOG -->
+    <div
+      id="modal-choose-creation"
+      class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4"
+    >
+      <div class="bg-white w-full max-w-md rounded-[28px] sm:rounded-[32px] p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6 relative animate-in fade-in zoom-in-95">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-neutral-900">What would you like to create?</h3>
+            <p class="text-[11.5px] sm:text-xs text-neutral-500 mt-0.5">Select the publishing workspace suited for your topic.</p>
+          </div>
+          <button type="button" id="btn-close-choose-modal" class="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center font-bold text-xs cursor-pointer active:scale-95">✕</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Option: Blog -->
+          <button
+            type="button"
+            id="btn-create-blog"
+            class="flex flex-col items-start p-4 sm:p-5 rounded-2xl bg-neutral-50 hover:bg-blue-50/60 border border-neutral-200/80 hover:border-blue-300 text-left transition group cursor-pointer active:scale-98"
+          >
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-base sm:text-lg mb-2.5 group-hover:scale-105 transition">
+              ✍️
+            </div>
+            <h4 class="text-sm font-bold text-neutral-900 group-hover:text-blue-600">Write Blog</h4>
+            <p class="text-[11px] sm:text-[11.5px] text-neutral-500 mt-1 leading-relaxed">
+              Thought-driven editor without mandatory abstract or research PDFs.
+            </p>
+          </button>
+
+          <!-- Option: Research Paper -->
+          <button
+            type="button"
+            id="btn-create-research"
+            class="flex flex-col items-start p-4 sm:p-5 rounded-2xl bg-neutral-50 hover:bg-blue-50/60 border border-neutral-200/80 hover:border-blue-300 text-left transition group cursor-pointer active:scale-98"
+          >
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-base sm:text-lg mb-2.5 group-hover:scale-105 transition">
+              🔬
+            </div>
+            <h4 class="text-sm font-bold text-neutral-900 group-hover:text-blue-600">Research Paper</h4>
+            <p class="text-[11px] sm:text-[11.5px] text-neutral-500 mt-1 leading-relaxed">
+              Structured academic paper with abstract and research PDF attachments.
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE DRAFTS SHEET -->
+    <div
+      id="modal-drafts"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end"
+    >
+      <div
+        class="bg-[#f3f3f5] w-full max-h-[80vh] rounded-t-[28px] p-4 sm:p-5 flex flex-col shadow-2xl safe-bottom"
+      >
+        <div
+          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-3 shrink-0"
+        >
+        </div>
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-base font-bold text-neutral-900">Your Drafts</h3>
+          <button
+            type="button"
+            id="btn-close-drafts-modal"
+            class="text-xs font-bold text-neutral-500 p-1 cursor-pointer"
+            >Close</button
+          >
+        </div>
+
+        <div
+          id="mobile-drafts-container"
+          class="overflow-y-auto no-scroll flex flex-col gap-2.5 py-1"
+        >
+          <div class="text-xs text-neutral-400 text-center py-4">
+            Loading drafts...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENT SCRIPT -->
     <script>
-      const draftSearch = document.getElementById("draft-search-input") as HTMLInputElement;
-      draftSearch?.addEventListener("input", (e) => {
-        const q = (e.target as HTMLInputElement).value.toLowerCase();
-        const items = document.querySelectorAll(".draft-item");
-        items.forEach((item) => {
-          const text = item.textContent?.toLowerCase() || "";
-          (item as HTMLElement).style.display = text.includes(q) ? "flex" : "none";
+      import { apiClient } from "../api/api-client";
+
+      const GLOBE_THUMB =
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
+
+      async function loadDeskData() {
+        const filterTabs = document.querySelectorAll(".desk-filter-tab");
+        const mainSearch = document.getElementById(
+          "desk-search-input",
+        ) as HTMLInputElement;
+        const draftSearch = document.getElementById(
+          "draft-search-input",
+        ) as HTMLInputElement;
+        const papersFeed = document.getElementById("desk-papers-feed");
+        const skeleton = document.getElementById("desk-loading-skeleton");
+        const noPapersMsg = document.getElementById("no-desk-papers-msg");
+        const desktopDraftsList = document.getElementById("desktop-drafts-list");
+        const mobileDraftsContainer = document.getElementById("mobile-drafts-container");
+        const mobileDraftCount = document.getElementById("mobile-draft-count");
+
+        // Mobile Drafts Sheet Toggle
+        const draftsModal = document.getElementById("modal-drafts");
+        const openDraftsBtn = document.getElementById("open-drafts-modal");
+        const closeDraftsBtn = document.getElementById("btn-close-drafts-modal");
+
+        if (openDraftsBtn) {
+          openDraftsBtn.onclick = () => {
+            draftsModal?.classList.remove("hidden");
+            draftsModal?.classList.add("flex");
+          };
+        }
+        if (closeDraftsBtn) {
+          closeDraftsBtn.onclick = () => {
+            draftsModal?.classList.add("hidden");
+            draftsModal?.classList.remove("flex");
+          };
+        }
+
+        // Creation Modal Triggers
+        const chooseModal = document.getElementById("modal-choose-creation");
+        const closeChooseBtn = document.getElementById("btn-close-choose-modal");
+        const btnCreateBlog = document.getElementById("btn-create-blog");
+        const btnCreateResearch = document.getElementById("btn-create-research");
+
+        document.querySelectorAll(".btn-trigger-new-creation").forEach((btn) => {
+          (btn as HTMLElement).onclick = () => {
+            chooseModal?.classList.remove("hidden");
+            chooseModal?.classList.add("flex");
+          };
         });
-      });
+
+        if (closeChooseBtn) {
+          closeChooseBtn.onclick = () => {
+            chooseModal?.classList.add("hidden");
+            chooseModal?.classList.remove("flex");
+          };
+        }
+
+        if (btnCreateBlog) {
+          btnCreateBlog.onclick = () => {
+            localStorage.setItem(
+              "the_evidence_editor_state_v15",
+              JSON.stringify({ docType: "BLOG", content: "", title: "", excerpt: "", category: "" })
+            );
+            window.location.href = "/desk/new?type=blog";
+          };
+        }
+
+        if (btnCreateResearch) {
+          btnCreateResearch.onclick = () => {
+            localStorage.setItem(
+              "the_evidence_editor_state_v15",
+              JSON.stringify({ docType: "RESEARCH", content: "", title: "", excerpt: "", category: "" })
+            );
+            window.location.href = "/desk/new?type=research";
+          };
+        }
+
+        let activeStatus = "ALL";
+        let allPapers: any[] = [];
+        let allDrafts: any[] = [];
+
+        function updateCounts(papers: any[], serverCounts?: any) {
+          const counts: Record<string, number> = {
+            ALL: papers.length,
+            PUBLISHED: papers.filter(
+              (p) => (p.status || "").toUpperCase() === "PUBLISHED",
+            ).length,
+            DRAFT: papers.filter(
+              (p) => (p.status || "").toUpperCase() === "DRAFT",
+            ).length,
+            PENDING: papers.filter(
+              (p) => (p.status || "").toUpperCase() === "PENDING",
+            ).length,
+            REJECTED: papers.filter(
+              (p) => (p.status || "").toUpperCase() === "REJECTED",
+            ).length,
+          };
+
+          if (serverCounts) Object.assign(counts, serverCounts);
+
+          filterTabs.forEach((tab) => {
+            const statusKey = tab.getAttribute("data-status") || "ALL";
+            const badge = tab.querySelector(".filter-count-badge");
+            if (badge) badge.textContent = String(counts[statusKey] ?? 0);
+          });
+
+          if (mobileDraftCount) {
+            mobileDraftCount.textContent = String(counts.DRAFT ?? 0);
+          }
+        }
+
+        function renderCards() {
+          if (!papersFeed) return;
+          const query = mainSearch ? mainSearch.value.toLowerCase().trim() : "";
+          papersFeed.innerHTML = "";
+
+          const filtered = allPapers.filter((item) => {
+            const matchesStatus =
+              activeStatus === "ALL" ||
+              (item.status || "").toUpperCase() === activeStatus;
+            const matchesSearch =
+              !query ||
+              (item.title || "").toLowerCase().includes(query) ||
+              (item.category || "").toLowerCase().includes(query) ||
+              (item.excerpt || "").toLowerCase().includes(query);
+            return matchesStatus && matchesSearch;
+          });
+
+          if (filtered.length === 0) {
+            noPapersMsg?.classList.remove("hidden");
+            noPapersMsg?.classList.add("flex");
+          } else {
+            noPapersMsg?.classList.add("hidden");
+            noPapersMsg?.classList.remove("flex");
+
+            filtered.forEach((item) => {
+              const status = (item.status || "PUBLISHED").toUpperCase();
+              const isBlog = item.docType === "BLOG";
+              const pubDate =
+                item.publishedAt || item.createdAt
+                  ? new Date(item.publishedAt || item.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "Aug 20, 2026";
+
+              const thumb = item.coverImage?.url || GLOBE_THUMB;
+
+              const article = document.createElement("article");
+              article.className =
+                "desk-paper-card bg-white rounded-[18px] sm:rounded-[24px] p-3.5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-2.5 sm:gap-3.5 transition hover:-translate-y-0.5 duration-200 cursor-pointer";
+              article.innerHTML = `
+                <div class="flex items-start gap-3 sm:gap-4">
+                  <img src="${thumb}" alt="" loading="lazy" decoding="async" class="w-[52px] h-[52px] sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a]" />
+                  <div class="flex flex-col pt-0.5 min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[9.5px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-md ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                          ${isBlog ? 'BLOG' : 'RESEARCH'}
+                        </span>
+                        <span class="text-[10.5px] sm:text-[11.5px] text-[#888] font-medium leading-none truncate">${item.category || "General"}</span>
+                      </div>
+                      <span class="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                        status === "PUBLISHED"
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+                          : status === "DRAFT"
+                            ? "bg-amber-50 text-amber-600 border border-amber-200/60"
+                            : status === "REJECTED"
+                              ? "bg-rose-50 text-rose-600 border border-rose-200/60"
+                              : "bg-blue-50 text-blue-600 border border-blue-200/60"
+                      }">
+                        ${status}
+                      </span>
+                    </div>
+                    <a href="/papers/${item.slug || item._id}" class="hover:text-[#1b62f2] transition-colors">
+                      <h3 class="text-[14px] sm:text-[16px] font-bold text-[#111] leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2">
+                        ${item.title || "Untitled Creation"}
+                      </h3>
+                    </a>
+                  </div>
+                </div>
+                ${item.excerpt ? `<p class="text-[11.5px] sm:text-[12.5px] text-[#555] leading-relaxed line-clamp-2">${item.excerpt}</p>` : ''}
+                <div class="flex items-center justify-between text-[10.5px] sm:text-[11.5px] text-[#888] pt-1 flex-wrap border-t border-neutral-100 mt-0.5">
+                  <div class="flex items-center gap-3.5 sm:gap-5">
+                    <span>${pubDate}</span>
+                    <span>${item.views || 0} views</span>
+                  </div>
+                  <a href="/papers/${item.slug || item._id}" class="text-neutral-700 hover:text-[#1b62f2] font-bold text-xs flex items-center gap-0.5">
+                    View →
+                  </a>
+                </div>
+              `;
+              papersFeed.appendChild(article);
+            });
+          }
+        }
+
+        function renderDrafts(drafts: any[]) {
+          if (desktopDraftsList) desktopDraftsList.innerHTML = "";
+          if (mobileDraftsContainer) mobileDraftsContainer.innerHTML = "";
+
+          if (drafts.length === 0) {
+            const emptyMsg = `<div class="text-xs text-neutral-400 text-center py-6">No saved drafts.</div>`;
+            if (desktopDraftsList) desktopDraftsList.innerHTML = emptyMsg;
+            if (mobileDraftsContainer) mobileDraftsContainer.innerHTML = emptyMsg;
+            return;
+          }
+
+          drafts.forEach((draft, idx) => {
+            const edited = draft.updatedAt
+              ? new Date(draft.updatedAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Recently";
+
+            const isBlog = draft.docType === "BLOG";
+
+            if (desktopDraftsList) {
+              const div = document.createElement("div");
+              div.className =
+                "draft-item bg-white rounded-[22px] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-neutral-200/40 flex flex-col gap-3 shrink-0";
+              div.innerHTML = `
+                <div class="flex items-start gap-3.5">
+                  <img src="${draft.coverImage?.url || GLOBE_THUMB}" alt="" class="w-[58px] h-[58px] rounded-xl object-cover shrink-0 bg-[#0f172a]" />
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${isBlog ? 'BLOG' : 'RESEARCH'}</span>
+                      <span class="text-[10.5px] text-[#888] font-medium leading-tight">${draft.category || "General"}</span>
+                    </div>
+                    <h4 class="text-[14px] font-bold text-[#111] leading-snug line-clamp-2">${draft.title || (isBlog ? "Untitled Blog" : "Untitled Manuscript")}</h4>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-[11px] pt-1 border-t border-neutral-100">
+                  <button type="button" class="btn-resume-draft text-[#1b62f2] hover:underline font-bold flex items-center gap-1 transition cursor-pointer" data-idx="${idx}">
+                    <span>Continue writing</span><span>&gt;</span>
+                  </button>
+                  <span class="text-[#999] text-[10.5px]">${edited}</span>
+                </div>
+              `;
+              desktopDraftsList.appendChild(div);
+            }
+
+            if (mobileDraftsContainer) {
+              const mDiv = document.createElement("div");
+              mDiv.className =
+                "bg-white rounded-2xl p-3.5 shadow-sm border border-neutral-200/60 flex flex-col gap-1.5";
+              mDiv.innerHTML = `
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${isBlog ? 'BLOG' : 'RESEARCH'}</span>
+                  <span class="text-[10px] font-bold text-neutral-500">${draft.category || "General"}</span>
+                </div>
+                <h4 class="text-xs font-bold text-neutral-900 line-clamp-1">${draft.title || "Untitled Creation"}</h4>
+                <div class="flex items-center justify-between pt-1.5 border-t border-neutral-100 text-xs">
+                  <span class="text-[10px] text-neutral-400">${edited}</span>
+                  <button type="button" class="btn-resume-draft text-[#1b62f2] font-bold text-xs cursor-pointer" data-idx="${idx}">Edit Draft →</button>
+                </div>
+              `;
+              mobileDraftsContainer.appendChild(mDiv);
+            }
+          });
+
+          // Resume Draft Listener
+          document.querySelectorAll(".btn-resume-draft").forEach((btn) => {
+            (btn as HTMLElement).onclick = (e) => {
+              const idx = parseInt((e.currentTarget as HTMLElement).getAttribute("data-idx") || "0", 10);
+              const selected = drafts[idx];
+              if (!selected) return;
+
+              const state = {
+                title: selected.title || "",
+                excerpt: selected.excerpt || "",
+                content: selected.content || "",
+                category: selected.category || "",
+                docType: selected.docType || "RESEARCH",
+                coverImageBase64: selected.coverImage?.url || "",
+                pdfAttachments: selected.pdfs || [],
+                updatedAt: Date.now(),
+              };
+
+              localStorage.setItem("the_evidence_editor_state_v15", JSON.stringify(state));
+              const targetType = (selected.docType || "RESEARCH").toLowerCase();
+              window.location.href = `/desk/new?type=${targetType}`;
+            };
+          });
+        }
+
+        try {
+          let response: any;
+          try {
+            response = await apiClient.get("/blog/overview");
+          } catch {
+            response = await apiClient.get("/blog/getall");
+          }
+
+          if (response?.data?.success || response?.status === 200) {
+            const resData = response.data || {};
+            allPapers = resData.papers || resData.blogs || (Array.isArray(resData) ? resData : []);
+            allDrafts = resData.drafts || allPapers.filter((p) => (p.status || "").toUpperCase() === "DRAFT");
+
+            updateCounts(allPapers, resData.counts || resData.stats);
+            renderDrafts(allDrafts);
+            renderCards();
+          }
+        } catch (error: any) {
+          console.error("Desk load error:", error);
+          if (error.response?.status === 401) {
+            window.location.href = "/?auth=login";
+          }
+        } finally {
+          skeleton?.classList.add("hidden");
+          papersFeed?.classList.remove("hidden");
+        }
+
+        // Tab Filter Listener
+        filterTabs.forEach((tab) => {
+          (tab as HTMLElement).onclick = () => {
+            activeStatus = tab.getAttribute("data-status") || "ALL";
+            filterTabs.forEach((t) => {
+              t.classList.remove("bg-[#1b62f2]", "text-white", "font-medium", "shadow-sm");
+              t.classList.add("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]");
+              t.querySelector(".filter-count-badge")?.classList.replace("text-white/80", "text-neutral-400");
+            });
+
+            tab.classList.remove("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]");
+            tab.classList.add("bg-[#1b62f2]", "text-white", "font-medium", "shadow-sm");
+            tab.querySelector(".filter-count-badge")?.classList.replace("text-neutral-400", "text-white/80");
+
+            renderCards();
+          };
+        });
+
+        if (mainSearch) mainSearch.oninput = renderCards;
+        if (draftSearch) {
+          draftSearch.oninput = (e: any) => {
+            const q = e.target.value.toLowerCase().trim();
+            document.querySelectorAll(".draft-item").forEach((item) => {
+              (item as HTMLElement).style.display = (item.textContent?.toLowerCase() || "").includes(q) ? "flex" : "none";
+            });
+          };
+        }
+      }
+
+      document.addEventListener("astro:page-load", loadDeskData);
+      if (document.readyState === "complete" || document.readyState === "interactive") {
+        loadDeskData();
+      }
     </script>
   </body>
 </html>
