@@ -5,7 +5,7 @@ import config from "../config/config.js";
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import emailService from "../services/email.service.js";
-import { loginNotificationTemplate } from "../templates/login-notification.template.js";
+import { loginNotificationTemplate } from "../email-templates/login-notification.template.js";
 
 const isProd = config.NODE_ENV === "production";
 
