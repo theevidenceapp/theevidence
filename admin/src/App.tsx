@@ -5,12 +5,12 @@ import SignIn from "@/pages/auth/SignIn";
 import AdminAccessDenied from "@/pages/error/AdminAccessDenied";
 import VerifyToken from "@/components/token/VerifyToken";
 import AdminPanelLayout from "@/components/layout/AdminPanelLayout";
-import Dashboard from "@/components/dashboard/dashboard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 import { apiClient } from "@/api/api-client";
 import { useAuthStore } from "@/store/authStore";
 import UserManagement from "@/pages/user/UserManagement";
+import Dashboard from "@/components/dashboard/dashboard";
 
 const App = () => {
   useEffect(() => {

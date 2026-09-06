@@ -71,6 +71,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useAuthStore } from "@/store/authStore";
 
 // =====================================================================
 // Types — mirrored 1:1 from backend controllers, do not widen loosely
@@ -164,11 +165,29 @@ function truncateLabel(label: string, max = 10): string {
 // =====================================================================
 
 function useDashboardData() {
+    const authLoading = useAuthStore((s) => s.isLoading);
+
     const [data, setData] = React.useState<DashboardData | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
     const fetchAll = React.useCallback(async () => {
+        // Yield a microtask first. Anything below this line now runs
+        // in a separate task from whatever synchronously invoked
+        // fetchAll() (e.g. the effect), so subsequent setState calls
+        // are async continuations, not part of the effect's render pass.
+        await Promise.resolve();
+
+        // Read the latest token directly from the store instead of a
+        // closed-over value, so this callback stays referentially
+        // stable (empty dep array) while still seeing fresh auth state.
+        const token = useAuthStore.getState().accessToken;
+        if (!token) {
+            setIsLoading(false);
+            setError("Not authenticated.");
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
         try {
@@ -230,8 +249,13 @@ function useDashboardData() {
     }, []);
 
     React.useEffect(() => {
+        // Wait until the auth bootstrap (get-access-token / refresh-token)
+        // has finished. fetchAll() itself decides what to do once it runs
+        // — this effect body has no setState calls of its own.
+        if (authLoading) return;
+
         fetchAll();
-    }, [fetchAll]);
+    }, [authLoading, fetchAll]);
 
     return { data, isLoading, error, refetch: fetchAll };
 }
