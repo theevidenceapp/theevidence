@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import emailService from "../services/email.service.js";
 import { loginNotificationTemplate } from "../email-templates/login-notification.template.js";
 
-const isProd = config.NODE_ENV === "production";
+const isProd = config.NODE_ENV === "development";
 
 export const createUser = async (req: Request, res: Response) => {
   try {

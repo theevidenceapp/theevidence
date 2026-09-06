@@ -24,6 +24,7 @@ interface IBlog {
   category: string;
   tags: string[];
   status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
+  docType:"RESEARCH"|"BLOG";
   publishedAt: Date | null;
   views: Number
 }
@@ -73,7 +74,7 @@ const blogSchema = new Schema<IBlog>(
       },
     },
 
-    csv :{
+    csv: {
       url: {
         type: String,
         default: "",
@@ -99,6 +100,12 @@ const blogSchema = new Schema<IBlog>(
         },
       },
     ],
+
+    docType: {
+      type: String,
+      enum: ["RESEARCH", "BLOG"],
+      default: "RESEARCH" // 👈 Stores whether it's a Blog or Research
+    },
 
     // User who created the blog
     author: {
