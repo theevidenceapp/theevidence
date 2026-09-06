@@ -13,14 +13,25 @@ import blogRouter from "./src/routes/blog.router.js";
 import { adminRouter } from "./src/routes/admin.router.js";
 import { authenticate, authorize } from "./src/middleware/auth.middleware.js";
 
-
 dotenv.config();
 
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  : [];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -38,7 +49,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
-app.use("/admin",adminRouter);
+app.use("/admin", authorize("ADMIN"), adminRouter);
 
 app.use("/blog", authenticate, blogRouter);
 
@@ -50,7 +61,6 @@ app.get(
     return res.status(200).json({ msg: "Welcome Admin" });
   },
 );
-
 
 connectDB();
 

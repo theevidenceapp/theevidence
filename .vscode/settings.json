@@ -3,6 +3,7 @@
         "Cloudnery",
         "getuser",
         "pdfs",
-        "uploadoncloudinary"
+        "uploadoncloudinary",
+        "Usermanagement"
     ]
 }
