@@ -346,10 +346,13 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                     width={42}
                 />
                 <Tooltip
-                    formatter={(value: number) => [
-                        preciseFormatter.format(value),
-                        "Views",
-                    ]}
+                    formatter={(value: unknown) => {
+                        // Return a fallback array if the value is missing or not a number
+                        if (typeof value !== 'number') return ['0', 'Views'];
+
+                        return [preciseFormatter.format(value), 'Views'];
+                    }}
+
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
                     contentStyle={{
                         borderRadius: 12,
