@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./src/db/db.js";
 import passport from "./src/config/passport-config.js";
 import { sessionConfig } from "./src/config/session.js";
+import compression from "compression";
 
 // routers
 import userRouter from "./src/routes/user.router.js";
@@ -34,9 +35,9 @@ app.use(
     credentials: true,
   }),
 );
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(compression());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
 app.get("/", (req: Request, res: Response) => {

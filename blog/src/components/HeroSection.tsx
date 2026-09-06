@@ -67,7 +67,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <div className="bg-white dark:bg-brand-dark w-full">
+    <div className="w-full">
       <div>
         <div className="mt-24 sm:mt-32 md:mt-40 lg:mt-[231px] flex flex-col gap-2 text-center px-4">
           <div

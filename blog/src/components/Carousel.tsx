@@ -161,7 +161,13 @@ const Carousel = () => {
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current || !trackRef.current) return;
     const delta = e.clientX - startX.current;
-    trackRef.current.scrollLeft = scrollStart.current - delta;
+    const track = trackRef.current;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    track.scrollLeft = gsap.utils.clamp(
+      0,
+      maxScroll,
+      scrollStart.current - delta,
+    );
   };
 
   const onPointerUp = () => {
@@ -172,7 +178,8 @@ const Carousel = () => {
     const track = trackRef.current;
     if (!track) return;
     const card = track.querySelector<HTMLElement>("[data-card]");
-    const amount = card ? card.offsetWidth + 40 : 300;
+    const gapPx = parseFloat(getComputedStyle(track).columnGap || "0") || 24;
+    const amount = card ? card.offsetWidth + gapPx : 300;
     const maxScroll = track.scrollWidth - track.clientWidth;
     const target = gsap.utils.clamp(
       0,
@@ -188,8 +195,11 @@ const Carousel = () => {
   };
 
   return (
-    <div className="mt-10" ref={sectionRef}>
-      <div className="px-5 sm:px-8 md:px-16 lg:px-[220px]">
+    <div
+      className="mt-10 w-full max-w-full overflow-x-hidden"
+      ref={sectionRef}
+    >
+      <div className="px-5 sm:px-8 md:px-16 lg:px-[220px] w-full max-w-full">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-[26px] sm:text-[32px] md:text-[40px] leading-tight dark:text-white">
@@ -255,12 +265,12 @@ const Carousel = () => {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
-          className="flex gap-6 sm:gap-8 md:gap-15 mt-8 sm:mt-10 overflow-x-auto cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth -mx-5 px-5 sm:mx-0 sm:px-0"
+          className="flex gap-6 sm:gap-8 md:gap-15 mt-8 sm:mt-10 w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-y cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth"
         >
           {defaultData.map((post, index) => (
             <article
               data-card
-              className="flex flex-col w-[clamp(190px,60vw,280px)] shrink-0 snap-start"
+              className="flex flex-col min-w-0 w-[clamp(190px,60vw,280px)] shrink-0 snap-start"
               key={`the-evidence-${index}`}
             >
               <div className="overflow-hidden rounded group">
