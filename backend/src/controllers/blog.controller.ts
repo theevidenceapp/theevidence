@@ -18,43 +18,47 @@ const safeUnlink = (filePath?: string) => {
 };
 
 export const createBlog = async (req: Request, res: Response) => {
-
   try {
     const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
     const authorId = (req as any).user?._id;
-    const { title, slug, content, excerpt, category, tags, author, status } =
-      req.body;
+    const { title, slug, content, excerpt, category, tags, author, status } = req.body;
 
-    // Validate required fields
-    if (!title || !slug || !content || !author) {
-      // Clean up uploaded files before early return
-      if (files?.coverImage)
-        files.coverImage.forEach((f) => safeUnlink(f.path));
-      if (files?.csv) files.csv.forEach((f) => safeUnlink(f.path));
-      if (files?.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
+    // Typecast files from multer so TypeScript recognizes the structure and file paths
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
+    // Helper for safe cleanup if files exist
+    const cleanupUploadedFiles = () => {
+      if (typeof safeUnlink === "function" && files) {
+        if (files.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+        if (files.csv) files.csv.forEach((f) => safeUnlink(f.path));
+        if (files.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
+      }
+    };
+
+    // 1. Validate Authentication
     if (!authorId) {
+      cleanupUploadedFiles();
       return res.status(401).json({ success: false, message: "No user found in token" });
     }
 
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: "Title and content required" });
+    // 2. Validate Required Fields
+    if (!title || !slug || !content) {
+      cleanupUploadedFiles();
+      return res.status(400).json({ success: false, message: "Title, slug, and content are required" });
     }
 
-    // BYPASS CLOUDINARY TEMPORARILY
-    const coverImage = { url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400", publicId: "test" };
+    // 3. BYPASS CLOUDINARY TEMPORARILY (Declared in outer try-catch scope)
+    const coverImage = {
+      url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400",
+      publicId: "test",
+    };
     const csv = { url: "" };
-    const pdfs: any[] = [];
+    let pdfs: Array<{ url: string; publicId: string; originalName: string }> = [];
 
-    
-
-      const uploadedResults = await Promise.all(uploadPromises);
-      pdfs = uploadedResults.filter(Boolean) as {
-        url: string;
-        publicId: string;
-        originalName: string;
-      }[];
-    }
+    // Note: If you want to enable uploadPromises later, define the array first before awaiting:
+    // const uploadPromises: Promise<any>[] = [];
+    // const uploadedResults = await Promise.all(uploadPromises);
+    // pdfs = uploadedResults.filter(Boolean);
 
     // 4. PARSE TAGS & STATUS
     const parsedTags = Array.isArray(tags)
@@ -62,7 +66,7 @@ export const createBlog = async (req: Request, res: Response) => {
       : typeof tags === "string"
         ? tags
             .split(",")
-            .map((t) => t.trim())
+            .map((t: string) => t.trim())
             .filter(Boolean)
         : [];
 
@@ -75,10 +79,12 @@ export const createBlog = async (req: Request, res: Response) => {
       slug,
       content,
       excerpt,
-      docType, // 👈 Make sure this is explicitly saved in MongoDB
+      docType,
       category: category || "General",
-      status: status || "PUBLISHED",
-      author: req.user?._id,
+      status: finalStatus,
+      tags: parsedTags,
+      publishedAt,
+      author: authorId,
       coverImage,
       csv,
       pdfs,

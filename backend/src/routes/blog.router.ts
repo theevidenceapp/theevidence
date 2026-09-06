@@ -10,7 +10,9 @@ import {
   getDeskOverview,
 } from "../controllers/blog.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
+import Blog from "../models/blog.model.js";
 import multer from "multer";
+
 import { authenticate } from "../middleware/auth.middleware.js";
 
 const blogRouter = Router();
@@ -61,35 +63,45 @@ blogRouter.delete("/delete/:id", deleteBlog);
 blogRouter.put("/statusupdate/:id", updateBlogStatus);
 blogRouter.get("/overview", getDeskOverview);
 
-
 // Add this exact GET route in your backend router (e.g., blog.routes.ts or similar)
-blogRouter.get("/published-by-type", async (req, res) => {
+blogRouter.get("/published-by-type", async (req: Request, res: Response) => {
   try {
     const docType = (req.query.docType || "RESEARCH").toString().toUpperCase();
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 24;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string, 10) || 24);
     const skip = (page - 1) * limit;
 
-    const query = { status: "PUBLISHED", docType: docType };
-    const blogs = await Blog.find(query)
-      .populate("author", "name avatar")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const query: Record<string, any> = {
+      status: "PUBLISHED",
+      docType: docType,
+    };
 
-    const total = await Blog.countDocuments(query);
+    // Execute queries in parallel for better database performance
+    const [blogs, total] = await Promise.all([
+      Blog.find(query)
+        .populate("author", "name avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Blog.countDocuments(query),
+    ]);
 
-    res.json({
+    return res.status(200).json({
       success: true,
       blogs,
       pagination: {
         page,
+        total,
         totalPages: Math.ceil(total / limit) || 1,
-        hasMore: skip + blogs.length < total
-      }
+        hasMore: skip + blogs.length < total,
+      },
     });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Internal Server Error",
+    });
   }
 });
 
