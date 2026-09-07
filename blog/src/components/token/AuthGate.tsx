@@ -1,10 +1,17 @@
 import React from 'react'
 import { useAuthStore } from '../../store/authStore'
+import { navigate } from 'astro:transitions/client'
 
 const AuthGate = () => {
     const isInitialized = useAuthStore(
         (state) => state.isInitialized
     )
+
+    const token = useAuthStore((state) => state.token)
+
+    if (token) {
+        navigate('/discover')
+    }
 
     if (isInitialized) {
         return null

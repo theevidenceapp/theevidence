@@ -3,7 +3,7 @@ import mongoose, { Schema } from "mongoose";
 interface IPdf {
   url: string;
   publicId: string;
-  originalName: string
+  originalName: string;
 }
 
 interface IBlog {
@@ -24,9 +24,10 @@ interface IBlog {
   category: string;
   tags: string[];
   status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
-  docType:"RESEARCH"|"BLOG";
+  docType: "RESEARCH" | "BLOG";
   publishedAt: Date | null;
-  views: Number
+  views: Number;
+  readTime: Number;
 }
 
 const blogSchema = new Schema<IBlog>(
@@ -104,7 +105,7 @@ const blogSchema = new Schema<IBlog>(
     docType: {
       type: String,
       enum: ["RESEARCH", "BLOG"],
-      default: "RESEARCH" // 👈 Stores whether it's a Blog or Research
+      default: "RESEARCH", // 👈 Stores whether it's a Blog or Research
     },
 
     // User who created the blog
@@ -135,14 +136,13 @@ const blogSchema = new Schema<IBlog>(
     // Publishing workflow
     status: {
       type: String,
-      enum: [
-        "DRAFT",
-        "PENDING",
-        "APPROVED",
-        "PUBLISHED",
-        "REJECTED",
-      ],
+      enum: ["DRAFT", "PENDING", "APPROVED", "PUBLISHED", "REJECTED"],
       default: "DRAFT",
+    },
+
+    readTime: {
+      type: Number,
+      default: 0,
     },
 
     // Published date
@@ -153,8 +153,15 @@ const blogSchema = new Schema<IBlog>(
   },
   {
     timestamps: true,
-  }
+  },
 );
+
+blogSchema.pre("save", function (next) {
+  if (this.content) {
+    const words = this.content.trim().split(/\s+/).length;
+    this.readTime = Math.ceil(words / 200); // Assuming 200 words per minute reading speed
+  }
+});
 
 const Blog = mongoose.model<IBlog>("Blog", blogSchema);
 

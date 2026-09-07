@@ -32,7 +32,7 @@ userRouter.get(
 
 userRouter.get("/auth/failure", handleAuthFailure);
 
-userRouter.get("/get-access-token", authenticate, getAccessToken);
+userRouter.get("/get-access-token", getAccessToken);
 
 userRouter.get("/refresh-token", refreshAccessToken);
 
