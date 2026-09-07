@@ -402,7 +402,7 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                         return (
                             <text
                                 x={x}
-                                y={y + 12}
+                                y={Number(y) + 12}
                                 textAnchor="middle"
                                 fontSize={12}
                                 fontWeight={isPeak ? 700 : 400}

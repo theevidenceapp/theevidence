@@ -22,13 +22,13 @@ interface NavItem {
     active?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
-    { label: "Dashboard", icon: LayoutGrid, active: true },
-    { label: "Users", icon: Users },
-    { label: "Content", icon: FileText },
-    { label: "Blocked Users", icon: Ban },
-    { label: "Settings", icon: Settings },
-];
+// const NAV_ITEMS: NavItem[] = [
+//     { label: "Dashboard", icon: LayoutGrid, active: true },
+//     { label: "Users", icon: Users },
+//     { label: "Content", icon: FileText },
+//     { label: "Blocked Users", icon: Ban },
+//     { label: "Settings", icon: Settings },
+// ];
 
 interface AdminPanelLayoutProps {
     children?: React.ReactNode;
@@ -38,7 +38,7 @@ export default function AdminPanelLayout({ children }: AdminPanelLayoutProps) {
     const [sidebarOpen, setSidebarOpen] = React.useState<boolean>(false);
 
     const navigate = useNavigate();
-    const activeItem = NAV_ITEMS.find((item) => item.active) ?? NAV_ITEMS[0];
+    // const activeItem = NAV_ITEMS.find((item) => item.active) ?? NAV_ITEMS[0];
 
     const handleLogout = async () => {
         const res = await apiClient.get("/user/logout");

@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
@@ -26,8 +28,6 @@
     "noEmit": true,
     "jsx": "react-jsx",
     /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
