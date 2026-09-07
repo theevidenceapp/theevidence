@@ -2,9 +2,9 @@
  * pages/dashboard/Dashboard.tsx — Admin Analytics Overview
  * ------------------------------------------------------------------
  * Rendered as the `children` of <AdminPanelLayout>, which already
- * supplies the dark top strip, white search/actions bar, sidebar nav,
- * and the <main> wrapper (padding, background, rounded corners). This
- * component is ONLY the page content that goes inside that <main>.
+ * supplies the header (title, search, notifications, logout) and the
+ * <main> wrapper (padding, background). This component is ONLY the
+ * page content that goes inside that <main>.
  *
  * DATA SOURCE NOTE
  * The backend (backend/src/controllers/admin.controller.ts) only exposes:
@@ -17,15 +17,19 @@
  * There is NO endpoint for "Unique Visitors", "Avg. Read Time", a
  * day-by-day "Views over Time" series, or a "Device Breakdown" split —
  * none of that is tracked anywhere in the backend/models. Rather than
- * fabricate numbers, this keeps the original visual layout but swaps
- * those four slots for metrics that ARE real and traceable to an
- * endpoint:
+ * fabricate numbers, this keeps the reference visual layout but swaps
+ * those slots for metrics that ARE real and traceable to an endpoint:
  *   - Total Views        <- /admin/analytics
  *   - Total Blogs         <- /admin/analytics
  *   - Blocked Users       <- /admin/get-blocked-users
  *   - Avg. Views / Blog   <- derived (totalViews / totalBlogs)
  *   - "Views over Time"   -> "Views by Blog" area chart, real per-blog views
  *   - "Device Breakdown"  -> "Access Breakdown" (Editors / Publishers / Blocked)
+ *
+ * The "7 Days / 30 Days / All Time" pill control mirrors the reference
+ * UI but is presentational only — there is no backend date-range filter
+ * to wire it to yet. The download/refresh icon buttons ARE wired to the
+ * real export + refetch behavior.
  *
  * If/when the backend adds real visitor-session, read-time, or device
  * analytics, swap the derived sections below for direct API-backed
@@ -45,11 +49,11 @@ import {
 } from "recharts";
 import {
     Ban,
+    ChevronRight,
     Download,
     Eye,
     FileText,
     RefreshCw,
-    TrendingDown,
     TrendingUp,
     UserCog,
 } from "lucide-react";
@@ -63,14 +67,6 @@ import {
     AlertDescription,
     AlertTitle,
 } from "@/components/ui/alert";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { useAuthStore } from "@/store/authStore";
 
 // =====================================================================
@@ -261,6 +257,41 @@ function useDashboardData() {
 }
 
 // =====================================================================
+// Range pill control (presentational only — no backend date filter yet)
+// =====================================================================
+
+const RANGE_OPTIONS = ["7 Days", "30 Days", "All Time"] as const;
+type RangeOption = (typeof RANGE_OPTIONS)[number];
+
+function RangeToggle({
+    value,
+    onChange,
+}: {
+    value: RangeOption;
+    onChange: (v: RangeOption) => void;
+}) {
+    return (
+        <div className="inline-flex items-center gap-1 rounded-full bg-white p-1 shadow-sm">
+            {RANGE_OPTIONS.map((option) => (
+                <button
+                    key={option}
+                    type="button"
+                    onClick={() => onChange(option)}
+                    className={cn(
+                        "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm",
+                        value === option
+                            ? "bg-indigo-600 text-white"
+                            : "text-slate-500 hover:text-slate-700",
+                    )}
+                >
+                    {option}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+// =====================================================================
 // Stat card
 // =====================================================================
 
@@ -273,44 +304,42 @@ interface StatCardProps {
 
 function StatCard({ label, value, delta, icon: Icon }: StatCardProps) {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                    <Icon className="h-5 w-5 text-indigo-600" />
-                </div>
+        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    {label}
+                </p>
                 {delta && (
                     <span
                         className={cn(
-                            "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                             delta.direction === "up"
                                 ? "bg-emerald-50 text-emerald-600"
                                 : "bg-red-50 text-red-500",
                         )}
                     >
-                        {delta.direction === "up" ? (
-                            <TrendingUp className="h-3 w-3" />
-                        ) : (
-                            <TrendingDown className="h-3 w-3" />
-                        )}
                         {delta.value}
                     </span>
                 )}
             </div>
-            <p className="mt-4 text-sm text-slate-500">{label}</p>
-            <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
+            <div className="mt-2 flex items-end justify-between gap-2">
+                <p className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                    {value}
+                </p>
+                <Icon className="mb-0.5 h-5 w-5 shrink-0 text-slate-300" />
+            </div>
         </div>
     );
 }
 
 function StatCardSkeleton() {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
             <div className="flex items-center justify-between">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-5 w-14 rounded-full" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-5 w-10 rounded-full" />
             </div>
-            <Skeleton className="mt-4 h-4 w-24" />
-            <Skeleton className="mt-2 h-8 w-20" />
+            <Skeleton className="mt-4 h-8 w-20" />
         </div>
     );
 }
@@ -335,23 +364,28 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
         [blogs],
     );
 
+    const peakViews = React.useMemo(
+        () => chartData.reduce((max, d) => Math.max(max, d.views), 0),
+        [chartData],
+    );
+
     if (chartData.length === 0) {
         return (
-            <div className="flex h-[320px] items-center justify-center text-sm text-slate-400">
+            <div className="flex h-[280px] items-center justify-center text-sm text-slate-400">
                 No published blogs yet.
             </div>
         );
     }
 
     return (
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={280}>
             <AreaChart
                 data={chartData}
-                margin={{ top: 10, right: 12, left: -8, bottom: 0 }}
+                margin={{ top: 24, right: 12, left: -8, bottom: 0 }}
             >
                 <defs>
                     <linearGradient id="viewsFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.18} />
+                        <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.22} />
                         <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
                     </linearGradient>
                 </defs>
@@ -360,7 +394,24 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                     dataKey="name"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    tick={(props) => {
+                        const { x, y, payload } = props;
+                        const isPeak = payload.value === truncateLabel(
+                            chartData.find((d) => d.views === peakViews)?.name ?? "",
+                        );
+                        return (
+                            <text
+                                x={x}
+                                y={y + 12}
+                                textAnchor="middle"
+                                fontSize={12}
+                                fontWeight={isPeak ? 700 : 400}
+                                fill={isPeak ? "#4f46e5" : "#94a3b8"}
+                            >
+                                {payload.value}
+                            </text>
+                        );
+                    }}
                 />
                 <YAxis
                     axisLine={false}
@@ -380,9 +431,14 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
                     contentStyle={{
                         borderRadius: 12,
-                        border: "1px solid #e2e8f0",
+                        border: "none",
+                        background: "#0f172a",
+                        color: "#fff",
                         fontSize: 12,
+                        padding: "6px 10px",
                     }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#cbd5e1", marginBottom: 2 }}
                 />
                 <Area
                     type="monotone"
@@ -390,6 +446,23 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                     stroke="#4f46e5"
                     strokeWidth={3}
                     fill="url(#viewsFill)"
+                    dot={(props) => {
+                        const { cx, cy, payload, key } = props;
+                        if (payload.views !== peakViews) {
+                            return <React.Fragment key={key} />;
+                        }
+                        return (
+                            <circle
+                                key={key}
+                                cx={cx}
+                                cy={cy}
+                                r={5}
+                                fill="#fff"
+                                stroke="#4f46e5"
+                                strokeWidth={3}
+                            />
+                        );
+                    }}
                 />
             </AreaChart>
         </ResponsiveContainer>
@@ -404,6 +477,7 @@ interface AccessRow {
     label: string;
     count: number;
     icon: React.ComponentType<{ className?: string }>;
+    color: string;
 }
 
 function AccessBreakdown({
@@ -416,106 +490,112 @@ function AccessBreakdown({
     blockedCount: number;
 }) {
     const rows: AccessRow[] = [
-        { label: "Editors", count: editorCount, icon: UserCog },
-        { label: "Publishers", count: publisherCount, icon: FileText },
-        { label: "Blocked", count: blockedCount, icon: Ban },
+        { label: "Editors", count: editorCount, icon: UserCog, color: "bg-indigo-600" },
+        { label: "Publishers", count: publisherCount, icon: FileText, color: "bg-indigo-300" },
+        { label: "Blocked", count: blockedCount, icon: Ban, color: "bg-slate-300" },
     ];
-    const max = Math.max(1, ...rows.map((r) => r.count));
+    const total = Math.max(1, rows.reduce((sum, r) => sum + r.count, 0));
 
     return (
-        <div className="space-y-6">
-            {rows.map(({ label, count, icon: Icon }) => (
-                <div key={label}>
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-slate-700">
-                            <Icon className="h-4 w-4 text-slate-400" />
-                            {label}
-                        </span>
-                        <span className="font-semibold text-slate-900">{count}</span>
+        <div>
+            <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                {rows.map((row) => (
+                    <div
+                        key={row.label}
+                        className={cn("h-full", row.color)}
+                        style={{ width: `${(row.count / total) * 100}%` }}
+                    />
+                ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+                {rows.map(({ label, count, color }) => (
+                    <div key={label} className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                            <span className={cn("h-2 w-2 shrink-0 rounded-full", color)} />
+                            <span className="truncate">{label}</span>
+                        </div>
+                        <p className="mt-1 text-sm font-bold text-slate-900">
+                            {Math.round((count / total) * 100)}%
+                        </p>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                            className="h-full rounded-full bg-indigo-600"
-                            style={{ width: `${(count / max) * 100}%` }}
-                        />
-                    </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
 
 // =====================================================================
-// Top performing blogs table
+// Top performing blogs list
 // =====================================================================
 
-function TopBlogsTable({ blogs }: { blogs: BlogAnalyticsItem[] }) {
+function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
     const [expanded, setExpanded] = React.useState(false);
-    const visible = expanded ? blogs : blogs.slice(0, 4);
+    const sorted = React.useMemo(
+        () => [...blogs].sort((a, b) => b.views - a.views),
+        [blogs],
+    );
+    const visible = expanded ? sorted : sorted.slice(0, 3);
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between px-6 py-5">
-                <h3 className="text-lg font-bold text-slate-900">
-                    Top Performing Blogs
-                </h3>
-                {blogs.length > 4 && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                        Top Performing Blogs
+                    </h3>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                        Ranked by total views
+                    </p>
+                </div>
+                {sorted.length > 3 && (
                     <button
                         type="button"
                         onClick={() => setExpanded((prev) => !prev)}
-                        className="text-sm font-semibold text-indigo-600 hover:underline"
+                        className="flex shrink-0 items-center gap-1 text-sm font-semibold text-indigo-600 hover:underline"
                     >
-                        {expanded ? "Show Less" : "View All →"}
+                        {expanded ? "Show Less" : "View All"}
+                        {!expanded && <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
                 )}
             </div>
 
-            {blogs.length === 0 ? (
-                <p className="px-6 pb-6 text-sm text-slate-500">
+            {sorted.length === 0 ? (
+                <p className="mt-4 text-sm text-slate-500">
                     No published blogs to display yet.
                 </p>
             ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow className="border-slate-200 hover:bg-transparent">
-                            <TableHead className="pl-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Title
-                            </TableHead>
-                            <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Slug
-                            </TableHead>
-                            <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Views
-                            </TableHead>
-                            <TableHead className="pr-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Created Date
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {visible.map((blog) => (
-                            <TableRow key={blog._id} className="border-slate-100">
-                                <TableCell className="pl-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50">
-                                            <FileText className="h-4 w-4 text-indigo-500" />
-                                        </div>
-                                        <span className="font-medium text-slate-900">
-                                            {blog.title}
-                                        </span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-slate-500">/{blog.slug}</TableCell>
-                                <TableCell className="font-semibold text-slate-900">
-                                    {preciseFormatter.format(blog.views)}
-                                </TableCell>
-                                <TableCell className="pr-6 text-slate-500">
-                                    {formatDate(blog.createdAt)}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                <div className="mt-4 divide-y divide-slate-100">
+                    {visible.map((blog, index) => (
+                        <div key={blog._id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                            <div className="relative shrink-0">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                                    <FileText className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                                    {index + 1}
+                                </span>
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-indigo-600">
+                                    /{blog.slug}
+                                </p>
+                                <p className="truncate text-sm font-semibold text-slate-900">
+                                    {blog.title}
+                                </p>
+                                <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                                    <Eye className="h-3.5 w-3.5" />
+                                    <span>{preciseFormatter.format(blog.views)}</span>
+                                    <span>·</span>
+                                    <span>{formatDate(blog.createdAt)}</span>
+                                </div>
+                            </div>
+
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );
@@ -551,6 +631,7 @@ function exportBlogsToCsv(blogs: BlogAnalyticsItem[]) {
 
 export default function Dashboard() {
     const { data, isLoading, error, refetch } = useDashboardData();
+    const [range, setRange] = React.useState<RangeOption>("7 Days");
 
     const avgViewsPerBlog =
         data && data.totalBlogs > 0
@@ -559,40 +640,34 @@ export default function Dashboard() {
 
     return (
         <div className="w-full">
-            <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900">
-                        Analytics Overview
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Real-time performance metrics and content engagement.
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <RangeToggle value={range} onChange={setRange} />
+                <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => refetch()}
                         disabled={isLoading}
-                        className="gap-2 border-slate-200 text-slate-600"
+                        aria-label="Refresh"
+                        className="h-9 w-9 rounded-lg border-slate-200 bg-white text-slate-500 shadow-sm"
                     >
                         <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                        Refresh
                     </Button>
                     <Button
-                        size="sm"
+                        variant="outline"
+                        size="icon"
                         onClick={() => data && exportBlogsToCsv(data.blogs)}
                         disabled={!data || data.blogs.length === 0}
-                        className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                        aria-label="Export"
+                        className="h-9 w-9 rounded-lg border-slate-200 bg-white text-slate-500 shadow-sm"
                     >
                         <Download className="h-4 w-4" />
-                        Export
                     </Button>
                 </div>
             </div>
 
             {error && (
-                <Alert variant="destructive" className="mb-6">
+                <Alert variant="destructive" className="mb-5">
                     <AlertTitle>Couldn&apos;t load dashboard data</AlertTitle>
                     <AlertDescription className="flex items-center justify-between gap-4">
                         <span>{error}</span>
@@ -604,7 +679,7 @@ export default function Dashboard() {
             )}
 
             {/* Stat cards */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {isLoading || !data ? (
                     Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
                 ) : (
@@ -633,31 +708,50 @@ export default function Dashboard() {
                 )}
             </div>
 
-            {/* Chart + breakdown */}
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h3 className="mb-4 text-lg font-bold text-slate-900">
-                        Views by Blog
-                    </h3>
+            {/* Chart */}
+            <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900">
+                            Views by Blog
+                        </h3>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Real per-blog view counts, highest first
+                        </p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
+                        Live
+                    </span>
+                </div>
+                <div className="mt-4">
                     {isLoading || !data ? (
-                        <Skeleton className="h-[320px] w-full rounded-xl" />
+                        <Skeleton className="h-[280px] w-full rounded-xl" />
                     ) : (
                         <ViewsByBlogChart blogs={data.blogs} />
                     )}
                 </div>
+            </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h3 className="mb-6 text-lg font-bold text-slate-900">
+            {/* Access breakdown */}
+            <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-lg font-bold text-slate-900">
                         Access Breakdown
                     </h3>
+                    <span className="text-xs font-medium text-slate-400">
+                        Editors · Publishers · Blocked
+                    </span>
+                </div>
+                <div className="mt-5">
                     {isLoading || !data ? (
-                        <div className="space-y-6">
-                            {Array.from({ length: 3 }).map((_, i) => (
-                                <div key={i}>
-                                    <Skeleton className="mb-2 h-4 w-24" />
-                                    <Skeleton className="h-2 w-full rounded-full" />
-                                </div>
-                            ))}
+                        <div>
+                            <Skeleton className="h-2.5 w-full rounded-full" />
+                            <div className="mt-5 grid grid-cols-3 gap-2">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-9 w-full" />
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         <AccessBreakdown
@@ -670,16 +764,16 @@ export default function Dashboard() {
             </div>
 
             {/* Top performing blogs */}
-            <div className="mt-6">
+            <div className="mt-5">
                 {isLoading || !data ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
                         <Skeleton className="mb-6 h-6 w-48" />
-                        {Array.from({ length: 4 }).map((_, i) => (
+                        {Array.from({ length: 3 }).map((_, i) => (
                             <Skeleton key={i} className="mb-3 h-12 w-full rounded-lg" />
                         ))}
                     </div>
                 ) : (
-                    <TopBlogsTable blogs={data.blogs} />
+                    <TopBlogsList blogs={data.blogs} />
                 )}
             </div>
         </div>

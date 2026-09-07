@@ -134,13 +134,15 @@ export const googleCallback = async (
       "Unknown";
     const userAgent = req.headers["user-agent"] || "Unknown device";
 
-    emailService
-      .sendEmail(
-        userExists.email,
-        "New Login to Your Account",
-        loginNotificationTemplate({ loginTime, ipAddress, userAgent }),
-      )
-      .catch((err) => console.error("Failed to send login email:", err));
+    if (site === "admin") {
+      emailService
+        .sendEmail(
+          userExists.email,
+          "New Login to Your Account",
+          loginNotificationTemplate({ loginTime, ipAddress, userAgent }),
+        )
+        .catch((err) => console.error("Failed to send login email:", err));
+    }
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
