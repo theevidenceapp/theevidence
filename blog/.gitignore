@@ -3,6 +3,8 @@ node_modules/
 .env.*
 !.env.example
 
+.astro/
+
 dist/
 dist/client
 dist/server

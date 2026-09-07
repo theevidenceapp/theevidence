@@ -9,10 +9,6 @@ const AuthGate = () => {
 
     const token = useAuthStore((state) => state.token)
 
-    if (token) {
-        navigate('/discover')
-    }
-
     if (isInitialized) {
         return null
     }
