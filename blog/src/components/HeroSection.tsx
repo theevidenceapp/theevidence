@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import worldMap from "../assets/world-map.png";
 import { openAuthModal } from "../lib/authModal";
+import { navigate } from "astro:transitions/client";
 
 const HeroSection = () => {
   const headingRef = useRef<HTMLDivElement>(null);
@@ -102,7 +103,7 @@ const HeroSection = () => {
           >
             Be a researcher
           </button>
-          <button className="w-full sm:w-auto rounded-full bg-brand-gray px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base text-white dark:bg-brand-gray dark:text-white">
+          <button onClick={() => navigate('/discover')} className="w-full sm:w-auto rounded-full bg-brand-gray px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base text-white dark:bg-brand-gray dark:text-white">
             Explore researches
           </button>
         </div>
