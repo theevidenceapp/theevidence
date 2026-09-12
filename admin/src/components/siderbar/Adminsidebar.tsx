@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     LayoutGrid,
     Users,
@@ -26,8 +26,15 @@ interface NavBadge {
 interface NavItem {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
+    /**
+     * Optional manual override. Leave unset (recommended) so the item's
+     * active/background state is derived automatically from the current
+     * URL via `useLocation()`. Only set this if you need to force a
+     * particular item to appear active regardless of route.
+     */
     active?: boolean;
     badge?: NavBadge;
+    navigateTo?: string;
 }
 
 interface AdminSidebarProps {
@@ -42,13 +49,20 @@ interface AdminSidebarProps {
 // =====================================================================
 // Default nav config — pass `navItems` prop to wire in real counts
 // (e.g. live user/content/blocked totals) without touching this file.
+//
+// NOTE: "Content" and "Blocked Users" both currently point to
+// "/users-list". With URL-driven active-state detection (see
+// `isPathActive` below), both entries will highlight together whenever
+// that route is active — this is very likely a copy/paste typo in the
+// original routes rather than intended behavior, and worth pointing one
+// of them at its actual destination.
 // =====================================================================
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
-    { label: "Dashboard", icon: LayoutGrid, active: true },
-    { label: "Users", icon: Users, badge: { label: "1.2k", tone: "slate" } },
-    { label: "Content", icon: FileText, badge: { label: "9", tone: "indigo" } },
-    { label: "Blocked Users", icon: Ban, badge: { label: "42", tone: "rose" } },
+    { label: "Dashboard", icon: LayoutGrid, navigateTo: '/admin/dashboard' },
+    { label: "Users", icon: Users, badge: { label: "1.2k", tone: "slate", }, navigateTo: '/admin/users-list' },
+    { label: "Content", icon: FileText, badge: { label: "9", tone: "indigo" }, navigateTo: '/admin/app-content' },
+    { label: "Blocked Users", icon: Ban, badge: { label: "42", tone: "rose" }, navigateTo: '/admin/blocked-users' },
     { label: "Settings", icon: Settings },
 ];
 
@@ -57,6 +71,31 @@ const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
     rose: "bg-rose-50 text-rose-500",
     slate: "bg-slate-100 text-slate-600",
 };
+
+// =====================================================================
+// Helpers
+// =====================================================================
+
+/**
+ * Determines whether a nav item's target route matches the current URL.
+ * Matches exactly, or as a path prefix (so `/admin/users-list/123` still
+ * highlights an item pointing at `/admin/users-list`). Trailing slashes
+ * are normalized so `/dashboard` and `/dashboard/` are treated the same.
+ */
+function isPathActive(pathname: string, target?: string): boolean {
+    if (!target) return false;
+
+    const normalize = (path: string) => path.replace(/\/+$/, "") || "/";
+    const normalizedPathname = normalize(pathname);
+    const normalizedTarget = normalize(target);
+
+    if (normalizedTarget === "/") return normalizedPathname === "/";
+
+    return (
+        normalizedPathname === normalizedTarget ||
+        normalizedPathname.startsWith(`${normalizedTarget}/`)
+    );
+}
 
 // =====================================================================
 // Component
@@ -68,6 +107,7 @@ export default function AdminSidebar({
     navItems = DEFAULT_NAV_ITEMS,
 }: AdminSidebarProps) {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = async () => {
         const res = await apiClient.get("/user/logout");
@@ -122,43 +162,53 @@ export default function AdminSidebar({
                         Navigation
                     </p>
                     <nav className="space-y-1">
-                        {navItems.map(({ label, icon: Icon, active, badge }) => (
-                            <a
-                                key={label}
-                                href="#"
-                                onClick={onClose}
-                                className={cn(
-                                    "flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm font-medium transition-colors",
-                                    active
-                                        ? "border-indigo-600 bg-indigo-50 text-indigo-600"
-                                        : "border-transparent text-slate-600 hover:bg-slate-50",
-                                )}
-                            >
-                                <Icon
+                        {navItems.map(({ label, icon: Icon, active: forcedActive, badge, navigateTo }) => {
+                            const active = forcedActive ?? isPathActive(location.pathname, navigateTo);
+
+                            return (
+                                <Link
+                                    to={navigateTo ?? "#"}
+                                    key={label}
+                                    aria-current={active ? "page" : undefined}
+                                    onClick={(event) => {
+                                        // Items without a real destination (e.g. "Settings" until
+                                        // it's wired up) shouldn't navigate to a broken route.
+                                        if (!navigateTo) event.preventDefault();
+                                        onClose();
+                                    }}
                                     className={cn(
-                                        "h-[18px] w-[18px] shrink-0",
-                                        active ? "text-indigo-600" : "text-slate-400",
+                                        "flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm font-medium transition-colors",
+                                        active
+                                            ? "border-indigo-600 bg-indigo-50 text-indigo-600"
+                                            : "border-transparent text-slate-600 hover:bg-slate-50",
                                     )}
-                                />
-                                <span className="min-w-0 flex-1 truncate">{label}</span>
-                                {active ? (
-                                    <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
-                                        Active
-                                    </span>
-                                ) : (
-                                    badge && (
-                                        <span
-                                            className={cn(
-                                                "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                                                BADGE_TONE_CLASSES[badge.tone],
-                                            )}
-                                        >
-                                            {badge.label}
+                                >
+                                    <Icon
+                                        className={cn(
+                                            "h-[18px] w-[18px] shrink-0",
+                                            active ? "text-indigo-600" : "text-slate-400",
+                                        )}
+                                    />
+                                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                                    {active ? (
+                                        <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                                            Active
                                         </span>
-                                    )
-                                )}
-                            </a>
-                        ))}
+                                    ) : (
+                                        badge && (
+                                            <span
+                                                className={cn(
+                                                    "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                                    BADGE_TONE_CLASSES[badge.tone],
+                                                )}
+                                            >
+                                                {badge.label}
+                                            </span>
+                                        )
+                                    )}
+                                </Link>
+                            );
+                        })}
                     </nav>
                 </div>
 
