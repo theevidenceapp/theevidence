@@ -3,35 +3,35 @@ import User from "../models/user.model.js";
 import Blog from "../models/blog.model.js";
 
 export const BlockUser = async (req: Request, res: Response) => {
-    try {
-        const useremail = req.params.email;
+  try {
+    const useremail = req.params.email;
 
-        const user = await User.findOne({ email: useremail });
+    const user = await User.findOne({ email: useremail });
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                msg: "User not found",
-            });
-        }
-
-        user.isActive = false;
-
-        await user.save();
-
-        return res.status(200).json({
-            success: true,
-            msg: "User blocked successfully",
-            user,
-        });
-    } catch (error) {
-        console.error("Block user error:", error);
-
-        return res.status(500).json({
-            success: false,
-            msg: "Internal Server Error",
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found",
+      });
     }
+
+    user.isActive = false;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      msg: "User blocked successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Block user error:", error);
+
+    return res.status(500).json({
+      success: false,
+      msg: "Internal Server Error",
+    });
+  }
 };
 
 export const getBlockedUsers = async (req: Request, res: Response) => {
@@ -170,10 +170,7 @@ export const removeEditor = async (req: Request, res: Response) => {
   }
 };
 
-export const getAnalytics = async (
-  req: Request,
-  res: Response
-) => {
+export const getAnalytics = async (req: Request, res: Response) => {
   try {
     const result = await Blog.aggregate([
       {
@@ -209,10 +206,7 @@ export const getAnalytics = async (
   }
 };
 
-export const getBlogAnalytics = async (
-  req: Request,
-  res: Response
-) => {
+export const getBlogAnalytics = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find(
       { status: "PUBLISHED" },
@@ -221,7 +215,7 @@ export const getBlogAnalytics = async (
         slug: 1,
         views: 1,
         createdAt: 1,
-      }
+      },
     ).sort({ views: -1 });
 
     return res.status(200).json({
@@ -234,6 +228,21 @@ export const getBlogAnalytics = async (
     return res.status(500).json({
       success: false,
       message: "Failed to fetch blog analytics",
+    });
+  }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await User.find().select('-accessToken')
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get all user",
     });
   }
 };
