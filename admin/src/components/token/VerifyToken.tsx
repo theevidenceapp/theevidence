@@ -23,7 +23,7 @@ const VerifyToken = () => {
         setAccessToken(token);
 
         // Remove token from URL
-        navigate("/dashboard", { replace: true });
+        navigate("/admin/dashboard", { replace: true });
     }, [navigate, setAccessToken]);
 
     return <div>Verifying...</div>;

@@ -52,7 +52,7 @@ const App = () => {
             }
           />
           <Route
-            path="/admin/users-list"
+            path="/admin/users"
             element={
               <AdminPanelLayout>
                 <UsersList />
@@ -75,6 +75,9 @@ const App = () => {
               </AdminPanelLayout>
             }
           />
+        </Route>
+        <Route path="/admin/users/:id"
+          element={<AdminPanelLayout></AdminPanelLayout>} >
         </Route>
       </Routes>
     </BrowserRouter>

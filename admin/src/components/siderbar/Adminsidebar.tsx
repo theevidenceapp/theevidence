@@ -60,9 +60,9 @@ interface AdminSidebarProps {
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
     { label: "Dashboard", icon: LayoutGrid, navigateTo: '/admin/dashboard' },
-    { label: "Users", icon: Users, badge: { label: "1.2k", tone: "slate", }, navigateTo: '/admin/users-list' },
-    { label: "Content", icon: FileText, badge: { label: "9", tone: "indigo" }, navigateTo: '/admin/app-content' },
-    { label: "Blocked Users", icon: Ban, badge: { label: "42", tone: "rose" }, navigateTo: '/admin/blocked-users' },
+    { label: "Users", icon: Users, badge: { label:'', tone: "slate", }, navigateTo: '/admin/users' },
+    { label: "Content", icon: FileText, badge: { label: "", tone: "indigo" }, navigateTo: '/admin/app-content' },
+    { label: "Blocked Users", icon: Ban, badge: { label: "", tone: "rose" }, navigateTo: '/admin/blocked-users' },
     { label: "Settings", icon: Settings },
 ];
 
