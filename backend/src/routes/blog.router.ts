@@ -64,44 +64,34 @@ blogRouter.put("/statusupdate/:id", updateBlogStatus);
 blogRouter.get("/overview", getDeskOverview);
 
 // Add this exact GET route in your backend router (e.g., blog.routes.ts or similar)
-blogRouter.get("/published-by-type", async (req: Request, res: Response) => {
+blogRouter.get("/published-by-type", async (req, res) => {
   try {
-    const docType = (req.query.docType || "RESEARCH").toString().toUpperCase();
-    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string, 10) || 24);
-    const skip = (page - 1) * limit;
+    const docTypeParam = (req.query.docType || "RESEARCH").toString().toUpperCase();
+    
+    // Create a case-insensitive regex query to catch both uppercase and lowercase variations in MongoDB
+    const docTypeRegex = new RegExp(`^${docTypeParam}$`, "i");
 
-    const query: Record<string, any> = {
-      status: "PUBLISHED",
-      docType: docType,
+    const query = { 
+      status: "PUBLISHED", 
+      docType: docTypeRegex 
     };
 
-    // Execute queries in parallel for better database performance
-    const [blogs, total] = await Promise.all([
-      Blog.find(query)
-        .populate("author", "name avatar")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Blog.countDocuments(query),
-    ]);
+    const blogs = await Blog.find(query)
+      .populate("author", "name avatar")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return res.status(200).json({
+    res.json({
       success: true,
       blogs,
       pagination: {
-        page,
-        total,
-        totalPages: Math.ceil(total / limit) || 1,
-        hasMore: skip + blogs.length < total,
-      },
+        page: 1,
+        totalPages: 1,
+        hasMore: false
+      }
     });
   } catch (err: any) {
-    return res.status(500).json({
-      success: false,
-      message: err.message || "Internal Server Error",
-    });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

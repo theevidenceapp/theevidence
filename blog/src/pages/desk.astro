@@ -17,7 +17,7 @@ const filterTabs = [
 ---
 
 <!doctype html>
-<html lang="en" class="bg-[#f3f3f5]">
+<html lang="en" class="bg-[#f9f9fb]">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -29,7 +29,7 @@ const filterTabs = [
     <style>
       html,
       body {
-        background-color: #f3f3f5 !important;
+        background-color: #f9f9fb !important;
         -webkit-tap-highlight-color: transparent;
       }
       .no-scroll::-webkit-scrollbar {
@@ -39,18 +39,29 @@ const filterTabs = [
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-      /* Safe padding for bottom home bars on modern Android & iOS */
       .safe-bottom {
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 12px);
+      }
+      @keyframes pulse-subtle {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .skeleton-pulse {
+        animation: pulse-subtle 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
     </style>
   </head>
   <body
-    class="bg-[#f3f3f5] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative"
+    class="bg-[#f9f9fb] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative"
   >
     <!-- DESKTOP SIDEBAR -->
     <aside
-      class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f3f3f5] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0"
+      class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f9f9fb] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0 border-r border-neutral-200/60"
     >
       <a
         href="/"
@@ -86,7 +97,7 @@ const filterTabs = [
                 stroke-linecap="round"
                 stroke-linejoin="round"></path>
               <path
-                d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.1834 14.2071 12.7929L17 10"
+                d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.8166 14.2071 12.7929L17 10"
                 stroke="#0D0D0C"
                 stroke-width="1.5"
                 stroke-linecap="round"
@@ -217,18 +228,18 @@ const filterTabs = [
 
     <!-- TOP HEADER -->
     <header
-      class="h-[64px] sm:h-[76px] px-3.5 sm:px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f3f3f5]"
+      class="h-[64px] sm:h-[76px] px-3.5 sm:px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f9f9fb] gap-3"
     >
-      <div class="flex items-center gap-2.5 sm:gap-4 shrink-0 mr-2 sm:mr-4">
+      <div class="flex items-center gap-2.5 sm:gap-4 shrink-0 mr-1">
         <a href="/" class="flex md:hidden items-center" title="The Evidence">
           <img
             src={THE_EVIDENCE_LOGO}
             alt="The Evidence"
-            class="h-8 w-auto object-contain"
+            class="h-7 sm:h-8 w-auto object-contain"
           />
         </a>
         <span
-          class="text-[15px] sm:text-[17px] font-bold text-[#111] tracking-tight"
+          class="text-[14px] sm:text-[17px] font-bold text-[#111] tracking-tight whitespace-nowrap"
           >Researcher Desk</span
         >
       </div>
@@ -250,8 +261,8 @@ const filterTabs = [
           <input
             type="text"
             id="desk-search-input"
-            placeholder="Search your papers or blogs..."
-            class="w-full pl-9 sm:pl-11 pr-3.5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border-none shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Search papers/blogs..."
+            class="w-full pl-9 sm:pl-11 pr-3.5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border border-neutral-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
           />
         </div>
       </div>
@@ -261,64 +272,53 @@ const filterTabs = [
 
     <!-- MOBILE QUICK ACTIONS -->
     <div
-      class="flex md:hidden items-center justify-between gap-2.5 px-3.5 pb-2 shrink-0"
+      class="flex md:hidden items-center gap-2 px-3.5 pb-2.5 pt-1 shrink-0 bg-[#f9f9fb]"
     >
       <button
         type="button"
-        class="btn-trigger-new-creation flex-1 py-2 px-3 bg-white border border-neutral-200/80 rounded-full text-xs font-bold text-neutral-900 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
+        class="btn-trigger-new-creation flex-1 py-2 px-3 bg-[#1b62f2] rounded-full text-xs font-semibold text-white shadow-sm flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
       >
-        <svg
-          class="w-3.5 h-3.5 text-[#1b62f2]"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 4v16m8-8H4"></path>
-        </svg>
+        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
         <span>New Creation</span>
       </button>
 
       <button
         type="button"
         id="open-drafts-modal"
-        class="py-2 px-3.5 bg-white border border-neutral-200/80 rounded-full text-xs font-bold text-neutral-800 shadow-sm flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
+        class="py-2 px-3.5 bg-white border border-neutral-200/60 rounded-full text-xs font-semibold text-neutral-800 shadow-sm flex items-center justify-center gap-1 active:bg-neutral-50 cursor-pointer"
       >
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
         <span>Drafts (<span id="mobile-draft-count">0</span>)</span>
       </button>
     </div>
 
     <!-- MAIN BODY -->
     <div
-      class="flex-1 flex px-3.5 sm:px-6 md:pl-[90px] md:pr-8 pb-20 md:pb-6 pt-1 gap-6 lg:gap-8 overflow-hidden max-w-[1600px] w-full mx-auto"
+      class="flex-1 flex px-3.5 sm:px-6 md:pl-[90px] md:pr-8 pb-16 md:pb-6 pt-0 gap-5 lg:gap-7 overflow-hidden max-w-[1600px] w-full mx-auto"
     >
-      <div class="flex-1 flex gap-6 lg:gap-8 overflow-hidden">
-        
+      <div class="flex-1 flex gap-5 lg:gap-7 overflow-hidden">
         <!-- LEFT: FEED CONTAINER -->
         <main
-          class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3 sm:gap-3.5 pb-16 md:pb-4"
+          class="flex-1 h-full overflow-y-auto no-scroll pr-0.5 sm:pr-1 flex flex-col gap-3.5 pb-16 md:pb-4"
         >
           <!-- Status Tabs Filter -->
           <div
-            class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f3f3f5]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll gap-2 sm:gap-2.5 shrink-0 px-0.5"
+            class="sticky top-0 z-10 pb-2 pt-0.5 bg-[#f9f9fb]/95 backdrop-blur-sm flex items-center overflow-x-auto no-scroll gap-2 shrink-0 px-0.5"
           >
             {
               filterTabs.map((tab, idx) => (
                 <button
                   type="button"
                   data-status={tab.key}
-                  class={`desk-filter-tab px-3.5 sm:px-5 h-[32px] sm:h-[36px] flex items-center justify-center gap-1.5 rounded-full text-[12px] sm:text-[13px] transition whitespace-nowrap shrink-0 cursor-pointer ${
+                  class={`desk-filter-tab px-3.5 sm:px-5 h-[34px] sm:h-[36px] flex items-center justify-center rounded-full text-[12px] sm:text-[13px] transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                     idx === 0
-                      ? "bg-[#1b62f2] text-white font-medium shadow-sm"
-                      : "bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                      ? "bg-[#1b62f2] text-white shadow-[0_2px_8px_rgba(27,98,242,0.25)] border border-transparent font-semibold"
+                      : "bg-white text-[#1a1a1a] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border border-neutral-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                   }`}
                 >
                   <span>{tab.name}</span>
                   <span
-                    class={`filter-count-badge text-[10.5px] sm:text-[11px] font-semibold ${idx === 0 ? "text-white/80" : "text-neutral-400"}`}
+                    class={`filter-count-badge text-[10.5px] sm:text-[11px] ml-1.5 ${idx === 0 ? "text-white/80" : "text-[#888]"}`}
                   >
                     0
                   </span>
@@ -327,20 +327,54 @@ const filterTabs = [
             }
           </div>
 
-          <!-- Loading Skeleton -->
+          <!-- Rich Full Skeleton Loader (Visible until data fetches) -->
           <div id="desk-loading-skeleton" class="flex flex-col gap-3.5">
-            <div class="bg-white rounded-2xl sm:rounded-3xl p-6 h-28 sm:h-32 animate-pulse"></div>
-            <div class="bg-white rounded-2xl sm:rounded-3xl p-6 h-28 sm:h-32 animate-pulse"></div>
+            <div
+              class="bg-white rounded-[24px] p-5 h-36 shadow-sm border border-neutral-200/50 flex flex-col justify-between skeleton-pulse"
+            >
+              <div class="flex items-center justify-between">
+                <div class="w-20 h-5 bg-neutral-200 rounded-full"></div>
+                <div class="w-14 h-4 bg-neutral-200 rounded-full"></div>
+              </div>
+              <div class="space-y-2">
+                <div class="w-4/5 h-4 bg-neutral-200 rounded-lg"></div>
+                <div class="w-2/3 h-3 bg-neutral-200 rounded-lg"></div>
+              </div>
+              <div
+                class="flex items-center justify-between pt-2 border-t border-neutral-100"
+              >
+                <div class="w-28 h-3 bg-neutral-200 rounded-md"></div>
+                <div class="w-16 h-3 bg-neutral-200 rounded-md"></div>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-[24px] p-5 h-36 shadow-sm border border-neutral-200/50 flex flex-col justify-between skeleton-pulse"
+            >
+              <div class="flex items-center justify-between">
+                <div class="w-20 h-5 bg-neutral-200 rounded-full"></div>
+                <div class="w-14 h-4 bg-neutral-200 rounded-full"></div>
+              </div>
+              <div class="space-y-2">
+                <div class="w-4/5 h-4 bg-neutral-200 rounded-lg"></div>
+                <div class="w-2/3 h-3 bg-neutral-200 rounded-lg"></div>
+              </div>
+              <div
+                class="flex items-center justify-between pt-2 border-t border-neutral-100"
+              >
+                <div class="w-28 h-3 bg-neutral-200 rounded-md"></div>
+                <div class="w-16 h-3 bg-neutral-200 rounded-md"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Actual Articles Feed -->
-          <div id="desk-papers-feed" class="flex flex-col gap-3 sm:gap-3.5 pb-8 hidden">
+          <div id="desk-papers-feed" class="flex flex-col gap-3.5 pb-12 hidden">
           </div>
 
           <!-- Empty State -->
           <div
             id="no-desk-papers-msg"
-            class="hidden flex-col items-center justify-center p-8 sm:p-12 text-center bg-white rounded-3xl border border-neutral-200/50"
+            class="hidden flex-col items-center justify-center p-10 text-center bg-white rounded-3xl border border-neutral-200/50"
           >
             <span class="text-3xl mb-2">📄</span>
             <h4 class="font-bold text-neutral-900 text-sm">
@@ -354,14 +388,14 @@ const filterTabs = [
 
         <!-- RIGHT: SIDEBAR (DESKTOP DRAFTS & ACTIONS) -->
         <aside
-          class="hidden md:flex w-[340px] lg:w-[380px] shrink-0 h-full flex-col gap-3.5 overflow-hidden"
+          class="hidden md:flex w-[250px] xl:w-[270px] shrink-0 h-full flex-col gap-3.5 overflow-hidden"
         >
           <button
             type="button"
-            class="btn-trigger-new-creation w-full h-[64px] bg-white rounded-[22px] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2.5 text-[14.5px] font-bold text-[#111] hover:bg-neutral-50 border border-neutral-200/60 transition shrink-0 active:scale-98 cursor-pointer"
+            class="btn-trigger-new-creation w-full h-[50px] bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2 text-[13.5px] font-bold text-[#111] hover:bg-[#e8f0fe] hover:text-[#1b62f2] border border-neutral-200/40 transition-colors shrink-0 cursor-pointer"
           >
             <svg
-              class="w-5 h-5 text-[#1b62f2]"
+              class="w-4 h-4 text-[#1b62f2]"
               fill="none"
               stroke="currentColor"
               stroke-width="2.5"
@@ -377,7 +411,7 @@ const filterTabs = [
 
           <div class="w-full relative shrink-0">
             <svg
-              class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#777]"
+              class="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777]"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -391,14 +425,14 @@ const filterTabs = [
             <input
               type="text"
               id="draft-search-input"
-              placeholder="Search your draft manuscripts..."
-              class="w-full pl-11 pr-4 py-3 text-[12.5px] bg-white placeholder-[#777] rounded-full border-none shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none"
+              placeholder="Search drafts..."
+              class="w-full pl-9 pr-3 py-2 text-[12px] bg-white placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           <div
             id="desktop-drafts-list"
-            class="flex-1 overflow-y-auto no-scroll flex flex-col gap-3.5 pr-0.5 pb-8"
+            class="flex-1 overflow-y-auto no-scroll flex flex-col gap-2.5 pr-0.5 pb-8"
           >
             <div class="text-xs text-neutral-400 text-center py-6">
               Loading drafts...
@@ -408,9 +442,9 @@ const filterTabs = [
       </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION (RESTORED TO MATCH DISCOVER / ACCOUNT / NOTIFICATION) -->
+    <!-- MOBILE BOTTOM NAVIGATION -->
     <nav
-      class="flex md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 items-center justify-around h-[58px] safe-bottom"
+      class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f9f9fb]/95 backdrop-blur-lg border-t border-neutral-200/60 px-4 py-1.5 flex items-center justify-around h-[56px] safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.03)]"
     >
       <a
         href="/discover"
@@ -434,20 +468,22 @@ const filterTabs = [
         href="/desk"
         class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-[#1b62f2]"
       >
-        <div class="relative">
+        <div
+          class="w-8 h-6 rounded-full bg-[#e8f0fe] flex items-center justify-center"
+        >
           <svg
-            class="w-5 h-5"
+            class="w-5 h-5 overflow-visible"
             viewBox="0 0 24 24"
             fill="none"
             stroke="#1b62f2"
             stroke-width="2"
           >
             <path
-              d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087C4.78257 22 7.0218 22 11.5003 22C15.9787 22 18.218 22 19.6093 20.6087C20.8985 19.3195 20.9931 17.3022 21 13.4498"
+              d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087"
               stroke-linecap="round"
               stroke-linejoin="round"></path>
             <path
-              d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825C18.4327 7.41736 19.3951 8.13354 19.2913 9.02879C19.2174 9.66586 18.7847 9.97843 17.9195 10.6036C16.0232 11.9736 13.8265 12.8375 11.0557 13Z"
+              d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439C22.1897 5.19136 20.7086 6.32482 17.888 6.84825"
               stroke-linecap="round"
               stroke-linejoin="round"></path>
           </svg>
@@ -476,7 +512,9 @@ const filterTabs = [
               stroke-linecap="round"
               stroke-linejoin="round"></path>
           </svg>
-          <span class="w-1.5 h-1.5 rounded-full bg-blue-600 absolute top-0 right-0"></span>
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-blue-600 absolute top-0 right-0"
+          ></span>
         </div>
         <span class="text-[10px] font-medium tracking-tight">Alerts</span>
       </a>
@@ -502,46 +540,73 @@ const filterTabs = [
     <!-- MODAL: CHOOSE BETWEEN WRITING RESEARCH PAPER OR BLOG -->
     <div
       id="modal-choose-creation"
-      class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4 transition-opacity duration-200"
     >
-      <div class="bg-white w-full max-w-md rounded-[28px] sm:rounded-[32px] p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6 relative animate-in fade-in zoom-in-95">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-neutral-900">What would you like to create?</h3>
-            <p class="text-[11.5px] sm:text-xs text-neutral-500 mt-0.5">Select the publishing workspace suited for your topic.</p>
-          </div>
-          <button type="button" id="btn-close-choose-modal" class="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center font-bold text-xs cursor-pointer active:scale-95">✕</button>
+      <div
+        class="bg-[#f9f9fb] sm:bg-white w-full sm:max-w-md rounded-t-[28px] sm:rounded-[28px] p-5 flex flex-col shadow-2xl safe-bottom animate-in slide-in-from-bottom duration-200"
+      >
+        <div
+          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 sm:hidden shrink-0"
+        >
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Option: Blog -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-bold text-neutral-900">
+            What would you like to create?
+          </h3>
+          <button
+            type="button"
+            id="btn-close-choose-modal"
+            class="text-xs font-semibold text-neutral-500 p-1 cursor-pointer"
+            >Close</button
+          >
+        </div>
+        <div class="flex flex-col gap-2.5 py-2">
           <button
             type="button"
             id="btn-create-blog"
-            class="flex flex-col items-start p-4 sm:p-5 rounded-2xl bg-neutral-50 hover:bg-blue-50/60 border border-neutral-200/80 hover:border-blue-300 text-left transition group cursor-pointer active:scale-98"
+            class="flex items-center justify-between px-4 py-3.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-xs font-semibold text-neutral-900 border border-neutral-200/50 shadow-sm transition-colors text-left cursor-pointer group"
           >
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-base sm:text-lg mb-2.5 group-hover:scale-105 transition">
-              ✍️
+            <div class="flex items-center gap-3">
+              <span
+                class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold"
+                >✍️</span
+              >
+              <div>
+                <span
+                  class="block text-sm font-bold text-neutral-900 group-hover:text-[#1b62f2]"
+                  >Write Blog</span
+                >
+                <span
+                  class="block text-[11px] font-normal text-neutral-500 mt-0.5"
+                  >Quick thought-driven editor without mandatory research PDFs.</span
+                >
+              </div>
             </div>
-            <h4 class="text-sm font-bold text-neutral-900 group-hover:text-blue-600">Write Blog</h4>
-            <p class="text-[11px] sm:text-[11.5px] text-neutral-500 mt-1 leading-relaxed">
-              Thought-driven editor without mandatory abstract or research PDFs.
-            </p>
+            <span class="text-neutral-400 group-hover:text-[#1b62f2]">→</span>
           </button>
 
-          <!-- Option: Research Paper -->
           <button
             type="button"
             id="btn-create-research"
-            class="flex flex-col items-start p-4 sm:p-5 rounded-2xl bg-neutral-50 hover:bg-blue-50/60 border border-neutral-200/80 hover:border-blue-300 text-left transition group cursor-pointer active:scale-98"
+            class="flex items-center justify-between px-4 py-3.5 bg-white hover:bg-[#e8f0fe] hover:text-[#1b62f2] rounded-2xl text-xs font-semibold text-neutral-900 border border-neutral-200/50 shadow-sm transition-colors text-left cursor-pointer group"
           >
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-base sm:text-lg mb-2.5 group-hover:scale-105 transition">
-              🔬
+            <div class="flex items-center gap-3">
+              <span
+                class="w-8 h-8 rounded-full bg-blue-100 text-[#1b62f2] flex items-center justify-center text-sm font-bold"
+                >🔬</span
+              >
+              <div>
+                <span
+                  class="block text-sm font-bold text-neutral-900 group-hover:text-[#1b62f2]"
+                  >Research Paper</span
+                >
+                <span
+                  class="block text-[11px] font-normal text-neutral-500 mt-0.5"
+                  >Structured academic paper with abstract and attachments.</span
+                >
+              </div>
             </div>
-            <h4 class="text-sm font-bold text-neutral-900 group-hover:text-blue-600">Research Paper</h4>
-            <p class="text-[11px] sm:text-[11.5px] text-neutral-500 mt-1 leading-relaxed">
-              Structured academic paper with abstract and research PDF attachments.
-            </p>
+            <span class="text-neutral-400 group-hover:text-[#1b62f2]">→</span>
           </button>
         </div>
       </div>
@@ -550,28 +615,27 @@ const filterTabs = [
     <!-- MOBILE DRAFTS SHEET -->
     <div
       id="modal-drafts"
-      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end"
+      class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end transition-opacity duration-200"
     >
       <div
-        class="bg-[#f3f3f5] w-full max-h-[80vh] rounded-t-[28px] p-4 sm:p-5 flex flex-col shadow-2xl safe-bottom"
+        class="bg-[#f9f9fb] w-full max-h-[80vh] rounded-t-[28px] p-5 flex flex-col shadow-2xl safe-bottom"
       >
         <div
-          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-3 shrink-0"
+          class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-4 shrink-0"
         >
         </div>
-        <div class="flex items-center justify-between mb-2.5">
+        <div class="flex items-center justify-between mb-3">
           <h3 class="text-base font-bold text-neutral-900">Your Drafts</h3>
           <button
             type="button"
             id="btn-close-drafts-modal"
-            class="text-xs font-bold text-neutral-500 p-1 cursor-pointer"
+            class="text-xs font-semibold text-neutral-500 p-1 cursor-pointer"
             >Close</button
           >
         </div>
-
         <div
           id="mobile-drafts-container"
-          class="overflow-y-auto no-scroll flex flex-col gap-2.5 py-1"
+          class="overflow-y-auto no-scroll flex flex-col gap-2 py-2"
         >
           <div class="text-xs text-neutral-400 text-center py-4">
             Loading drafts...
@@ -598,14 +662,20 @@ const filterTabs = [
         const papersFeed = document.getElementById("desk-papers-feed");
         const skeleton = document.getElementById("desk-loading-skeleton");
         const noPapersMsg = document.getElementById("no-desk-papers-msg");
-        const desktopDraftsList = document.getElementById("desktop-drafts-list");
-        const mobileDraftsContainer = document.getElementById("mobile-drafts-container");
+        const desktopDraftsList = document.getElementById(
+          "desktop-drafts-list",
+        );
+        const mobileDraftsContainer = document.getElementById(
+          "mobile-drafts-container",
+        );
         const mobileDraftCount = document.getElementById("mobile-draft-count");
 
         // Mobile Drafts Sheet Toggle
         const draftsModal = document.getElementById("modal-drafts");
         const openDraftsBtn = document.getElementById("open-drafts-modal");
-        const closeDraftsBtn = document.getElementById("btn-close-drafts-modal");
+        const closeDraftsBtn = document.getElementById(
+          "btn-close-drafts-modal",
+        );
 
         if (openDraftsBtn) {
           openDraftsBtn.onclick = () => {
@@ -622,16 +692,22 @@ const filterTabs = [
 
         // Creation Modal Triggers
         const chooseModal = document.getElementById("modal-choose-creation");
-        const closeChooseBtn = document.getElementById("btn-close-choose-modal");
+        const closeChooseBtn = document.getElementById(
+          "btn-close-choose-modal",
+        );
         const btnCreateBlog = document.getElementById("btn-create-blog");
-        const btnCreateResearch = document.getElementById("btn-create-research");
+        const btnCreateResearch = document.getElementById(
+          "btn-create-research",
+        );
 
-        document.querySelectorAll(".btn-trigger-new-creation").forEach((btn) => {
-          (btn as HTMLElement).onclick = () => {
-            chooseModal?.classList.remove("hidden");
-            chooseModal?.classList.add("flex");
-          };
-        });
+        document
+          .querySelectorAll(".btn-trigger-new-creation")
+          .forEach((btn) => {
+            (btn as HTMLElement).onclick = () => {
+              chooseModal?.classList.remove("hidden");
+              chooseModal?.classList.add("flex");
+            };
+          });
 
         if (closeChooseBtn) {
           closeChooseBtn.onclick = () => {
@@ -644,7 +720,13 @@ const filterTabs = [
           btnCreateBlog.onclick = () => {
             localStorage.setItem(
               "the_evidence_editor_state_v15",
-              JSON.stringify({ docType: "BLOG", content: "", title: "", excerpt: "", category: "" })
+              JSON.stringify({
+                docType: "BLOG",
+                content: "",
+                title: "",
+                excerpt: "",
+                category: "",
+              }),
             );
             window.location.href = "/desk/new?type=blog";
           };
@@ -654,7 +736,13 @@ const filterTabs = [
           btnCreateResearch.onclick = () => {
             localStorage.setItem(
               "the_evidence_editor_state_v15",
-              JSON.stringify({ docType: "RESEARCH", content: "", title: "", excerpt: "", category: "" })
+              JSON.stringify({
+                docType: "RESEARCH",
+                content: "",
+                title: "",
+                excerpt: "",
+                category: "",
+              }),
             );
             window.location.href = "/desk/new?type=research";
           };
@@ -718,12 +806,13 @@ const filterTabs = [
             noPapersMsg?.classList.add("hidden");
             noPapersMsg?.classList.remove("flex");
 
-            filtered.forEach((item) => {
+            filtered.forEach((item, idx) => {
               const status = (item.status || "PUBLISHED").toUpperCase();
-              const isBlog = item.docType === "BLOG";
               const pubDate =
                 item.publishedAt || item.createdAt
-                  ? new Date(item.publishedAt || item.createdAt).toLocaleDateString("en-US", {
+                  ? new Date(
+                      item.publishedAt || item.createdAt,
+                    ).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -732,21 +821,39 @@ const filterTabs = [
 
               const thumb = item.coverImage?.url || GLOBE_THUMB;
 
+              const gradients = [
+                "bg-gradient-to-br from-[#e0f2fe]/90 via-[#f0f9ff]/70 to-[#dcfce7]/80",
+                "bg-gradient-to-br from-[#ecfdf5]/90 via-[#f0fdf4]/70 to-[#fdf4ff]/80",
+                "bg-gradient-to-br from-[#faf5ff]/95 via-[#fdf4ff]/70 to-[#fff7ed]/80",
+                "bg-gradient-to-br from-[#fff7ed]/95 via-[#fffbeb]/70 to-[#e0f2fe]/80",
+              ];
+              const cardBg = gradients[idx % gradients.length];
+
+              let cleanExcerpt = item.excerpt || "";
+              if (!cleanExcerpt && item.content) {
+                const textOnly = item.content.replace(/<[^>]*>/g, "").trim();
+                cleanExcerpt =
+                  textOnly.length > 150
+                    ? textOnly.substring(0, 150) + "..."
+                    : textOnly;
+              }
+              const finalExcerpt =
+                cleanExcerpt || "No abstract or description provided.";
+
               const article = document.createElement("article");
-              article.className =
-                "desk-paper-card bg-white rounded-[18px] sm:rounded-[24px] p-3.5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-2.5 sm:gap-3.5 transition hover:-translate-y-0.5 duration-200 cursor-pointer";
+              article.className = `paper-card ${cardBg} rounded-[24px] sm:rounded-[28px] border border-neutral-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex flex-row overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] cursor-pointer group`;
+
               article.innerHTML = `
-                <div class="flex items-start gap-3 sm:gap-4">
-                  <img src="${thumb}" alt="" loading="lazy" decoding="async" class="w-[52px] h-[52px] sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl object-cover shrink-0 bg-[#0f172a]" />
-                  <div class="flex flex-col pt-0.5 min-w-0 flex-1">
-                    <div class="flex items-center justify-between gap-2">
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-[9.5px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-md ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
-                          ${isBlog ? 'BLOG' : 'RESEARCH'}
-                        </span>
-                        <span class="text-[10.5px] sm:text-[11.5px] text-[#888] font-medium leading-none truncate">${item.category || "General"}</span>
-                      </div>
-                      <span class="text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                <div class="w-[130px] sm:w-[240px] shrink-0 bg-neutral-900 relative overflow-hidden">
+                  <img src="${thumb}" alt="" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                </div>
+                <div class="flex-1 p-3.5 sm:p-7 flex flex-col justify-between min-w-0">
+                  <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between gap-1.5">
+                      <span class="inline-block px-2.5 py-0.5 sm:px-3.5 sm:py-1 bg-[#dbeafe] text-[#1d4ed8] rounded-full text-[9.5px] sm:text-[11px] font-bold tracking-wider uppercase shadow-sm">
+                        ${item.category || "General"}
+                      </span>
+                      <span class="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         status === "PUBLISHED"
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
                           : status === "DRAFT"
@@ -758,22 +865,27 @@ const filterTabs = [
                         ${status}
                       </span>
                     </div>
-                    <a href="/papers/${item.slug || item._id}" class="hover:text-[#1b62f2] transition-colors">
-                      <h3 class="text-[14px] sm:text-[16px] font-bold text-[#111] leading-[1.25] tracking-tight mt-1 sm:mt-1.5 line-clamp-2">
+                    <a href="/papers/${item.slug || item._id}" class="hover:text-[#1b62f2] transition-colors mt-0.5 sm:mt-1">
+                      <h3 class="text-[14px] sm:text-[19px] font-extrabold text-[#0f172a] group-hover:text-[#1b62f2] leading-[1.3] sm:leading-[1.35] tracking-tight line-clamp-2 transition-colors">
                         ${item.title || "Untitled Creation"}
                       </h3>
                     </a>
                   </div>
-                </div>
-                ${item.excerpt ? `<p class="text-[11.5px] sm:text-[12.5px] text-[#555] leading-relaxed line-clamp-2">${item.excerpt}</p>` : ''}
-                <div class="flex items-center justify-between text-[10.5px] sm:text-[11.5px] text-[#888] pt-1 flex-wrap border-t border-neutral-100 mt-0.5">
-                  <div class="flex items-center gap-3.5 sm:gap-5">
-                    <span>${pubDate}</span>
-                    <span>${item.views || 0} views</span>
+
+                  <p class="text-[12px] sm:text-[14px] text-[#475569] leading-[1.4] line-clamp-2 my-1.5 sm:my-2.5 font-normal">
+                    ${finalExcerpt}
+                  </p>
+
+                  <div class="flex items-center justify-between text-[11px] sm:text-[12px] text-[#64748b] pt-1.5 sm:pt-2 border-t border-neutral-200/60 flex-wrap font-medium">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[#0f172a] font-bold">${pubDate}</span>
+                      <span>•</span>
+                      <span>${item.views || 0} views</span>
+                    </div>
+                    <a href="/papers/${item.slug || item._id}" class="text-[#1b62f2] hover:underline font-bold text-xs flex items-center gap-0.5">
+                      View →
+                    </a>
                   </div>
-                  <a href="/papers/${item.slug || item._id}" class="text-neutral-700 hover:text-[#1b62f2] font-bold text-xs flex items-center gap-0.5">
-                    View →
-                  </a>
                 </div>
               `;
               papersFeed.appendChild(article);
@@ -788,7 +900,8 @@ const filterTabs = [
           if (drafts.length === 0) {
             const emptyMsg = `<div class="text-xs text-neutral-400 text-center py-6">No saved drafts.</div>`;
             if (desktopDraftsList) desktopDraftsList.innerHTML = emptyMsg;
-            if (mobileDraftsContainer) mobileDraftsContainer.innerHTML = emptyMsg;
+            if (mobileDraftsContainer)
+              mobileDraftsContainer.innerHTML = emptyMsg;
             return;
           }
 
@@ -807,69 +920,83 @@ const filterTabs = [
             if (desktopDraftsList) {
               const div = document.createElement("div");
               div.className =
-                "draft-item bg-white rounded-[22px] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-neutral-200/40 flex flex-col gap-3 shrink-0";
+                "draft-item bg-white rounded-2xl p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-neutral-200/40 flex flex-col gap-2 shrink-0 hover:bg-[#e8f0fe] transition-colors cursor-pointer group";
               div.innerHTML = `
-                <div class="flex items-start gap-3.5">
-                  <img src="${draft.coverImage?.url || GLOBE_THUMB}" alt="" class="w-[58px] h-[58px] rounded-xl object-cover shrink-0 bg-[#0f172a]" />
-                  <div class="flex flex-col min-w-0">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${isBlog ? 'BLOG' : 'RESEARCH'}</span>
-                      <span class="text-[10.5px] text-[#888] font-medium leading-tight">${draft.category || "General"}</span>
+                <div class="flex items-start gap-3">
+                  <img src="${draft.coverImage?.url || GLOBE_THUMB}" alt="" class="w-10 h-10 rounded-xl object-cover shrink-0 bg-[#0f172a]" />
+                  <div class="flex flex-col min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 mb-0.5">
+                      <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}">${isBlog ? "BLOG" : "RESEARCH"}</span>
+                      <span class="text-[10px] text-[#888] font-medium leading-tight truncate">${draft.category || "General"}</span>
                     </div>
-                    <h4 class="text-[14px] font-bold text-[#111] leading-snug line-clamp-2">${draft.title || (isBlog ? "Untitled Blog" : "Untitled Manuscript")}</h4>
+                    <h4 class="text-[12.5px] font-semibold text-[#111] group-hover:text-[#1b62f2] leading-tight line-clamp-1 transition-colors">${draft.title || (isBlog ? "Untitled Blog" : "Untitled Manuscript")}</h4>
                   </div>
                 </div>
-                <div class="flex items-center justify-between text-[11px] pt-1 border-t border-neutral-100">
-                  <button type="button" class="btn-resume-draft text-[#1b62f2] hover:underline font-bold flex items-center gap-1 transition cursor-pointer" data-idx="${idx}">
-                    <span>Continue writing</span><span>&gt;</span>
-                  </button>
-                  <span class="text-[#999] text-[10.5px]">${edited}</span>
+                <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100">
+                  <span class="text-[#1b62f2] font-bold group-hover:underline">Continue writing →</span>
+                  <span class="text-[#999] text-[10px]">${edited}</span>
                 </div>
               `;
+              div.onclick = () => {
+                const state = {
+                  title: draft.title || "",
+                  excerpt: draft.excerpt || "",
+                  content: draft.content || "",
+                  category: draft.category || "",
+                  docType: draft.docType || "RESEARCH",
+                  coverImageBase64: draft.coverImage?.url || "",
+                  pdfAttachments: draft.pdfs || [],
+                  updatedAt: Date.now(),
+                };
+                localStorage.setItem(
+                  "the_evidence_editor_state_v15",
+                  JSON.stringify(state),
+                );
+                const targetType = (
+                  draft.docType || "RESEARCH"
+                ).toLowerCase();
+                window.location.href = `/desk/new?type=${targetType}`;
+              };
               desktopDraftsList.appendChild(div);
             }
 
             if (mobileDraftsContainer) {
               const mDiv = document.createElement("div");
               mDiv.className =
-                "bg-white rounded-2xl p-3.5 shadow-sm border border-neutral-200/60 flex flex-col gap-1.5";
+                "bg-white rounded-2xl p-3 shadow-sm border border-neutral-200/60 flex flex-col gap-1.5 cursor-pointer active:bg-neutral-50";
               mDiv.innerHTML = `
                 <div class="flex items-center gap-1.5">
-                  <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${isBlog ? 'BLOG' : 'RESEARCH'}</span>
+                  <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded ${isBlog ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}">${isBlog ? "BLOG" : "RESEARCH"}</span>
                   <span class="text-[10px] font-bold text-neutral-500">${draft.category || "General"}</span>
                 </div>
                 <h4 class="text-xs font-bold text-neutral-900 line-clamp-1">${draft.title || "Untitled Creation"}</h4>
                 <div class="flex items-center justify-between pt-1.5 border-t border-neutral-100 text-xs">
                   <span class="text-[10px] text-neutral-400">${edited}</span>
-                  <button type="button" class="btn-resume-draft text-[#1b62f2] font-bold text-xs cursor-pointer" data-idx="${idx}">Edit Draft →</button>
+                  <span class="text-[#1b62f2] font-bold text-xs">Edit Draft →</span>
                 </div>
               `;
+              mDiv.onclick = () => {
+                const state = {
+                  title: draft.title || "",
+                  excerpt: draft.excerpt || "",
+                  content: draft.content || "",
+                  category: draft.category || "",
+                  docType: draft.docType || "RESEARCH",
+                  coverImageBase64: draft.coverImage?.url || "",
+                  pdfAttachments: draft.pdfs || [],
+                  updatedAt: Date.now(),
+                };
+                localStorage.setItem(
+                  "the_evidence_editor_state_v15",
+                  JSON.stringify(state),
+                );
+                const targetType = (
+                  draft.docType || "RESEARCH"
+                ).toLowerCase();
+                window.location.href = `/desk/new?type=${targetType}`;
+              };
               mobileDraftsContainer.appendChild(mDiv);
             }
-          });
-
-          // Resume Draft Listener
-          document.querySelectorAll(".btn-resume-draft").forEach((btn) => {
-            (btn as HTMLElement).onclick = (e) => {
-              const idx = parseInt((e.currentTarget as HTMLElement).getAttribute("data-idx") || "0", 10);
-              const selected = drafts[idx];
-              if (!selected) return;
-
-              const state = {
-                title: selected.title || "",
-                excerpt: selected.excerpt || "",
-                content: selected.content || "",
-                category: selected.category || "",
-                docType: selected.docType || "RESEARCH",
-                coverImageBase64: selected.coverImage?.url || "",
-                pdfAttachments: selected.pdfs || [],
-                updatedAt: Date.now(),
-              };
-
-              localStorage.setItem("the_evidence_editor_state_v15", JSON.stringify(state));
-              const targetType = (selected.docType || "RESEARCH").toLowerCase();
-              window.location.href = `/desk/new?type=${targetType}`;
-            };
           });
         }
 
@@ -883,8 +1010,15 @@ const filterTabs = [
 
           if (response?.data?.success || response?.status === 200) {
             const resData = response.data || {};
-            allPapers = resData.papers || resData.blogs || (Array.isArray(resData) ? resData : []);
-            allDrafts = resData.drafts || allPapers.filter((p) => (p.status || "").toUpperCase() === "DRAFT");
+            allPapers =
+              resData.papers ||
+              resData.blogs ||
+              (Array.isArray(resData) ? resData : []);
+            allDrafts =
+              resData.drafts ||
+              allPapers.filter(
+                (p) => (p.status || "").toUpperCase() === "DRAFT",
+              );
 
             updateCounts(allPapers, resData.counts || resData.stats);
             renderDrafts(allDrafts);
@@ -905,14 +1039,45 @@ const filterTabs = [
           (tab as HTMLElement).onclick = () => {
             activeStatus = tab.getAttribute("data-status") || "ALL";
             filterTabs.forEach((t) => {
-              t.classList.remove("bg-[#1b62f2]", "text-white", "font-medium", "shadow-sm");
-              t.classList.add("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]");
-              t.querySelector(".filter-count-badge")?.classList.replace("text-white/80", "text-neutral-400");
+              t.classList.remove(
+                "bg-[#1b62f2]",
+                "text-white",
+                "shadow-[0_2px_8px_rgba(27,98,242,0.25)]",
+                "border-transparent",
+              );
+              t.classList.add(
+                "bg-white",
+                "text-[#1a1a1a]",
+                "hover:bg-[#e8f0fe]",
+                "hover:text-[#1b62f2]",
+                "border",
+                "border-neutral-200/60",
+                "shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+              );
+              t.querySelector(".filter-count-badge")?.classList.replace(
+                "text-white/80",
+                "text-[#888]",
+              );
             });
 
-            tab.classList.remove("bg-white", "text-[#1a1a1a]", "hover:bg-[#e8f0fe]", "hover:text-[#1b62f2]");
-            tab.classList.add("bg-[#1b62f2]", "text-white", "font-medium", "shadow-sm");
-            tab.querySelector(".filter-count-badge")?.classList.replace("text-neutral-400", "text-white/80");
+            tab.classList.remove(
+              "bg-white",
+              "text-[#1a1a1a]",
+              "hover:bg-[#e8f0fe]",
+              "hover:text-[#1b62f2]",
+              "border",
+              "border-neutral-200/60",
+              "shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+            );
+            tab.classList.add(
+              "bg-[#1b62f2]",
+              "text-white",
+              "shadow-[0_2px_8px_rgba(27,98,242,0.25)]",
+              "border-transparent",
+            );
+            tab
+              .querySelector(".filter-count-badge")
+              ?.classList.replace("text-[#888]", "text-white/80");
 
             renderCards();
           };
@@ -923,16 +1088,51 @@ const filterTabs = [
           draftSearch.oninput = (e: any) => {
             const q = e.target.value.toLowerCase().trim();
             document.querySelectorAll(".draft-item").forEach((item) => {
-              (item as HTMLElement).style.display = (item.textContent?.toLowerCase() || "").includes(q) ? "flex" : "none";
+              (item as HTMLElement).style.display = (
+                item.textContent?.toLowerCase() || ""
+              ).includes(q)
+                ? "flex"
+                : "none";
             });
           };
         }
       }
 
       document.addEventListener("astro:page-load", loadDeskData);
-      if (document.readyState === "complete" || document.readyState === "interactive") {
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
         loadDeskData();
       }
     </script>
+
+    <script>
+  import { useAuthStore } from "../store/authStore";
+  import { apiClient } from "../api/api-client";
+
+  async function quickGuard() {
+    const store = useAuthStore.getState();
+    if (store.token) return;
+
+    try {
+      // Try to silently refresh the session using your secure HttpOnly cookie
+      const res = await apiClient.get("/user/refresh-token");
+      if (res.data?.accessToken) {
+        store.setToken(res.data.accessToken);
+      }
+    } catch {
+      // If the session is invalid or missing, clear storage and send them to the homepage
+      store.clear();
+      if (window.location.pathname !== "/") {
+        window.location.replace("/");
+      }
+    }
+  }
+
+  document.addEventListener("astro:page-load", quickGuard);
+  quickGuard();
+</script>
+    
   </body>
 </html>

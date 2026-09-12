@@ -432,5 +432,29 @@ const extraPastNotifications = [
         }
       });
     </script>
+    <script>
+  import { useAuthStore } from "../store/authStore";
+  import { apiClient } from "../api/api-client";
+
+  async function quickGuard() {
+    const store = useAuthStore.getState();
+    if (store.token) return;
+
+    try {
+      // Ask backend for a fresh key using the secure cookie
+      const res = await apiClient.get("/user/refresh-token");
+      if (res.data?.accessToken) {
+        store.setToken(res.data.accessToken);
+      }
+    } catch {
+      // If the cookie is dead or missing, bounce them to login
+      store.clear();
+      window.location.replace("/?auth=login");
+    }
+  }
+
+  document.addEventListener("astro:page-load", quickGuard);
+  quickGuard();
+</script>
   </body>
 </html>

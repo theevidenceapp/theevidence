@@ -6,6 +6,8 @@ import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import emailService from "../services/email.service.js";
 import { loginNotificationTemplate } from "../email-templates/login-notification.template.js";
+import fs from "fs/promises";
+import { uploadoncloudinary } from "../services/cloudinary.service.js";
 
 const isProd = config.NODE_ENV === "development";
 
@@ -51,6 +53,94 @@ export const getUser = async (req: Request, res: Response) => {
       success: false,
       message: "Failed to get user",
     });
+  }
+};
+
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    // 'authenticate' middleware attaches the decoded user payload to req.user
+    const userId = (req as any).user?._id || (req as any).user?.id;
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({ success: true, user });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to get user profile" });
+  }
+};
+
+
+
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id || (req as any).user?._id;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID required" });
+    }
+
+    const { name, phone_number, dob, avatar } = req.body;
+    let avatarUrl: string | undefined;
+
+    // Handle Multer file if route uses upload middleware
+    if (req.file) {
+      const cloudinaryResponse = await uploadoncloudinary(req.file.path);
+      if (cloudinaryResponse && cloudinaryResponse.secure_url) {
+        avatarUrl = cloudinaryResponse.secure_url;
+      }
+    } 
+    // Handle Base64 string sent from frontend preview
+    else if (avatar && typeof avatar === "string" && avatar.startsWith("data:image")) {
+      try {
+        const matches = avatar.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const ext = matches[1].split("/")[1] || "png";
+          const buffer = Buffer.from(matches[2], "base64");
+          const tempPath = `./tmp/avatar-${Date.now()}.${ext}`;
+
+          await fs.mkdir("./tmp", { recursive: true });
+          await fs.writeFile(tempPath, buffer);
+
+          const cloudinaryResponse = await uploadoncloudinary(tempPath);
+          if (cloudinaryResponse && cloudinaryResponse.secure_url) {
+            avatarUrl = cloudinaryResponse.secure_url;
+          }
+        }
+      } catch (uploadErr) {
+        console.error("Base64 Cloudinary processing error:", uploadErr);
+      }
+    } else if (avatar && typeof avatar === "string" && avatar.startsWith("http")) {
+      avatarUrl = avatar;
+    }
+
+    const updateData: any = {
+      ...(name && { name: name.trim() }),
+      ...(phone_number !== undefined && { phone_number: phone_number.trim() }),
+      ...(dob && { dob: new Date(dob) }),
+      ...(avatarUrl && { avatar: avatarUrl }),
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { returnDocument: "after", runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    console.error("Update error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
