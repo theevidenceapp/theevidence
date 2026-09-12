@@ -11,6 +11,7 @@ import { apiClient } from "@/api/api-client";
 import { useAuthStore } from "@/store/authStore";
 import UserManagement from "@/pages/user/UserManagement";
 import Dashboard from "@/components/dashboard/dashboard";
+import UsersList from "@/pages/user/UserList";
 
 const App = () => {
   useEffect(() => {
@@ -43,7 +44,7 @@ const App = () => {
 
         <Route element={<ProtectedRoute />}>
           <Route
-            path="/dashboard"
+            path="/admin/dashboard"
             element={
               <AdminPanelLayout>
                 <Dashboard />
@@ -51,10 +52,26 @@ const App = () => {
             }
           />
           <Route
-            path="/user-management"
+            path="/admin/users-list"
             element={
               <AdminPanelLayout>
-                <UserManagement />
+                <UsersList />
+              </AdminPanelLayout>
+            }
+          />
+          <Route
+            path="/admin/app-content"
+            element={
+              <AdminPanelLayout>
+                <UsersList />
+              </AdminPanelLayout>
+            }
+          />
+          <Route
+            path="/admin/blocked-users"
+            element={
+              <AdminPanelLayout>
+                <UsersList />
               </AdminPanelLayout>
             }
           />

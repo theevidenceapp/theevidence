@@ -631,6 +631,7 @@ function exportBlogsToCsv(blogs: BlogAnalyticsItem[]) {
 
 export default function Dashboard() {
     const { data, isLoading, error, refetch } = useDashboardData();
+    console.log(data)
     const [range, setRange] = React.useState<RangeOption>("7 Days");
 
     const avgViewsPerBlog =
