@@ -1,24 +1,39 @@
 /**
  * UsersList.tsx
  * -----------------------------------------------------------------------------
- * Admin Console — User Directory (read-only)
+ * Admin Console — User Directory
  *
  * Renders the "Users" view of the admin console exactly as specified by design:
  *   - Desktop: 4 KPI cards, filter pills, and a paginated data table.
  *   - Mobile:  3 KPI cards, filter pills, and a paginated stacked card list.
  * Selecting any user (row or card) opens an accessible modal with the user's
- * full profile as returned by the API.
+ * full profile as returned by the API, plus — for non-administrator accounts —
+ * an inline role-management control backed by the role-update endpoint.
  *
- * Data source
+ * Data sources
  * -----------------------------------------------------------------------------
- * GET /admin/get-all-users  (via the shared, token-refreshing `apiClient`)
+ * GET  /admin/get-all-users        (via the shared, token-refreshing `apiClient`)
+ * POST /admin/user/role/:userId    (role update; body: { role })
  *
- * This is a single, static, view-only fetch — the entire directory is loaded
- * once. Search, role/verification filtering, and pagination (10 / 25 rows per
- * page) are all performed client-side against that single payload, which is
- * appropriate for an admin directory of this scale. If the directory grows
- * into the tens of thousands of rows, switch to server-side pagination by
- * passing `page`/`pageSize` query params to the endpoint instead.
+ * The directory listing is a single, static, view-only fetch — the entire
+ * directory is loaded once. Search, role/verification/status filtering, and
+ * pagination (10 / 25 rows per page) are all performed client-side against
+ * that single payload, which is appropriate for an admin directory of this
+ * scale. If the directory grows into the tens of thousands of rows, switch to
+ * server-side pagination by passing `page`/`pageSize` query params to the
+ * endpoint instead.
+ *
+ * Role management
+ * -----------------------------------------------------------------------------
+ * The console supports four roles: READER, PUBLISHER, EDITOR, and ADMIN.
+ * Administrators can change the role of any non-administrator account to any
+ * of the four roles directly from the user detail modal. Accounts that are
+ * currently ADMIN are protected from in-console role changes entirely (the
+ * role control is replaced with a read-only notice) — this prevents both
+ * accidental de-escalation of another administrator and unauthorized
+ * self-service privilege changes from this view. Promoting an account to
+ * ADMIN requires an explicit two-step confirmation in the UI before the
+ * request is sent.
  *
  * Integration notes
  * -----------------------------------------------------------------------------
@@ -29,15 +44,8 @@
  * 3. Written against Tailwind CSS utility classes; no custom CSS required.
  *
  * -----------------------------------------------------------------------------
- * Bug-fix pass (see change log at bottom of file for a summary)
+ * Change log lives at the bottom of this file.
  * -----------------------------------------------------------------------------
- * The real API does not always return `role` as a strict, upper-cased
- * "ADMIN" | "PUBLISHER" | "READER" value — case can differ, or the field can
- * be missing/null for a given account. The previous version trusted the
- * TypeScript type and indexed straight into ROLE_CONFIG with the raw value,
- * which threw `Cannot read properties of undefined (reading 'icon')` the
- * moment a role didn't match exactly. Role handling is now normalized and
- * defensive everywhere it's read (badge, stat counts, filter pills).
  */
 
 import { useCallback, useEffect, useMemo, useState, memo } from "react";
@@ -49,8 +57,10 @@ import {
     Users as UsersIcon,
     CheckCircle2,
     ShieldCheck,
+    ShieldAlert,
     PenSquare,
     BookOpenText,
+    FilePenLine,
     Clock3,
     Calendar,
     History,
@@ -68,6 +78,10 @@ import {
     Inbox,
     ChevronLeft,
     ChevronRight,
+    Loader2,
+    UserCog,
+    Lock,
+    PauseCircle,
 } from "lucide-react";
 
 // NOTE: adjust this import to match your project's folder structure.
@@ -77,19 +91,20 @@ import { apiClient } from "@/api/api-client";
  * Types
  * ========================================================================== */
 
-type UserRole = "ADMIN" | "PUBLISHER" | "READER";
+type UserRole = "ADMIN" | "PUBLISHER" | "READER" | "EDITOR";
 
 /**
- * Shape of a single user record as returned by GET /admin/get-all-users.
+ * Shape of a single user record as returned by GET /admin/get-all-users and
+ * POST /admin/user/role/:userId.
  * The endpoint serves two "families" of accounts (local auth vs. Google
  * OAuth), so several fields are optional depending on how the account was
  * provisioned. Every field is treated defensively in the UI.
  *
  * NOTE: `role` is typed as `string` rather than the strict `UserRole` union.
  * The TypeScript union was a lie the API didn't honor at runtime (different
- * casing, or values outside the three known roles) — widening the type here
- * forces every call site to go through `normalizeRole()` instead of trusting
- * a compile-time guarantee the server doesn't actually provide.
+ * casing, or values outside the known roles) — widening the type here forces
+ * every call site to go through `normalizeRole()` instead of trusting a
+ * compile-time guarantee the server doesn't actually provide.
  */
 interface ApiUser {
     _id: string;
@@ -113,17 +128,36 @@ interface GetAllUsersResponse {
     users: ApiUser[];
 }
 
-type FilterKey = "all" | "admin" | "publisher" | "reader" | "verified";
+/** Response contract for POST /admin/user/role/:userId. */
+interface UpdateUserRoleResponse {
+    success: boolean;
+    message?: string;
+    user?: ApiUser;
+}
+
+type FilterKey =
+    | "all"
+    | "admin"
+    | "publisher"
+    | "editor"
+    | "reader"
+    | "verified"
+    | "suspended";
 type FetchStatus = "loading" | "success" | "error";
 type PageToken = number | "ellipsis";
+type RoleSaveState = "idle" | "confirming" | "saving" | "success" | "error";
 
 /* =============================================================================
  * Constants & static configuration
  * ========================================================================== */
 
 const USERS_ENDPOINT = "/admin/get-all-users";
+const USER_ROLE_ENDPOINT = "/admin/user/role";
 const PAGE_SIZE_OPTIONS = [10, 25] as const;
 const DEFAULT_PAGE_SIZE: (typeof PAGE_SIZE_OPTIONS)[number] = 10;
+
+/** Every role the console can assign, in the order they should be offered. */
+const ASSIGNABLE_ROLES: UserRole[] = ["READER", "PUBLISHER", "EDITOR", "ADMIN"];
 
 const ROLE_CONFIG: Record<
     UserRole,
@@ -141,6 +175,12 @@ const ROLE_CONFIG: Record<
         badgeClass: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200",
         iconClass: "text-amber-500",
     },
+    EDITOR: {
+        label: "Editor",
+        icon: FilePenLine,
+        badgeClass: "bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200",
+        iconClass: "text-teal-500",
+    },
     READER: {
         label: "Reader",
         icon: BookOpenText,
@@ -151,7 +191,7 @@ const ROLE_CONFIG: Record<
 
 /**
  * Fallback config for any role value that doesn't normalize to one of the
- * three known roles. Rendering this instead of crashing means a bad/unknown
+ * known roles. Rendering this instead of crashing means a bad/unrecognized
  * role from the API becomes a visible, debuggable badge in the UI rather
  * than a blank screen.
  */
@@ -185,11 +225,18 @@ function cn(...classes: Array<string | false | null | undefined>): string {
  * tolerant of surrounding whitespace, `null`/`undefined`, and non-string
  * values — this is the single source of truth every role comparison in the
  * component should go through, instead of comparing raw strings directly.
+ *
+ * Covers all four roles the API can return (READER, PUBLISHER, EDITOR,
+ * ADMIN). Previously EDITOR was not recognized here, which meant every
+ * editor account fell through to the "Unknown role" badge even though it was
+ * a perfectly valid role — that gap is closed below.
  */
 function normalizeRole(role: unknown): UserRole | null {
     if (typeof role !== "string") return null;
     const upper = role.trim().toUpperCase();
-    return upper === "ADMIN" || upper === "PUBLISHER" || upper === "READER" ? (upper as UserRole) : null;
+    return upper === "ADMIN" || upper === "PUBLISHER" || upper === "READER" || upper === "EDITOR"
+        ? (upper as UserRole)
+        : null;
 }
 
 /** Looks up display config for a raw role value, falling back to the "unknown" config. */
@@ -197,8 +244,7 @@ function getRoleConfig(role: unknown): { label: string; icon: typeof ShieldCheck
     const normalized = normalizeRole(role);
     return normalized ? ROLE_CONFIG[normalized] : UNKNOWN_ROLE_CONFIG;
 }
-
-/** "Divyesh Moraniya" -> "DM" · "theevidence" -> "TH" */
+// /** get Initials */
 function getInitials(name: string): string {
     const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return "?";
@@ -275,6 +321,20 @@ function getPageWindow(current: number, total: number): PageToken[] {
     return pages;
 }
 
+/**
+ * Extracts a human-readable error message from a failed axios request,
+ * falling back to a generic message. Shared by the initial directory fetch
+ * and the role-update mutation so both surfaces report errors consistently.
+ */
+function extractErrorMessage(error: unknown, fallback: string): string {
+    if (axios.isAxiosError(error)) {
+        const serverMessage = (error.response?.data as { message?: string } | undefined)?.message;
+        if (serverMessage) return serverMessage;
+    }
+    if (error instanceof Error && error.message) return error.message;
+    return fallback;
+}
+
 /* =============================================================================
  * Data hook
  * ========================================================================== */
@@ -304,21 +364,57 @@ function useAdminUsers() {
             })
             .catch((error: unknown) => {
                 if (axios.isCancel(error) || controller.signal.aborted) return;
-
-                const message =
-                    (axios.isAxiosError(error) &&
-                        (error.response?.data as { message?: string } | undefined)?.message) ||
-                    (error instanceof Error ? error.message : undefined) ||
-                    "Unable to load the user directory. Please try again.";
-
                 setStatus("error");
-                setErrorMessage(message);
+                setErrorMessage(extractErrorMessage(error, "Unable to load the user directory. Please try again."));
             });
 
         return () => controller.abort();
     }, [reloadToken]);
 
-    return { users, status, errorMessage, reload };
+    /**
+     * Persists a role change for a single user via POST /admin/user/role/:userId
+     * and, on success, patches that user's record in local state so the table,
+     * cards, KPI counts, and filter pills all reflect the new role immediately
+     * without requiring a full reload of the directory.
+     *
+     * Throws (with a display-ready message) on failure so callers can surface
+     * the error inline next to the control that triggered the change.
+     */
+    const updateUserRole = useCallback(async (userId: string, role: UserRole): Promise<ApiUser> => {
+        try {
+            const response = await apiClient.post<UpdateUserRoleResponse>(
+                `${USER_ROLE_ENDPOINT}/${userId}`,
+                { role },
+            );
+
+            if (!response.data?.success) {
+                throw new Error(response.data?.message || "Failed to update user role.");
+            }
+
+            const returnedUser = response.data.user;
+
+            setUsers((prev) =>
+                prev.map((existing) =>
+                    existing._id === userId
+                        ? returnedUser
+                            ? { ...existing, ...returnedUser }
+                            : { ...existing, role }
+                        : existing,
+                ),
+            );
+
+            return returnedUser ?? { ...(users.find((u) => u._id === userId) as ApiUser), role };
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to update user role. Please try again."));
+        }
+        // `users` is intentionally excluded from deps: it is only read inside the
+        // rare fallback branch above (server omitted the updated user in its
+        // response) and re-creating this callback on every users change would
+        // needlessly churn consumers such as the modal.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return { users, status, errorMessage, reload, updateUserRole };
 }
 
 /* =============================================================================
@@ -808,15 +904,190 @@ function DetailRow({
 }
 
 /* =============================================================================
+ * Role management control (inside the modal)
+ * ========================================================================== */
+
+/**
+ * Inline role-management widget rendered in the user detail modal.
+ *
+ * Behavior:
+ * - Accounts whose *current* role is ADMIN are protected: the control renders
+ *   a read-only notice instead of a selector, and no request can be issued
+ *   for that account from this component. This is enforced client-side as a
+ *   UX safeguard; the source of truth is still whatever the server enforces.
+ * - All other accounts can be reassigned to READER, PUBLISHER, EDITOR, or
+ *   ADMIN.
+ * - Selecting ADMIN as the target role requires a second, explicit
+ *   confirmation click before the request is sent, since it's the only
+ *   change here that grants elevated privileges.
+ * - Save is disabled until the selection actually differs from the user's
+ *   current role, and while a request is in flight.
+ * - On success, the parent's `onUpdateRole` updates the shared users list;
+ *   this component resets its local draft/confirmation state whenever the
+ *   underlying user record changes (new selection, or a role that was just
+ *   saved).
+ */
+function RoleManagementControl({
+    user,
+    onUpdateRole,
+}: {
+    user: ApiUser;
+    onUpdateRole: (userId: string, role: UserRole) => Promise<void>;
+}) {
+    const currentRole = normalizeRole(user.role);
+    const isProtectedAdmin = currentRole === "ADMIN";
+
+    const [draftRole, setDraftRole] = useState<UserRole>(currentRole ?? "READER");
+    const [saveState, setSaveState] = useState<RoleSaveState>("idle");
+    const [errorText, setErrorText] = useState<string | null>(null);
+
+    // Whenever the selected user (or their confirmed role) changes, drop any
+    // stale draft/confirmation/error state from a previous session with this
+    // control so it never carries over between users or after a save.
+    useEffect(() => {
+        setDraftRole(currentRole ?? "READER");
+        setSaveState("idle");
+        setErrorText(null);
+    }, [user._id, currentRole]);
+
+    if (isProtectedAdmin) {
+        return (
+            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <Lock className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                    <p className="text-sm font-semibold text-slate-700">Administrator role is protected</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                        This account's role can't be changed from the user directory. Administrator access must be
+                        managed separately.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const hasChanged = draftRole !== (currentRole ?? "READER");
+    const isPromotingToAdmin = draftRole === "ADMIN";
+    const isSaving = saveState === "saving";
+
+    const handleRoleSelect = (nextRole: UserRole) => {
+        setDraftRole(nextRole);
+        setErrorText(null);
+        if (saveState !== "saving") setSaveState("idle");
+    };
+
+    const handleSaveClick = async () => {
+        if (!hasChanged || isSaving) return;
+
+        if (isPromotingToAdmin && saveState !== "confirming") {
+            setSaveState("confirming");
+            return;
+        }
+
+        setSaveState("saving");
+        setErrorText(null);
+        try {
+            await onUpdateRole(user._id, draftRole);
+            setSaveState("success");
+            window.setTimeout(() => setSaveState((prev) => (prev === "success" ? "idle" : prev)), 2500);
+        } catch (error) {
+            setSaveState("error");
+            setErrorText(error instanceof Error ? error.message : "Failed to update user role.");
+        }
+    };
+
+    return (
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3.5">
+            <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                    <UserCog className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Role management</p>
+                    <p className="text-sm font-semibold text-slate-700">Reassign this account's role</p>
+                </div>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <select
+                    value={draftRole}
+                    onChange={(event) => handleRoleSelect(event.target.value as UserRole)}
+                    disabled={isSaving}
+                    aria-label={`Change role for ${user.name}`}
+                    className="w-full flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 disabled:opacity-60 sm:w-auto"
+                >
+                    {ASSIGNABLE_ROLES.map((role) => (
+                        <option key={role} value={role}>
+                            {ROLE_CONFIG[role].label}
+                        </option>
+                    ))}
+                </select>
+
+                <button
+                    type="button"
+                    onClick={handleSaveClick}
+                    disabled={!hasChanged || isSaving}
+                    className={cn(
+                        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40",
+                        saveState === "confirming"
+                            ? "bg-amber-500 text-white hover:bg-amber-600"
+                            : "bg-slate-900 text-white hover:bg-slate-800",
+                    )}
+                >
+                    {isSaving ? (
+                        <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            Saving
+                        </>
+                    ) : saveState === "confirming" ? (
+                        <>
+                            <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                            Confirm Admin
+                        </>
+                    ) : (
+                        "Save role"
+                    )}
+                </button>
+            </div>
+
+            {saveState === "confirming" ? (
+                <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-amber-700">
+                    <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    This grants full administrator access. Click "Confirm Admin" again to proceed, or pick a
+                    different role to cancel.
+                </p>
+            ) : null}
+
+            {saveState === "success" ? (
+                <p className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Role updated successfully.
+                </p>
+            ) : null}
+
+            {saveState === "error" && errorText ? (
+                <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-red-600">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {errorText}
+                </p>
+            ) : null}
+        </div>
+    );
+}
+
+/* =============================================================================
  * User detail modal
  * ========================================================================== */
 
 function UserDetailModal({
     user,
     onOpenChange,
+    onUpdateRole,
 }: {
     user: ApiUser | null;
     onOpenChange: (open: boolean) => void;
+    onUpdateRole: (userId: string, role: UserRole) => Promise<void>;
 }) {
     const isOpen = user !== null;
     const memberSince = user ? formatUtc(user.createdAt) : null;
@@ -858,7 +1129,11 @@ function UserDetailModal({
                                     <VerificationBadge isVerified={Boolean(user.isVerified)} />
                                 </div>
 
-                                <div className="divide-y divide-slate-100">
+                                <div className="pb-4">
+                                    <RoleManagementControl user={user} onUpdateRole={onUpdateRole} />
+                                </div>
+
+                                <div className="divide-y divide-slate-100 border-t border-slate-100">
                                     <DetailRow icon={Mail} label="Email address" value={user.email} copyable={user.email} />
 
                                     <DetailRow
@@ -1014,21 +1289,31 @@ function EmptyState({ hasQuery }: { hasQuery: boolean }) {
  * ========================================================================== */
 
 export default function UsersList() {
-    const { users, status, errorMessage, reload } = useAdminUsers();
+    const { users, status, errorMessage, reload, updateUserRole } = useAdminUsers();
     const [query, setQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
-    const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
+    // Track the selected user by id rather than by object reference. Deriving
+    // the live record from `users` on every render keeps the detail modal in
+    // sync automatically after a role update, without a second copy of state
+    // that could drift out of date.
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
     const [currentPage, setCurrentPage] = useState<number>(1);
+
+    const selectedUser = useMemo(
+        () => (selectedUserId ? users.find((u) => u._id === selectedUserId) ?? null : null),
+        [users, selectedUserId],
+    );
 
     const stats = useMemo(() => {
         const total = users.length;
         const active = users.filter((u) => u.isActive).length;
-        // Role comparisons go through normalizeRole() so casing differences
-        // or unexpected values from the API don't silently drop users out of
-        // every role-based count.
+        // Role comparisons go through normalizeRole() so casing differences,
+        // unexpected values, or (previously) the EDITOR role don't silently
+        // drop users out of every role-based count.
         const admins = users.filter((u) => normalizeRole(u.role) === "ADMIN").length;
         const publishers = users.filter((u) => normalizeRole(u.role) === "PUBLISHER").length;
+        const editors = users.filter((u) => normalizeRole(u.role) === "EDITOR").length;
         const readers = users.filter((u) => normalizeRole(u.role) === "READER").length;
         const verified = users.filter((u) => u.isVerified === true).length;
 
@@ -1037,10 +1322,11 @@ export default function UsersList() {
             active,
             admins,
             publishers,
+            editors,
             readers,
             verified,
             suspended: total - active,
-            scopedTier: publishers + readers,
+            contentTeam: publishers + editors + readers,
             activePercent: total === 0 ? 0 : Math.round((active / total) * 100),
         };
     }, [users]);
@@ -1050,8 +1336,10 @@ export default function UsersList() {
 
         if (activeFilter === "admin") list = list.filter((u) => normalizeRole(u.role) === "ADMIN");
         else if (activeFilter === "publisher") list = list.filter((u) => normalizeRole(u.role) === "PUBLISHER");
+        else if (activeFilter === "editor") list = list.filter((u) => normalizeRole(u.role) === "EDITOR");
         else if (activeFilter === "reader") list = list.filter((u) => normalizeRole(u.role) === "READER");
         else if (activeFilter === "verified") list = list.filter((u) => u.isVerified === true);
+        else if (activeFilter === "suspended") list = list.filter((u) => u.isActive === false);
 
         const trimmedQuery = query.trim().toLowerCase();
         if (trimmedQuery.length > 0) {
@@ -1094,6 +1382,23 @@ export default function UsersList() {
         setPageSize(size);
     }, []);
 
+    const handleSelectUser = useCallback((user: ApiUser) => {
+        setSelectedUserId(user._id);
+    }, []);
+
+    const handleModalOpenChange = useCallback((open: boolean) => {
+        if (!open) setSelectedUserId(null);
+    }, []);
+
+    // Thin adapter so the modal / RoleManagementControl only need to know
+    // "update this id to this role", not how the hook's state is shaped.
+    const handleUpdateRole = useCallback(
+        async (userId: string, role: UserRole) => {
+            await updateUserRole(userId, role);
+        },
+        [updateUserRole],
+    );
+
     const filters: Array<{
         key: FilterKey;
         label: string;
@@ -1104,8 +1409,10 @@ export default function UsersList() {
             { key: "all", label: "All Accounts", count: stats.total },
             { key: "admin", label: "Admins", count: stats.admins },
             { key: "publisher", label: "Publishers", count: stats.publishers },
+            { key: "editor", label: "Editors", count: stats.editors },
             { key: "reader", label: "Readers", count: stats.readers },
             { key: "verified", label: "Verified", count: stats.verified, icon: CheckCircle2, className: "hidden md:inline-flex" },
+            { key: "suspended", label: "Suspended", count: stats.suspended, icon: PauseCircle, className: "hidden md:inline-flex" },
         ];
 
     const isLoading = status === "loading";
@@ -1127,13 +1434,13 @@ export default function UsersList() {
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-slate-500">
-                            View-only inspection of registered team accounts, role privileges, and activity status.
+                            Inspect registered team accounts, manage role privileges, and review activity status.
                         </p>
                     </div>
 
                     <span className="inline-flex items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                        <ShieldCheck className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                        Read-Only View
+                        <UserCog className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                        Role Management Enabled
                     </span>
                 </div>
 
@@ -1208,13 +1515,15 @@ export default function UsersList() {
 
                             <div className="hidden lg:block">
                                 <StatCard
-                                    label="Publishers & Readers"
+                                    label="Content Team"
                                     value={
-                                        <span className="text-2xl">
+                                        <span className="text-xl">
                                             {stats.publishers}
-                                            <span className="mx-1 text-base font-medium text-slate-400">Publisher</span>·{" "}
+                                            <span className="mx-1 text-sm font-medium text-slate-400">Pub</span>·{" "}
+                                            {stats.editors}
+                                            <span className="mx-1 text-sm font-medium text-slate-400">Edit</span>·{" "}
                                             {stats.readers}
-                                            <span className="ml-1 text-base font-medium text-slate-400">Reader</span>
+                                            <span className="ml-1 text-sm font-medium text-slate-400">Read</span>
                                         </span>
                                     }
                                     icon={PenSquare}
@@ -1223,7 +1532,7 @@ export default function UsersList() {
                                     footer={
                                         <span className="inline-flex items-center gap-1.5">
                                             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                            {stats.scopedTier} scoped tier members
+                                            {stats.contentTeam} publisher, editor & reader accounts
                                         </span>
                                     }
                                 />
@@ -1236,7 +1545,7 @@ export default function UsersList() {
                 {/* Filters + search                                                */}
                 {/* ---------------------------------------------------------------- */}
                 <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+                    <div className="flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-1 sm:pb-0">
                         {filters.map((filter) => (
                             <FilterPill
                                 key={filter.key}
@@ -1287,7 +1596,7 @@ export default function UsersList() {
                         <EmptyState hasQuery={hasActiveQueryOrFilter} />
                     ) : (
                         paginatedUsers.map((user) => (
-                            <DesktopUserRow key={user._id} user={user} onSelect={setSelectedUser} />
+                            <DesktopUserRow key={user._id} user={user} onSelect={handleSelectUser} />
                         ))
                     )}
 
@@ -1320,7 +1629,7 @@ export default function UsersList() {
                         </div>
                     ) : (
                         paginatedUsers.map((user) => (
-                            <MobileUserCard key={user._id} user={user} onSelect={setSelectedUser} />
+                            <MobileUserCard key={user._id} user={user} onSelect={handleSelectUser} />
                         ))
                     )}
 
@@ -1349,7 +1658,7 @@ export default function UsersList() {
                 </div>
             </div>
 
-            <UserDetailModal user={selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)} />
+            <UserDetailModal user={selectedUser} onOpenChange={handleModalOpenChange} onUpdateRole={handleUpdateRole} />
         </div>
     );
 }
@@ -1357,26 +1666,66 @@ export default function UsersList() {
 /* =============================================================================
  * Change log (this pass)
  * -----------------------------------------------------------------------------
- * 1. CRASH FIX: RoleBadge threw "Cannot read properties of undefined (reading
- *    'icon')" whenever `user.role` wasn't an exact match for "ADMIN" |
- *    "PUBLISHER" | "READER" (wrong casing, null, or an unrecognized role from
- *    the API). Added `normalizeRole()` + `getRoleConfig()` and an
- *    UNKNOWN_ROLE_CONFIG fallback so any role value renders a badge instead
- *    of throwing.
- * 2. `ApiUser.role` widened from the strict `UserRole` union to `string`,
- *    since the compile-time type was not something the API actually
- *    guaranteed at runtime.
- * 3. Role-based stat counts and role filter pills (`admin`/`publisher`/
- *    `reader`) now compare through `normalizeRole()` too, so casing
- *    mismatches no longer silently under-count or mis-bucket users the way
- *    a raw `u.role === "ADMIN"` comparison did.
- * 4. `getInitials` / `paletteFor` guarded against a missing `name` / `_id`
- *    (`(name ?? "")`, `id ?? ""`) so a record missing those fields can't
- *    throw on `.trim()` / `.charCodeAt`.
- * 5. Search filter guarded `u.name` / `u.email` with `?? ""` before
- *    `.toLowerCase()` for the same reason.
- * 6. Fixed `h-4.5 w-4.5` (not a real Tailwind spacing step — the scale jumps
- *    3.5 → 4 → 5) to `h-[18px] w-[18px]` in StatCard's icon and the modal's
- *    close button, so those icons render at the intended size instead of
- *    falling back to default sizing.
+ * EDITOR role support (fixes "Unknown role" for editors)
+ * 1. `UserRole` now includes "EDITOR" alongside "ADMIN" | "PUBLISHER" |
+ *    "READER", matching the updated `IUser.role` union on the backend model.
+ * 2. `normalizeRole()` now recognizes "EDITOR" (any casing/whitespace), so
+ *    editor accounts resolve to a real role instead of falling through to
+ *    `UNKNOWN_ROLE_CONFIG` — this was the root cause of editors showing an
+ *    "Unknown role" badge.
+ * 3. Added a dedicated `ROLE_CONFIG.EDITOR` entry (Editor label, FilePenLine
+ *    icon, teal badge) visually distinct from Publisher (amber) and Reader
+ *    (slate).
+ * 4. Editors are now counted in KPI stats (`stats.editors`), included in the
+ *    "Content Team" KPI card (renamed from "Publishers & Readers"), and have
+ *    their own filter pill.
+ *
+ * Role-update API integration (POST /admin/user/role/:userId)
+ * 5. `useAdminUsers()` now also returns `updateUserRole(userId, role)`, which
+ *    POSTs to `/admin/user/role/:userId` with `{ role }`, validates the
+ *    `{ success, user }` response shape, and patches the affected user's
+ *    record in local state on success (no full reload required). Errors are
+ *    normalized via `extractErrorMessage()` and re-thrown with a
+ *    display-ready message.
+ * 6. Added `RoleManagementControl`, rendered inside `UserDetailModal`,
+ *    providing an inline role selector + save action:
+ *      - Accounts whose current role is ADMIN render a protected, read-only
+ *        notice and cannot be reassigned from this view, per the requirement
+ *        that admins can update anyone's role *except* other admins'.
+ *      - All other accounts can be reassigned to READER / PUBLISHER / EDITOR
+ *        / ADMIN.
+ *      - Selecting ADMIN as the new role requires a second "Confirm Admin"
+ *        click before the request fires, to guard against accidental
+ *        privilege escalation.
+ *      - Surfaces saving / success / error states inline, and disables the
+ *        Save action until the selection actually differs from the user's
+ *        current role.
+ * 7. `selectedUser` is now derived from `users` via `selectedUserId` instead
+ *    of being stored as a standalone object, so the modal automatically
+ *    reflects a role change the instant local state updates — no separate
+ *    sync logic required, and no risk of the modal showing a stale role
+ *    after a successful save.
+ *
+ * Filtering enhancements
+ * 8. Added an "Editors" filter pill (role = EDITOR).
+ * 9. Added a new "Suspended" filter pill (isActive === false) — a
+ *    previously-unavailable way to isolate deactivated accounts, in addition
+ *    to the existing role and verification filters.
+ * 10. The search bar (`query`, matched against name/email) is untouched and
+ *     continues to compose with whichever filter pill is active, exactly as
+ *     before.
+ *
+ * Carried over from the previous pass (unchanged)
+ * 11. `ApiUser.role` remains `string` (not the strict union), since the API
+ *     is still the runtime source of truth; all comparisons go through
+ *     `normalizeRole()`.
+ * 12. `getInitials` / `paletteFor` remain guarded against a missing `name` /
+ *     `_id`.
+ * 13. Search filter still guards `u.name` / `u.email` with `?? ""` before
+ *     `.toLowerCase()`.
+ * 14. `h-[18px] w-[18px]` icon sizing (StatCard icon, modal close button)
+ *     preserved as-is.
+ * 15. Pagination (10/25 rows, page windowing, range text), responsive
+ *     desktop-table / mobile-card layouts, loading skeletons, error banner
+ *     with retry, and the empty state are all unchanged in behavior.
  * ========================================================================== */
