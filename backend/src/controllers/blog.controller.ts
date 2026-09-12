@@ -21,14 +21,14 @@ export const createBlog = async (req: Request, res: Response) => {
   try {
     const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
     const authorId = (req as any).user?._id;
-    const { title, slug, content, excerpt, category, tags, author, status } = req.body;
+    const { title, slug, content, excerpt, category, tags, status } = req.body;
 
-    // Typecast files from multer so TypeScript recognizes the structure and file paths
+    // Typecast files from multer
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
     // Helper for safe cleanup if files exist
     const cleanupUploadedFiles = () => {
-      if (typeof safeUnlink === "function" && files) {
+      if (files) {
         if (files.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
         if (files.csv) files.csv.forEach((f) => safeUnlink(f.path));
         if (files.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
@@ -47,18 +47,54 @@ export const createBlog = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Title, slug, and content are required" });
     }
 
-    // 3. BYPASS CLOUDINARY TEMPORARILY (Declared in outer try-catch scope)
-    const coverImage = {
+    // 3. PROCESS CLOUDINARY UPLOADS FOR FILES
+    let coverImage = {
       url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400",
-      publicId: "test",
+      publicId: "default",
     };
-    const csv = { url: "" };
+    let csv = { url: "" };
     let pdfs: Array<{ url: string; publicId: string; originalName: string }> = [];
 
-    // Note: If you want to enable uploadPromises later, define the array first before awaiting:
-    // const uploadPromises: Promise<any>[] = [];
-    // const uploadedResults = await Promise.all(uploadPromises);
-    // pdfs = uploadedResults.filter(Boolean);
+    if (files) {
+      // Upload coverImage if provided
+      if (files.coverImage && files.coverImage[0]) {
+        const coverResult = await uploadoncloudinary(files.coverImage[0].path);
+        if (coverResult) {
+          coverImage = {
+            url: coverResult.secure_url,
+            publicId: coverResult.public_id,
+          };
+        }
+      }
+
+      // Upload csv if provided
+      if (files.csv && files.csv[0]) {
+        const csvResult = await uploadoncloudinary(files.csv[0].path);
+        if (csvResult) {
+          csv = {
+            url: csvResult.secure_url,
+          };
+        }
+      }
+
+      // Upload pdfs if provided
+      if (files.pdfs && files.pdfs.length > 0) {
+        const pdfUploadPromises = files.pdfs.map(async (file) => {
+          const pdfResult = await uploadoncloudinary(file.path);
+          if (pdfResult) {
+            return {
+              url: pdfResult.secure_url,
+              publicId: pdfResult.public_id,
+              originalName: file.originalname,
+            };
+          }
+          return null;
+        });
+
+        const uploadedPdfs = await Promise.all(pdfUploadPromises);
+        pdfs = uploadedPdfs.filter(Boolean) as any;
+      }
+    }
 
     // 4. PARSE TAGS & STATUS
     const parsedTags = Array.isArray(tags)
@@ -102,7 +138,6 @@ export const createBlog = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-
 // ----------------------------------------------------
 // 2. GET ALL BLOGS (Admin/Desk - Excludes heavy content)
 // ----------------------------------------------------
@@ -194,7 +229,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
       status: "PUBLISHED",
     };
 
-    // Fast search: Only scan title, excerpt, and tags (NEVER scan heavy base64 content)
     if (search && typeof search === "string" && search.trim()) {
       const searchRegex = { $regex: search.trim(), $options: "i" };
       filter.$or = [
@@ -204,7 +238,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
       ];
     }
 
-    // Category filter
     if (category && typeof category === "string" && category.trim()) {
       filter.category = {
         $regex: `^${category.trim()}$`,
@@ -212,7 +245,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
       };
     }
 
-    // Tag filter
     if (tag && typeof tag === "string" && tag.trim()) {
       filter.tags = {
         $regex: tag.trim(),
@@ -224,7 +256,7 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
 
     const [blogs, totalBlogs] = await Promise.all([
       Blog.find(filter)
-        .select("title slug excerpt coverImage category tags publishedAt author views createdAt")
+        .select("title slug excerpt coverImage category tags publishedAt author views createdAt docType") // <-- Added docType here!
         .populate("author", "name email avatar")
         .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
@@ -237,7 +269,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalBlogs / perPage);
     const hasMore = currentPage < totalPages;
 
-    // Cache responses briefly to maximize performance
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
 
     return res.status(200).json({

@@ -6,8 +6,12 @@ import EditorHeader from "../../components/editor/EditorHeader.astro";
 import EditorToolbar from "../../components/editor/EditorToolbar.astro";
 import EditorModals from "../../components/editor/EditorModals.astro";
 
-const DEFAULT_COVER = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80";
-const API_URL = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BACKEND_URI || "http://localhost:5000";
+const DEFAULT_COVER =
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80";
+const API_URL =
+  import.meta.env.VITE_BACKEND_URI ||
+  import.meta.env.PUBLIC_BACKEND_URI ||
+  "http://localhost:5000";
 const authorId = "6a8462f3cda1ff595c54bd4a";
 
 const categories = [
@@ -25,7 +29,7 @@ const categories = [
   "Risk Management",
   "Environmental Policy",
   "Global Security",
-  "Macroeconomics"
+  "Macroeconomics",
 ];
 ---
 
@@ -33,29 +37,49 @@ const categories = [
 <html lang="en" class="bg-[#eceef1]">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <ClientRouter />
     <title>The Evidence - Editor Studio</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css"
+      rel="stylesheet"
+    />
 
     <style is:global>
-      html, body {
+      html,
+      body {
         background-color: #eceef1 !important;
         margin: 0;
         padding: 0;
         -webkit-tap-highlight-color: transparent;
         scroll-behavior: smooth;
+        overflow-x: hidden;
       }
-      .no-scroll::-webkit-scrollbar { display: none; }
-      .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
 
       .canvas-editor {
-        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-family:
+          "Plus Jakarta Sans",
+          system-ui,
+          -apple-system,
+          sans-serif;
         color: #111827;
         outline: none !important;
       }
@@ -67,10 +91,12 @@ const categories = [
         display: block;
       }
 
-      .ql-toolbar.ql-snow { display: none !important; }
+      .ql-toolbar.ql-snow {
+        display: none !important;
+      }
       .ql-container.ql-snow {
         border: none !important;
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-family: "Plus Jakarta Sans", sans-serif !important;
         font-size: 15px !important;
       }
       @media (min-width: 640px) {
@@ -98,32 +124,77 @@ const categories = [
         color: #9ca3af !important;
         font-style: normal !important;
       }
-      
-      .ql-editor strong, .ql-editor b { font-weight: 800 !important; color: #000000 !important; }
-      .ql-editor em, .ql-editor i { font-style: italic !important; }
-      .ql-editor u { text-decoration: underline !important; text-underline-offset: 3px !important; }
-      .ql-editor h1 { font-size: 24px !important; font-weight: 800 !important; margin: 0.8em 0 0.3em 0 !important; display: block !important; }
-      .ql-editor h2 { font-size: 20px !important; font-weight: 700 !important; margin: 0.7em 0 0.25em 0 !important; display: block !important; }
-      .ql-editor h3 { font-size: 17px !important; font-weight: 700 !important; margin: 0.6em 0 0.2em 0 !important; display: block !important; }
-      .ql-editor h4 { font-size: 15px !important; font-weight: 700 !important; margin: 0.5em 0 0.2em 0 !important; display: block !important; }
-      @media (min-width: 640px) {
-        .ql-editor h1 { font-size: 28px !important; }
-        .ql-editor h2 { font-size: 22px !important; }
-        .ql-editor h3 { font-size: 18px !important; }
-        .ql-editor h4 { font-size: 16px !important; }
+
+      .ql-editor strong,
+      .ql-editor b {
+        font-weight: 800 !important;
+        color: #000000 !important;
       }
-      .ql-editor p { margin: 0 0 0.5em 0 !important; font-size: inherit; }
+      .ql-editor em,
+      .ql-editor i {
+        font-style: italic !important;
+      }
+      .ql-editor u {
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+      }
+      .ql-editor h1 {
+        font-size: 24px !important;
+        font-weight: 800 !important;
+        margin: 0.8em 0 0.3em 0 !important;
+        display: block !important;
+      }
+      .ql-editor h2 {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        margin: 0.7em 0 0.25em 0 !important;
+        display: block !important;
+      }
+      .ql-editor h3 {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        margin: 0.6em 0 0.2em 0 !important;
+        display: block !important;
+      }
+      .ql-editor h4 {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        margin: 0.5em 0 0.2em 0 !important;
+        display: block !important;
+      }
+      @media (min-width: 640px) {
+        .ql-editor h1 {
+          font-size: 28px !important;
+        }
+        .ql-editor h2 {
+          font-size: 22px !important;
+        }
+        .ql-editor h3 {
+          font-size: 18px !important;
+        }
+        .ql-editor h4 {
+          font-size: 16px !important;
+        }
+      }
+      .ql-editor p {
+        margin: 0 0 0.5em 0 !important;
+        font-size: inherit;
+      }
       .ql-editor img {
         border-radius: 14px;
         margin: 8px 0;
         max-width: 100%;
         display: block;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
         cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
       }
       .ql-editor img:hover {
-        box-shadow: 0 0 0 2px #1b62f2, 0 4px 20px rgba(0,0,0,0.1);
+        box-shadow:
+          0 0 0 2px #1b62f2,
+          0 4px 20px rgba(0, 0, 0, 0.1);
       }
       .ql-editor blockquote {
         border-left: 3px solid #1b62f2 !important;
@@ -133,16 +204,45 @@ const categories = [
         margin: 0.8em 0 !important;
         display: block !important;
       }
-      .ql-editor a { color: #1b62f2 !important; text-decoration: underline !important; }
-      .ql-editor ol { list-style-type: decimal !important; padding-left: 1.4rem !important; margin-bottom: 0.4em !important; }
-      .ql-editor ul { list-style-type: disc !important; padding-left: 1.4rem !important; margin-bottom: 0.4em !important; }
-      .ql-editor li { margin-bottom: 0.2em !important; display: list-item !important; }
+      .ql-editor a {
+        color: #1b62f2 !important;
+        text-decoration: underline !important;
+      }
+      .ql-editor ol {
+        list-style-type: decimal !important;
+        padding-left: 1.4rem !important;
+        margin-bottom: 0.4em !important;
+      }
+      .ql-editor ul {
+        list-style-type: disc !important;
+        padding-left: 1.4rem !important;
+        margin-bottom: 0.4em !important;
+      }
+      .ql-editor li {
+        margin-bottom: 0.2em !important;
+        display: list-item !important;
+      }
 
-      .ql-editor .ql-size-14px, .ql-editor span[style*="font-size: 14px"] { font-size: 14px !important; }
-      .ql-editor .ql-size-16px, .ql-editor span[style*="font-size: 16px"] { font-size: 16px !important; }
-      .ql-editor .ql-size-18px, .ql-editor span[style*="font-size: 18px"] { font-size: 18px !important; }
-      .ql-editor .ql-size-20px, .ql-editor span[style*="font-size: 20px"] { font-size: 20px !important; }
-      .ql-editor .ql-size-24px, .ql-editor span[style*="font-size: 24px"] { font-size: 24px !important; }
+      .ql-editor .ql-size-14px,
+      .ql-editor span[style*="font-size: 14px"] {
+        font-size: 14px !important;
+      }
+      .ql-editor .ql-size-16px,
+      .ql-editor span[style*="font-size: 16px"] {
+        font-size: 16px !important;
+      }
+      .ql-editor .ql-size-18px,
+      .ql-editor span[style*="font-size: 18px"] {
+        font-size: 18px !important;
+      }
+      .ql-editor .ql-size-20px,
+      .ql-editor span[style*="font-size: 20px"] {
+        font-size: 20px !important;
+      }
+      .ql-editor .ql-size-24px,
+      .ql-editor span[style*="font-size: 24px"] {
+        font-size: 24px !important;
+      }
 
       /* Mobile-Responsive Formatting Dock Overrides */
       #format-dock {
@@ -173,88 +273,208 @@ const categories = [
       }
 
       @keyframes shakeAnimation {
-        0%, 100% { transform: translateX(0); }
-        20%, 60% { transform: translateX(-4px); }
-        40%, 80% { transform: translateX(4px); }
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-4px);
+        }
+        40%,
+        80% {
+          transform: translateX(4px);
+        }
       }
       .animate-shake {
         animation: shakeAnimation 0.4s ease-in-out;
       }
     </style>
   </head>
-  <body class="bg-[#eceef1] text-[#111] antialiased min-h-screen flex flex-col font-sans select-none relative" data-api-url={API_URL} data-author-id={authorId}>
-    
+  <body
+    class="bg-[#eceef1] text-[#111] antialiased min-h-screen flex flex-col font-sans select-none relative"
+    data-api-url={API_URL}
+    data-author-id={authorId}
+  >
     <EditorHeader categories={categories} />
 
-    <main class="flex-1 w-full flex flex-col items-center justify-start px-2 sm:px-4 pb-48 pt-1 sm:pt-2">
-      <div class="bg-white rounded-[22px] sm:rounded-[36px] overflow-hidden shadow-[0_2px_14px_rgba(0,0,0,0.03)] border border-neutral-200/80 w-full max-w-[800px] flex flex-col relative min-h-[600px] sm:min-h-[720px]">
-        
-        <div class="relative w-full h-[170px] sm:h-[300px] bg-neutral-900 overflow-hidden group">
-          <img id="cover-avatar-preview" src={DEFAULT_COVER} alt="Cover Banner" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-between p-3.5 sm:p-6">
-            <span id="cover-badge-text" class="text-xs font-semibold text-white/90 drop-shadow-sm">Article Header Cover</span>
-            <label for="cover-file-input" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/90 hover:bg-white text-neutral-900 rounded-full text-xs font-bold shadow-md cursor-pointer transition active:scale-95 backdrop-blur-sm flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    <main
+      class="flex-1 w-full flex flex-col items-center justify-start px-2 sm:px-4 pb-48 pt-1 sm:pt-2"
+    >
+      <div
+        class="bg-white rounded-[22px] sm:rounded-[36px] overflow-hidden shadow-[0_2px_14px_rgba(0,0,0,0.03)] border border-neutral-200/80 w-full max-w-[800px] flex flex-col relative min-h-[600px] sm:min-h-[720px]"
+      >
+        <div
+          class="relative w-full h-[170px] sm:h-[300px] bg-neutral-900 overflow-hidden group"
+        >
+          <img
+            id="cover-avatar-preview"
+            src={DEFAULT_COVER}
+            alt="Cover Banner"
+            class="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-between p-3.5 sm:p-6"
+          >
+            <span
+              id="cover-badge-text"
+              class="text-xs font-semibold text-white/90 drop-shadow-sm"
+              >Article Header Cover</span
+            >
+            <label
+              for="cover-file-input"
+              class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/90 hover:bg-white text-neutral-900 rounded-full text-xs font-bold shadow-md cursor-pointer transition active:scale-95 backdrop-blur-sm flex items-center gap-1.5"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                ></path><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg
+              >
               <span>Change Cover</span>
             </label>
-            <input type="file" id="cover-file-input" accept="image/*" class="hidden" />
+            <input
+              type="file"
+              id="cover-file-input"
+              accept="image/*"
+              class="hidden"
+            />
           </div>
         </div>
 
         <div class="px-3.5 sm:px-14 py-4 sm:py-10 flex flex-col gap-4 sm:gap-8">
-          
-          <section id="section-research-title" class="flex flex-col gap-1 sm:gap-2">
-            <h2 class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight">Title</h2>
+          <section
+            id="section-research-title"
+            class="flex flex-col gap-1 sm:gap-2"
+          >
+            <h2
+              id="heading-title"
+              class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight transition-all duration-200"
+            >
+              Title
+            </h2>
             <div
               id="field-title"
               contenteditable="true"
               data-placeholder="Give your research a clear, compelling title..."
               class="canvas-editor text-base sm:text-lg text-neutral-800 font-medium py-1 select-text"
-            ></div>
+            >
+            </div>
           </section>
 
-          <section id="section-research-abstract" class="flex flex-col gap-1 sm:gap-2">
-            <h2 class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight">Abstract</h2>
+          <section
+            id="section-research-abstract"
+            class="flex flex-col gap-1 sm:gap-2"
+          >
+            <h2
+              id="heading-abstract"
+              class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight transition-all duration-200"
+            >
+              Abstract
+            </h2>
             <div
               id="field-excerpt"
               contenteditable="true"
               data-placeholder="Summarize your research in a few sentences..."
               class="canvas-editor text-sm sm:text-[15px] text-neutral-600 leading-relaxed py-1 select-text"
-            ></div>
+            >
+            </div>
           </section>
 
           <section class="flex flex-col gap-2 relative">
             <div class="flex items-center justify-between mb-1">
               <div class="flex items-center gap-2 sm:gap-3">
-                <h2 id="content-heading-text" class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight">Content</h2>
-                <span id="blog-word-counter" class="text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500 hidden">0 / 3,000 words</span>
+                <h2
+                  id="content-heading-text"
+                  class="text-xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight transition-all duration-200"
+                >
+                  Content
+                </h2>
+                <span
+                  id="blog-word-counter"
+                  class="text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500 hidden"
+                  >0 / 3,000 words</span
+                >
               </div>
 
               <div class="flex items-center gap-1.5 sm:gap-2">
-                <label for="inline-img-file" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#f0f3fa] hover:bg-[#e4ebfa] text-xs font-semibold text-[#1b62f2] cursor-pointer transition active:scale-95">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <label
+                  for="inline-img-file"
+                  class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#f0f3fa] hover:bg-[#e4ebfa] text-xs font-semibold text-[#1b62f2] cursor-pointer transition active:scale-95"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    ><rect x="3" y="3" width="18" height="18" rx="2"
+                    ></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path
+                      d="M21 15l-5-5L5 21"></path></svg
+                  >
                   <span class="hidden md:block">+ Image</span>
-                  <input type="file" id="inline-img-file" accept="image/*" class="hidden" />
+                  <input
+                    type="file"
+                    id="inline-img-file"
+                    accept="image/*"
+                    class="hidden"
+                  />
                 </label>
 
-                <label for="inline-csv-file" class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-700 cursor-pointer transition active:scale-95">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-6 4 3 5-8"/></svg>
+                <label
+                  for="inline-csv-file"
+                  class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-700 cursor-pointer transition active:scale-95"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    ><path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 3v18h18M7 15l4-6 4 3 5-8"></path></svg
+                  >
                   <span class="hidden md:block">+ Graph</span>
-                  <input type="file" id="inline-csv-file" accept=".csv,text/csv" class="hidden" />
+                  <input
+                    type="file"
+                    id="inline-csv-file"
+                    accept=".csv,text/csv"
+                    class="hidden"
+                  />
                 </label>
               </div>
             </div>
-            
+
             <div class="relative w-full">
               <div id="quill-editor-container" class="w-full"></div>
-              
+
               <div
                 id="media-action-bar"
                 class="hidden absolute z-30 items-center gap-1.5 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.14)] border border-neutral-200/80 transition-all duration-150 select-none pointer-events-auto"
               >
-                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 border-r border-neutral-200/80 pr-2">
-                  <svg class="w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <div
+                  class="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 border-r border-neutral-200/80 pr-2"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"
+                    ></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                     <polyline points="21 15 16 10 5 21"></polyline>
                   </svg>
@@ -267,8 +487,18 @@ const categories = [
                   class="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-rose-50 text-neutral-600 hover:text-rose-600 text-xs font-semibold transition active:scale-95 cursor-pointer"
                   title="Remove Image"
                 >
-                  <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    class="w-3.5 h-3.5 text-rose-500"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    ></path>
                   </svg>
                   <span>Remove</span>
                 </button>
@@ -276,13 +506,28 @@ const categories = [
             </div>
           </section>
 
-          <section id="section-research-pdfs" class="flex flex-col gap-3 pt-5 border-t border-neutral-100">
+          <section
+            id="section-research-pdfs"
+            class="flex flex-col gap-3 pt-5 border-t border-neutral-100"
+          >
             <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-neutral-900 flex items-center gap-2">
-                <svg class="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm-1 15v-4H8l4-5 4 5h-3v4h-2z"/></svg>
+              <h3
+                class="text-sm font-bold text-neutral-900 flex items-center gap-2"
+              >
+                <svg
+                  class="w-4 h-4 text-rose-500"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  ><path
+                    d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm-1 15v-4H8l4-5 4 5h-3v4h-2z"
+                  ></path></svg
+                >
                 <span>Attached Research Documents</span>
               </h3>
-              <span id="pdf-count-badge" class="text-[11px] font-bold text-neutral-400">0 / 3 PDFs</span>
+              <span
+                id="pdf-count-badge"
+                class="text-[11px] font-bold text-neutral-400">0 / 3 PDFs</span
+              >
             </div>
 
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -291,16 +536,32 @@ const categories = [
                 for="pdf-input"
                 class="px-3.5 py-2 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-xs font-semibold text-neutral-700 flex items-center gap-1.5 cursor-pointer transition active:scale-95"
               >
-                <svg class="w-3.5 h-3.5 text-rose-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+                <svg
+                  class="w-3.5 h-3.5 text-rose-600"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  ><path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path><path d="M14 2v6h6"></path></svg
+                >
                 <span>Attach Research PDF (Max 3)</span>
-                <input type="file" id="pdf-input" accept="application/pdf" multiple class="hidden" />
+                <input
+                  type="file"
+                  id="pdf-input"
+                  accept="application/pdf"
+                  multiple
+                  class="hidden"
+                />
               </label>
             </div>
 
-            <div id="attached-files-list" class="flex flex-col gap-2 pt-1"></div>
+            <div id="attached-files-list" class="flex flex-col gap-2 pt-1">
+            </div>
           </section>
 
-          <div class="flex items-center justify-between pt-5 border-t border-gray-100 mt-1">
+          <div
+            class="flex items-center justify-between pt-5 border-t border-gray-100 mt-1"
+          >
             <button
               type="button"
               id="draft-btn"
@@ -315,10 +576,19 @@ const categories = [
               class="flex items-center gap-2 bg-[#111] hover:bg-black text-white text-xs font-bold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
             >
               <span id="publish-btn-text">Publish Paper</span>
-              <svg id="publish-spinner" class="hidden animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+              <svg
+                id="publish-spinner"
+                class="hidden animate-spin"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                ><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg
+              >
             </button>
           </div>
-
         </div>
       </div>
     </main>
@@ -334,8 +604,15 @@ const categories = [
         title="Scroll to Top"
         aria-label="Scroll to Top"
       >
-        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path>
+        <svg
+          class="w-3.5 h-3.5 sm:w-4 sm:h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"
+          ></path>
         </svg>
       </button>
 
@@ -348,8 +625,17 @@ const categories = [
         title="Scroll to Bottom"
         aria-label="Scroll to Bottom"
       >
-        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+        <svg
+          class="w-3.5 h-3.5 sm:w-4 sm:h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 9l-7 7-7-7"></path>
         </svg>
       </button>
     </div>
@@ -380,7 +666,11 @@ const categories = [
         return matches ? matches.length : 0;
       }
 
-      function compressImageToDataUrl(file: File, maxWidth = 1200, quality = 0.8): Promise<string> {
+      function compressImageToDataUrl(
+        file: File,
+        maxWidth = 1200,
+        quality = 0.8,
+      ): Promise<string> {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.readAsDataURL(file);
@@ -434,11 +724,17 @@ const categories = [
       function applyModeUI(mode: "BLOG" | "RESEARCH") {
         activeDocType = mode;
         const secTitle = document.getElementById("section-research-title");
-        const secAbstract = document.getElementById("section-research-abstract");
+        const secAbstract = document.getElementById(
+          "section-research-abstract",
+        );
         const secPdfs = document.getElementById("section-research-pdfs");
         const wordCounter = document.getElementById("blog-word-counter");
         const publishText = document.getElementById("publish-btn-text");
         const coverBadge = document.getElementById("cover-badge-text");
+
+        const headingTitle = document.getElementById("heading-title");
+        const headingAbstract = document.getElementById("heading-abstract");
+        const contentHeadingText = document.getElementById("content-heading-text");
 
         if (mode === "BLOG") {
           secTitle?.classList.add("hidden");
@@ -447,6 +743,10 @@ const categories = [
           wordCounter?.classList.remove("hidden");
           if (publishText) publishText.textContent = "Publish Blog";
           if (coverBadge) coverBadge.textContent = "Blog Header Cover";
+
+          if (headingTitle) headingTitle.style.display = "none";
+          if (headingAbstract) headingAbstract.style.display = "none";
+          if (contentHeadingText) contentHeadingText.style.display = "none";
         } else {
           secTitle?.classList.remove("hidden");
           secAbstract?.classList.remove("hidden");
@@ -454,6 +754,10 @@ const categories = [
           wordCounter?.classList.add("hidden");
           if (publishText) publishText.textContent = "Publish Paper";
           if (coverBadge) coverBadge.textContent = "Article Header Cover";
+
+          if (headingTitle) headingTitle.style.display = "block";
+          if (headingAbstract) headingAbstract.style.display = "block";
+          if (contentHeadingText) contentHeadingText.style.display = "block";
         }
       }
 
@@ -466,10 +770,12 @@ const categories = [
         if (!cat) {
           if (catLabel) {
             catLabel.textContent = "Select Category *";
-            catLabel.className = "text-amber-700 font-bold text-[11px] sm:text-xs";
+            catLabel.className =
+              "text-amber-700 font-bold text-[11px] sm:text-xs";
           }
           if (catDot) {
-            catDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0";
+            catDot.className =
+              "w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0";
           }
           if (catBtn) {
             catBtn.classList.remove("border-neutral-200/80");
@@ -478,13 +784,18 @@ const categories = [
         } else {
           if (catLabel) {
             catLabel.textContent = cat;
-            catLabel.className = "text-neutral-900 font-semibold text-[11px] sm:text-xs";
+            catLabel.className =
+              "text-neutral-900 font-semibold text-[11px] sm:text-xs";
           }
           if (catDot) {
             catDot.className = "w-2 h-2 rounded-full bg-[#1b62f2] shrink-0";
           }
           if (catBtn) {
-            catBtn.classList.remove("border-amber-400", "bg-amber-50/50", "animate-shake");
+            catBtn.classList.remove(
+              "border-amber-400",
+              "bg-amber-50/50",
+              "animate-shake",
+            );
             catBtn.classList.add("border-neutral-200/80");
           }
         }
@@ -503,10 +814,15 @@ const categories = [
           catMenu.classList.remove("hidden");
           catMenu.classList.add("flex");
         }
+
+        alert(
+          "⚠️ Please select a category before publishing your paper or blog.",
+        );
       }
 
       function loadQuillLibrary(): Promise<any> {
-        if ((window as any).Quill) return Promise.resolve((window as any).Quill);
+        if ((window as any).Quill)
+          return Promise.resolve((window as any).Quill);
         return new Promise((resolve, reject) => {
           const script = document.createElement("script");
           script.src = "https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js";
@@ -517,10 +833,12 @@ const categories = [
       }
 
       function loadChartLibrary(): Promise<any> {
-        if ((window as any).Chart) return Promise.resolve((window as any).Chart);
+        if ((window as any).Chart)
+          return Promise.resolve((window as any).Chart);
         return new Promise((resolve, reject) => {
           const script = document.createElement("script");
-          script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+          script.src =
+            "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
           script.onload = () => resolve((window as any).Chart);
           script.onerror = (e) => reject(e);
           document.head.appendChild(script);
@@ -535,9 +853,12 @@ const categories = [
         const catMenu = document.getElementById("category-menu");
         const optionsToggle = document.getElementById("btn-options-toggle");
         const optionsMenu = document.getElementById("options-menu");
-        const coverPreview = document.getElementById("cover-avatar-preview") as HTMLImageElement;
+        const coverPreview = document.getElementById(
+          "cover-avatar-preview",
+        ) as HTMLImageElement;
 
-        // Up & Down Instant Scroll Handlers
+        const contentHeadingText = document.getElementById("content-heading-text");
+
         const btnScrollTop = document.getElementById("btn-scroll-top");
         const btnScrollBottom = document.getElementById("btn-scroll-bottom");
 
@@ -549,7 +870,10 @@ const categories = [
 
         if (btnScrollBottom) {
           btnScrollBottom.onclick = () => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            });
           };
         }
 
@@ -576,47 +900,67 @@ const categories = [
           container.innerHTML = "";
           quillInstance = new QuillClass(container, {
             theme: "snow",
-            placeholder: activeDocType === "BLOG" ? "Write your perspective, thoughts, and reflections..." : "Start writing Introduction, Methodology, Findings, and Conclusions here...",
-            modules: { toolbar: false }
+            placeholder:
+              activeDocType === "BLOG"
+                ? "Write your perspective, thoughts, and reflections..."
+                : "Start writing Introduction, Methodology, Findings, and Conclusions here...",
+            modules: { toolbar: false },
           });
 
           quillInstance.on("selection-change", (range: any) => {
             if (range) lastSavedRange = range;
           });
 
-          quillInstance.on("text-change", (delta: any, oldDelta: any, source: string) => {
-            if (activeDocType === "BLOG") {
+          quillInstance.on(
+            "text-change",
+            (delta: any, oldDelta: any, source: string) => {
               const text = quillInstance.getText();
-              const wordCount = countWords(text);
-              const counter = document.getElementById("blog-word-counter");
+              const hasText = text.trim().length > 0;
 
-              if (counter) {
-                counter.textContent = `${wordCount} / ${MAX_BLOG_WORDS.toLocaleString()} words`;
-                if (wordCount >= MAX_BLOG_WORDS) {
-                  counter.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200";
+              if (contentHeadingText) {
+                if (activeDocType === "BLOG") {
+                  contentHeadingText.style.display = hasText ? "none" : "block";
                 } else {
-                  counter.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500";
+                  contentHeadingText.style.display = "block";
                 }
               }
 
-              if (wordCount > MAX_BLOG_WORDS && source === "user") {
-                quillInstance.setContents(oldDelta, "silent");
-                alert(`Blog word limit reached! Maximum allowed is ${MAX_BLOG_WORDS} words.`);
-              }
-            }
-            triggerAutosave();
-          });
+              if (activeDocType === "BLOG") {
+                const wordCount = countWords(text);
+                const counter = document.getElementById("blog-word-counter");
 
-          // Single-Click Media Action Bar Positioning
+                if (counter) {
+                  counter.textContent = `${wordCount} / ${MAX_BLOG_WORDS.toLocaleString()} words`;
+                  if (wordCount >= MAX_BLOG_WORDS) {
+                    counter.className =
+                      "text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200";
+                  } else {
+                    counter.className =
+                      "text-xs font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500";
+                  }
+                }
+
+                if (wordCount > MAX_BLOG_WORDS && source === "user") {
+                  quillInstance.setContents(oldDelta, "silent");
+                  alert(
+                    `Blog word limit reached! Maximum allowed is ${MAX_BLOG_WORDS} words.`,
+                  );
+                }
+              }
+              triggerAutosave();
+            },
+          );
+
           const mediaActionBar = document.getElementById("media-action-bar");
-          
+
           function positionMediaPill(imgTarget: HTMLElement) {
             if (!mediaActionBar) return;
             activeSelectedImageNode = imgTarget;
-            
+
             const topOffset = imgTarget.offsetTop + 10;
-            const leftOffset = imgTarget.offsetLeft + imgTarget.offsetWidth - 110;
-            
+            const leftOffset =
+              imgTarget.offsetLeft + imgTarget.offsetWidth - 110;
+
             mediaActionBar.style.top = `${topOffset}px`;
             mediaActionBar.style.left = `${Math.max(10, leftOffset)}px`;
             mediaActionBar.classList.remove("hidden");
@@ -628,14 +972,19 @@ const categories = [
             if (target && target.tagName === "IMG") {
               e.stopPropagation();
               positionMediaPill(target);
-            } else if (mediaActionBar && !e.target.closest("#media-action-bar")) {
+            } else if (
+              mediaActionBar &&
+              !e.target.closest("#media-action-bar")
+            ) {
               mediaActionBar.classList.add("hidden");
               mediaActionBar.classList.remove("flex");
               activeSelectedImageNode = null;
             }
           });
 
-          const btnDeleteMedia = document.getElementById("btn-delete-active-media");
+          const btnDeleteMedia = document.getElementById(
+            "btn-delete-active-media",
+          );
           if (btnDeleteMedia) {
             btnDeleteMedia.onclick = (e: MouseEvent) => {
               e.preventDefault();
@@ -648,7 +997,7 @@ const categories = [
                 } else {
                   activeSelectedImageNode.remove();
                 }
-                
+
                 if (mediaActionBar) {
                   mediaActionBar.classList.add("hidden");
                   mediaActionBar.classList.remove("flex");
@@ -660,11 +1009,14 @@ const categories = [
           }
         }
 
-        // Heading & Size Menu
-        const headingToggleBtn = document.getElementById("btn-heading-popup-toggle");
+        const headingToggleBtn = document.getElementById(
+          "btn-heading-popup-toggle",
+        );
         const headingMenu = document.getElementById("heading-size-menu");
         const headingArrow = document.getElementById("heading-arrow");
-        const activeHeadingLabel = document.getElementById("active-heading-label");
+        const activeHeadingLabel = document.getElementById(
+          "active-heading-label",
+        );
         const activeSizeLabel = document.getElementById("active-size-label");
 
         if (headingToggleBtn) {
@@ -694,10 +1046,16 @@ const categories = [
 
             if (quillInstance) {
               quillInstance.focus();
-              const range = quillInstance.getSelection() || lastSavedRange || { index: 0, length: 0 };
+              const range = quillInstance.getSelection() ||
+                lastSavedRange || { index: 0, length: 0 };
 
               if (range.length > 0) {
-                quillInstance.formatText(range.index, range.length, "size", size === "16px" ? false : size);
+                quillInstance.formatText(
+                  range.index,
+                  range.length,
+                  "size",
+                  size === "16px" ? false : size,
+                );
               } else {
                 quillInstance.format("size", size === "16px" ? false : size);
               }
@@ -714,16 +1072,27 @@ const categories = [
           if (!quillInstance) return;
           quillInstance.focus();
 
-          const range = quillInstance.getSelection() || lastSavedRange || { index: 0, length: 0 };
+          const range = quillInstance.getSelection() ||
+            lastSavedRange || { index: 0, length: 0 };
           const currentFormats = quillInstance.getFormat(range);
 
           if (formatName === "list" || formatName === "blockquote") {
             const isSet = currentFormats[formatName] === value;
-            quillInstance.formatLine(range.index, range.length, formatName, isSet ? false : value);
+            quillInstance.formatLine(
+              range.index,
+              range.length,
+              formatName,
+              isSet ? false : value,
+            );
           } else {
             const isSet = !!currentFormats[formatName];
             if (range.length > 0) {
-              quillInstance.formatText(range.index, range.length, formatName, !isSet);
+              quillInstance.formatText(
+                range.index,
+                range.length,
+                formatName,
+                !isSet,
+              );
             } else {
               quillInstance.format(formatName, !isSet);
             }
@@ -731,7 +1100,14 @@ const categories = [
           triggerAutosave();
         }
 
-        const formatBtnIds = ["btn-dock-bold", "btn-dock-underline", "btn-dock-italic", "btn-dock-ol", "btn-dock-ul", "btn-dock-quote"];
+        const formatBtnIds = [
+          "btn-dock-bold",
+          "btn-dock-underline",
+          "btn-dock-italic",
+          "btn-dock-ol",
+          "btn-dock-ul",
+          "btn-dock-quote",
+        ];
         formatBtnIds.forEach((id) => {
           const btn = document.getElementById(id);
           if (btn) {
@@ -754,10 +1130,11 @@ const categories = [
         if (bUl) bUl.onclick = () => executeFormat("list", "bullet");
         if (bQuote) bQuote.onclick = () => executeFormat("blockquote", true);
 
-        // CSV Graph Modal
         const graphModal = document.getElementById("graph-modal");
         const graphFileLabel = document.getElementById("graph-file-label");
-        const inlineCsvFile = document.getElementById("inline-csv-file") as HTMLInputElement;
+        const inlineCsvFile = document.getElementById(
+          "inline-csv-file",
+        ) as HTMLInputElement;
 
         if (inlineCsvFile) {
           inlineCsvFile.onchange = (e: any) => {
@@ -768,7 +1145,8 @@ const categories = [
             const reader = new FileReader();
             reader.onload = () => {
               pendingCsvData = { text: String(reader.result), name: file.name };
-              if (graphFileLabel) graphFileLabel.textContent = `File: ${file.name}`;
+              if (graphFileLabel)
+                graphFileLabel.textContent = `File: ${file.name}`;
               graphModal?.classList.remove("hidden");
               graphModal?.classList.add("flex");
             };
@@ -782,19 +1160,31 @@ const categories = [
           pendingCsvData = null;
         };
 
-        const btnCloseGraphModal = document.getElementById("btn-close-graph-modal");
+        const btnCloseGraphModal = document.getElementById(
+          "btn-close-graph-modal",
+        );
         const btnCancelGraph = document.getElementById("btn-cancel-graph");
         if (btnCloseGraphModal) btnCloseGraphModal.onclick = closeGraphModal;
         if (btnCancelGraph) btnCancelGraph.onclick = closeGraphModal;
 
-        async function renderSelectedChart(text: string, fileName: string, chartType: string) {
+        async function renderSelectedChart(
+          text: string,
+          fileName: string,
+          chartType: string,
+        ) {
           const ChartJS = await loadChartLibrary();
-          const lines = text.split(/\r\n|\n/).map((r) => r.trim()).filter(Boolean);
+          const lines = text
+            .split(/\r\n|\n/)
+            .map((r) => r.trim())
+            .filter(Boolean);
           if (lines.length < 2) return null;
 
-          const rawRows = lines.map((line) => line.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")));
+          const rawRows = lines.map((line) =>
+            line.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")),
+          );
           const sampleRow = rawRows[1] || rawRows[0];
-          let labelIdx = -1, valIdx = -1;
+          let labelIdx = -1,
+            valIdx = -1;
 
           for (let i = 0; i < sampleRow.length; i++) {
             const val = Number(sampleRow[i].replace(/[^0-9.-]+/g, ""));
@@ -827,25 +1217,34 @@ const categories = [
           canvas.height = 380;
 
           const palette = [
-            "rgba(27, 98, 242, 0.85)", "rgba(16, 185, 129, 0.85)", "rgba(245, 158, 11, 0.85)",
-            "rgba(239, 68, 68, 0.85)", "rgba(139, 92, 246, 0.85)", "rgba(236, 72, 153, 0.85)",
-            "rgba(14, 165, 233, 0.85)", "rgba(100, 116, 139, 0.85)"
+            "rgba(27, 98, 242, 0.85)",
+            "rgba(16, 185, 129, 0.85)",
+            "rgba(245, 158, 11, 0.85)",
+            "rgba(239, 68, 68, 0.85)",
+            "rgba(139, 92, 246, 0.85)",
+            "rgba(236, 72, 153, 0.85)",
+            "rgba(14, 165, 233, 0.85)",
+            "rgba(100, 116, 139, 0.85)",
           ];
 
           const chart = new ChartJS(canvas, {
             type: chartType,
             data: {
               labels: labels,
-              datasets: [{
-                label: fileName,
-                data: data,
-                backgroundColor: chartType === "bar" ? "rgba(27, 98, 242, 0.85)" : palette,
-                borderColor: chartType === "line" ? "rgba(27, 98, 242, 1)" : "#ffffff",
-                borderWidth: chartType === "line" ? 3 : 1.5,
-                borderRadius: chartType === "bar" ? 8 : 0,
-                fill: chartType === "line",
-                tension: 0.35,
-              }]
+              datasets: [
+                {
+                  label: fileName,
+                  data: data,
+                  backgroundColor:
+                    chartType === "bar" ? "rgba(27, 98, 242, 0.85)" : palette,
+                  borderColor:
+                    chartType === "line" ? "rgba(27, 98, 242, 1)" : "#ffffff",
+                  borderWidth: chartType === "line" ? 3 : 1.5,
+                  borderRadius: chartType === "bar" ? 8 : 0,
+                  fill: chartType === "line",
+                  tension: 0.35,
+                },
+              ],
             },
             options: {
               responsive: false,
@@ -854,28 +1253,46 @@ const categories = [
                 title: {
                   display: true,
                   text: `Dataset: ${fileName}`,
-                  font: { size: 16, weight: "bold", family: "'Plus Jakarta Sans', sans-serif" },
+                  font: {
+                    size: 16,
+                    weight: "bold",
+                    family: "'Plus Jakarta Sans', sans-serif",
+                  },
                   color: "#0f172a",
-                  padding: { top: 16, bottom: 16 }
+                  padding: { top: 16, bottom: 16 },
                 },
-                legend: { display: chartType !== "bar" && chartType !== "line", position: "bottom" }
+                legend: {
+                  display: chartType !== "bar" && chartType !== "line",
+                  position: "bottom",
+                },
               },
-              scales: (chartType === "bar" || chartType === "line") ? {
-                x: { grid: { display: false }, ticks: { color: "#475569", font: { size: 11 } } },
-                y: { grid: { color: "#f1f5f9" }, ticks: { color: "#64748b", font: { size: 11 } } }
-              } : {}
+              scales:
+                chartType === "bar" || chartType === "line"
+                  ? {
+                      x: {
+                        grid: { display: false },
+                        ticks: { color: "#475569", font: { size: 11 } },
+                      },
+                      y: {
+                        grid: { color: "#f1f5f9" },
+                        ticks: { color: "#64748b", font: { size: 11 } },
+                      },
+                    }
+                  : {},
             },
-            plugins: [{
-              id: "bg_color",
-              beforeDraw: (c: any) => {
-                const { ctx } = c;
-                ctx.save();
-                ctx.globalCompositeOperation = "destination-over";
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0, 0, c.width, c.height);
-                ctx.restore();
-              }
-            }]
+            plugins: [
+              {
+                id: "bg_color",
+                beforeDraw: (c: any) => {
+                  const { ctx } = c;
+                  ctx.save();
+                  ctx.globalCompositeOperation = "destination-over";
+                  ctx.fillStyle = "#ffffff";
+                  ctx.fillRect(0, 0, c.width, c.height);
+                  ctx.restore();
+                },
+              },
+            ],
           });
 
           const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
@@ -888,9 +1305,15 @@ const categories = [
             const chartType = card.getAttribute("data-type") || "bar";
             if (!pendingCsvData) return;
 
-            const chartImgUrl = await renderSelectedChart(pendingCsvData.text, pendingCsvData.name, chartType);
+            const chartImgUrl = await renderSelectedChart(
+              pendingCsvData.text,
+              pendingCsvData.name,
+              chartType,
+            );
             if (chartImgUrl && quillInstance) {
-              const range = quillInstance.getSelection(true) || { index: quillInstance.getLength() };
+              const range = quillInstance.getSelection(true) || {
+                index: quillInstance.getLength(),
+              };
               quillInstance.insertEmbed(range.index, "image", chartImgUrl);
               quillInstance.insertText(range.index + 1, "\n");
               quillInstance.setSelection(range.index + 2);
@@ -902,7 +1325,6 @@ const categories = [
           };
         });
 
-        // Category dropdown
         if (catBtn) {
           catBtn.onclick = (e) => {
             e.stopPropagation();
@@ -932,24 +1354,39 @@ const categories = [
         }
 
         document.onclick = (e: any) => {
-          if (catMenu && !catMenu.contains(e.target) && !catBtn?.contains(e.target)) {
+          if (
+            catMenu &&
+            !catMenu.contains(e.target) &&
+            !catBtn?.contains(e.target)
+          ) {
             catMenu.classList.add("hidden");
             catMenu.classList.remove("flex");
           }
-          if (optionsMenu && !optionsMenu.contains(e.target) && !optionsToggle?.contains(e.target)) {
+          if (
+            optionsMenu &&
+            !optionsMenu.contains(e.target) &&
+            !optionsToggle?.contains(e.target)
+          ) {
             optionsMenu.classList.add("hidden");
           }
-          if (headingMenu && !headingMenu.contains(e.target) && !headingToggleBtn?.contains(e.target)) {
+          if (
+            headingMenu &&
+            !headingMenu.contains(e.target) &&
+            !headingToggleBtn?.contains(e.target)
+          ) {
             headingMenu.classList.add("hidden");
             headingMenu.classList.remove("flex");
             headingArrow?.classList.remove("rotate-180");
           }
         };
 
-        // Drag Toolbar
         const formatDock = document.getElementById("format-dock");
         const dragHandle = document.getElementById("dock-drag-handle");
-        let isDragging = false, startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
+        let isDragging = false,
+          startX = 0,
+          startY = 0,
+          initialLeft = 0,
+          initialTop = 0;
 
         function startDrag(e: any) {
           isDragging = true;
@@ -991,19 +1428,24 @@ const categories = [
         window.ontouchmove = (e) => moveDrag(e);
         window.ontouchend = endDrag;
 
-        // Autosave & Restore
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
             const draft = JSON.parse(raw);
             if (draft.docType) applyModeUI(draft.docType);
             if (draft.title && titleField) titleField.innerText = draft.title;
-            if (draft.excerpt && excerptField) excerptField.innerText = draft.excerpt;
+            if (draft.excerpt && excerptField)
+              excerptField.innerText = draft.excerpt;
             if (draft.content && quillInstance) {
               quillInstance.root.innerHTML = draft.content;
               const words = countWords(quillInstance.getText());
               const counter = document.getElementById("blog-word-counter");
-              if (counter) counter.textContent = `${words} / ${MAX_BLOG_WORDS.toLocaleString()} words`;
+              if (counter)
+                counter.textContent = `${words} / ${MAX_BLOG_WORDS.toLocaleString()} words`;
+
+              if (contentHeadingText && activeDocType === "BLOG") {
+                contentHeadingText.style.display = words > 0 ? "none" : "block";
+              }
             }
 
             if (draft.category) {
@@ -1027,7 +1469,7 @@ const categories = [
         function triggerAutosave() {
           if (autosaveLabel) autosaveLabel.textContent = "Saving changes...";
           clearTimeout(autosaveTimeout);
-          
+
           autosaveTimeout = setTimeout(() => {
             const draft = {
               docType: activeDocType,
@@ -1037,16 +1479,22 @@ const categories = [
               category: selectedCategory,
               coverImageBase64: coverImageBase64 || "",
               pdfAttachments: pdfAttachments || [],
-              updatedAt: Date.now()
+              updatedAt: Date.now(),
             };
-            
+
             try {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-              if (autosaveLabel) autosaveLabel.textContent = "All edits saved locally!";
+              if (autosaveLabel)
+                autosaveLabel.textContent = "All edits saved locally!";
             } catch (err) {
-              const fallback = { ...draft, coverImageBase64: "", pdfAttachments: [] };
+              const fallback = {
+                ...draft,
+                coverImageBase64: "",
+                pdfAttachments: [],
+              };
               localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
-              if (autosaveLabel) autosaveLabel.textContent = "Text content saved locally!";
+              if (autosaveLabel)
+                autosaveLabel.textContent = "Text content saved locally!";
             }
           }, 800);
         }
@@ -1054,21 +1502,25 @@ const categories = [
         if (titleField) titleField.oninput = triggerAutosave;
         if (excerptField) excerptField.oninput = triggerAutosave;
 
-        // PDFs & Cover files
         function renderFileList() {
-          const filesListContainer = document.getElementById("attached-files-list");
+          const filesListContainer = document.getElementById(
+            "attached-files-list",
+          );
           const pdfCountBadge = document.getElementById("pdf-count-badge");
           const pdfUploadBtn = document.getElementById("pdf-upload-btn");
           if (!filesListContainer || !pdfCountBadge) return;
           filesListContainer.innerHTML = "";
           pdfCountBadge.textContent = `${pdfAttachments.length} / 3 PDFs`;
 
-          if (pdfAttachments.length >= 3) pdfUploadBtn?.classList.add("opacity-50", "pointer-events-none");
-          else pdfUploadBtn?.classList.remove("opacity-50", "pointer-events-none");
+          if (pdfAttachments.length >= 3)
+            pdfUploadBtn?.classList.add("opacity-50", "pointer-events-none");
+          else
+            pdfUploadBtn?.classList.remove("opacity-50", "pointer-events-none");
 
           pdfAttachments.forEach((file, index) => {
             const item = document.createElement("div");
-            item.className = "flex items-center justify-between p-3 rounded-2xl bg-white border border-neutral-200/80 text-xs shadow-sm";
+            item.className =
+              "flex items-center justify-between p-3 rounded-2xl bg-white border border-neutral-200/80 text-xs shadow-sm";
             item.innerHTML = `
               <div class="flex items-center gap-2.5 min-w-0 pr-2">
                 <svg class="w-4 h-4 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm-1 15v-4H8l4-5 4 5h-3v4h-2z"/></svg>
@@ -1080,24 +1532,35 @@ const categories = [
             filesListContainer.appendChild(item);
           });
 
-          filesListContainer.querySelectorAll(".remove-pdf-btn").forEach((btn) => {
-            (btn as HTMLElement).onclick = () => {
-              const idx = parseInt(btn.getAttribute("data-idx") || "0", 10);
-              pdfAttachments.splice(idx, 1);
-              renderFileList();
-              triggerAutosave();
-            };
-          });
+          filesListContainer
+            .querySelectorAll(".remove-pdf-btn")
+            .forEach((btn) => {
+              (btn as HTMLElement).onclick = () => {
+                const idx = parseInt(btn.getAttribute("data-idx") || "0", 10);
+                pdfAttachments.splice(idx, 1);
+                renderFileList();
+                triggerAutosave();
+              };
+            });
         }
 
-        const pdfInput = document.getElementById("pdf-input") as HTMLInputElement;
+        const pdfInput = document.getElementById(
+          "pdf-input",
+        ) as HTMLInputElement;
         if (pdfInput) {
           pdfInput.onchange = async (e: any) => {
             const files = Array.from(e.target.files || []) as File[];
             for (const f of files) {
-              if (pdfAttachments.length < 3 && !pdfAttachments.some((item) => item.name === f.name)) {
+              if (
+                pdfAttachments.length < 3 &&
+                !pdfAttachments.some((item) => item.name === f.name)
+              ) {
                 const b64 = await fileToBase64(f);
-                pdfAttachments.push({ name: f.name, size: f.size, base64: b64 });
+                pdfAttachments.push({
+                  name: f.name,
+                  size: f.size,
+                  base64: b64,
+                });
               }
             }
             pdfInput.value = "";
@@ -1106,7 +1569,9 @@ const categories = [
           };
         }
 
-        const coverInput = document.getElementById("cover-file-input") as HTMLInputElement;
+        const coverInput = document.getElementById(
+          "cover-file-input",
+        ) as HTMLInputElement;
         if (coverInput) {
           coverInput.onchange = async (e: any) => {
             const file = e.target.files?.[0];
@@ -1119,8 +1584,9 @@ const categories = [
           };
         }
 
-        // Inline Image Uploader
-        const inlineImgFile = document.getElementById("inline-img-file") as HTMLInputElement;
+        const inlineImgFile = document.getElementById(
+          "inline-img-file",
+        ) as HTMLInputElement;
         if (inlineImgFile) {
           inlineImgFile.onchange = async (e: any) => {
             if (isImageUploading) return;
@@ -1132,9 +1598,15 @@ const categories = [
             isImageUploading = true;
             try {
               const compressed = await compressImageToDataUrl(file, 1200, 0.82);
-              const range = quillInstance.getSelection(true) || lastSavedRange || { index: quillInstance.getLength() };
-              
-              quillInstance.insertEmbed(range.index, "image", compressed, "user");
+              const range = quillInstance.getSelection(true) ||
+                lastSavedRange || { index: quillInstance.getLength() };
+
+              quillInstance.insertEmbed(
+                range.index,
+                "image",
+                compressed,
+                "user",
+              );
               quillInstance.insertText(range.index + 1, "\n", "user");
               quillInstance.setSelection(range.index + 2, 0, "silent");
               triggerAutosave();
@@ -1144,7 +1616,6 @@ const categories = [
           };
         }
 
-        // Submit Logic
         async function submitCreation(isDraft = false) {
           if (isSubmitting) return;
 
@@ -1159,14 +1630,20 @@ const categories = [
           }
 
           if (activeDocType === "BLOG") {
-            const wordCount = countWords(quillInstance ? quillInstance.getText() : "");
+            const wordCount = countWords(
+              quillInstance ? quillInstance.getText() : "",
+            );
             if (wordCount > MAX_BLOG_WORDS) {
-              alert(`Your blog post exceeds the maximum allowed ${MAX_BLOG_WORDS.toLocaleString()} words.`);
+              alert(
+                `Your blog post exceeds the maximum allowed ${MAX_BLOG_WORDS.toLocaleString()} words.`,
+              );
               return;
             }
             if (!title) {
               const plain = quillInstance ? quillInstance.getText().trim() : "";
-              title = plain.split("\n")[0]?.substring(0, 60) || "Thoughts & Perspectives";
+              title =
+                plain.split("\n")[0]?.substring(0, 60) ||
+                "Thoughts & Perspectives";
             }
           } else {
             if (!title) {
@@ -1183,16 +1660,26 @@ const categories = [
 
           isSubmitting = true;
 
-          const publishBtn = document.getElementById("publish-btn") as HTMLButtonElement;
-          const draftBtn = document.getElementById("draft-btn") as HTMLButtonElement;
+          const publishBtn = document.getElementById(
+            "publish-btn",
+          ) as HTMLButtonElement;
+          const draftBtn = document.getElementById(
+            "draft-btn",
+          ) as HTMLButtonElement;
           const publishSpinner = document.getElementById("publish-spinner");
           const publishBtnText = document.getElementById("publish-btn-text");
 
           if (publishBtn) publishBtn.disabled = true;
           if (draftBtn) draftBtn.disabled = true;
           if (publishSpinner) publishSpinner.classList.remove("hidden");
-          if (publishBtnText) publishBtnText.textContent = isDraft ? "Saving..." : "Publishing...";
-          if (autosaveLabel) autosaveLabel.textContent = isDraft ? "Saving draft..." : "Publishing creation...";
+          if (publishBtnText)
+            publishBtnText.textContent = isDraft
+              ? "Saving..."
+              : "Publishing...";
+          if (autosaveLabel)
+            autosaveLabel.textContent = isDraft
+              ? "Saving draft..."
+              : "Publishing creation...";
 
           try {
             const baseSlug = title
@@ -1201,8 +1688,10 @@ const categories = [
               .replace(/[^\w\s-]/g, "")
               .replace(/[\s_-]+/g, "-")
               .replace(/^-+|-+$/g, "");
-            
-            const safeSlug = baseSlug ? `${baseSlug}-${Date.now()}` : `${activeDocType.toLowerCase()}-${Date.now()}`;
+
+            const safeSlug = baseSlug
+              ? `${baseSlug}-${Date.now()}`
+              : `${activeDocType.toLowerCase()}-${Date.now()}`;
 
             const formData = new FormData();
             formData.append("title", title);
@@ -1215,15 +1704,38 @@ const categories = [
             if (author) formData.append("author", author);
             formData.append("status", isDraft ? "DRAFT" : "PUBLISHED");
 
-            if (coverImageBase64) {
-              formData.append("coverImage", dataURLtoFile(coverImageBase64, "cover.jpg"));
-            } else if (coverInput?.files?.[0]) {
+            if (coverInput?.files?.[0]) {
               formData.append("coverImage", coverInput.files[0]);
+            } else if (coverImageBase64) {
+              formData.append(
+                "coverImage",
+                dataURLtoFile(coverImageBase64, "cover.jpg"),
+              );
+            } else {
+              try {
+                const imgRes = await fetch(DEFAULT_COVER);
+                const imgBlob = await imgRes.blob();
+                const defaultCoverFile = new File(
+                  [imgBlob],
+                  "default-cover.jpg",
+                  { type: "image/jpeg" },
+                );
+                formData.append("coverImage", defaultCoverFile);
+              } catch (fetchErr) {
+                console.warn(
+                  "Could not fetch default cover file, proceeding without it:",
+                  fetchErr,
+                );
+              }
             }
 
             if (activeDocType === "RESEARCH") {
               pdfAttachments.forEach((pdfObj) => {
-                formData.append("pdfs", dataURLtoFile(pdfObj.base64, pdfObj.name), pdfObj.name);
+                formData.append(
+                  "pdfs",
+                  dataURLtoFile(pdfObj.base64, pdfObj.name),
+                  pdfObj.name,
+                );
               });
             }
 
@@ -1246,27 +1758,36 @@ const categories = [
                 if (successModal) successModal.classList.remove("hidden");
                 setTimeout(() => {
                   const identifier = result.blog?.slug || result.blog?._id;
-                  window.location.href = identifier ? `/papers/${identifier}` : "/discover";
+                  window.location.href = identifier
+                    ? `/papers/${identifier}`
+                    : "/discover";
                 }, 1500);
               }
             } else {
               alert(result?.message || "Failed to submit.");
-              if (autosaveLabel) autosaveLabel.textContent = "The Evidence autosaves the work!";
+              if (autosaveLabel)
+                autosaveLabel.textContent = "The Evidence autosaves the work!";
             }
           } catch (err: any) {
             console.error("❌ Submission error:", err);
-            alert(err.response?.data?.message || err.message || "Failed to publish.");
+            alert(
+              err.response?.data?.message ||
+                err.message ||
+                "Failed to publish.",
+            );
             if (err.response?.status === 401) {
               window.location.href = "/?auth=login";
             }
-            if (autosaveLabel) autosaveLabel.textContent = "The Evidence autosaves the work!";
+            if (autosaveLabel)
+              autosaveLabel.textContent = "The Evidence autosaves the work!";
           } finally {
             isSubmitting = false;
             if (publishBtn) publishBtn.disabled = false;
             if (draftBtn) draftBtn.disabled = false;
             if (publishSpinner) publishSpinner.classList.add("hidden");
             if (publishBtnText) {
-              publishBtnText.textContent = activeDocType === "BLOG" ? "Publish Blog" : "Publish Paper";
+              publishBtnText.textContent =
+                activeDocType === "BLOG" ? "Publish Blog" : "Publish Paper";
             }
           }
         }
@@ -1284,5 +1805,29 @@ const categories = [
 
       document.addEventListener("astro:page-load", initStudio);
     </script>
+    <script>
+  import { useAuthStore } from "../store/authStore";
+  import { apiClient } from "../api/api-client";
+
+  async function quickGuard() {
+    const store = useAuthStore.getState();
+    if (store.token) return;
+
+    try {
+      // Ask backend for a fresh key using the secure cookie
+      const res = await apiClient.get("/user/refresh-token");
+      if (res.data?.accessToken) {
+        store.setToken(res.data.accessToken);
+      }
+    } catch {
+      // If the cookie is dead or missing, bounce them to login
+      store.clear();
+      window.location.replace("/?auth=login");
+    }
+  }
+
+  document.addEventListener("astro:page-load", quickGuard);
+  quickGuard();
+</script>
   </body>
 </html>

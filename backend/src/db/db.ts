@@ -8,7 +8,12 @@ const connectDB = async (): Promise<void> => {
   }
 
   try {
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      family: 4,
+    });
+
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("Error from DB connection:", error);
