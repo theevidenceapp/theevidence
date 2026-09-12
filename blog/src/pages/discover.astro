@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
+import SEOHead from "@/components/SEOHead.astro";
 
 const THE_EVIDENCE_LOGO =
   "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
@@ -213,6 +214,10 @@ papers.forEach((p) => {
     <meta name="description" content="Discover professional research papers and insightful blog posts on The Evidence platform." />
     <ClientRouter />
     <title>The Evidence - Discover Publications</title>
+    <SEOHead 
+      title="Discover Research Papers & Publications | The Evidence" 
+      description="Explore verified research papers and scholarly articles on global policy and technology." 
+    />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=account_circle"
