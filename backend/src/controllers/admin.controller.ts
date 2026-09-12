@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/user.model.js";
+import User, { IUser } from "../models/user.model.js";
 import Blog from "../models/blog.model.js";
 
 export const BlockUser = async (req: Request, res: Response) => {
@@ -234,7 +234,7 @@ export const getBlogAnalytics = async (req: Request, res: Response) => {
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find().select('-accessToken')
+    const users = await User.find().select("-accessToken");
     return res.status(200).json({
       success: true,
       users,
@@ -243,6 +243,85 @@ export const getAllUsers = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Failed to get all user",
+    });
+  }
+};
+
+export const getAUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is missing",
+      });
+    }
+
+    const UserExists = await User.findById(userId).select("-accessToken");
+
+    if (!UserExists) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: UserExists,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get a user",
+    });
+  }
+};
+
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const allowedRoles = ["READER", "PUBLISHER", "ADMIN", "EDITOR"] as const;
+    const userId = req.params.userId;
+    const role = req.body;
+
+    if (!userId || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is missing",
+      });
+    }
+
+    if (typeof role !== "string" || !allowedRoles.includes(role as any)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user role",
+      });
+    }
+
+    const UserExists = await User.findById(userId).select("-accessToken");
+
+    if (!UserExists) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    UserExists.role = role as IUser["role"];
+    await UserExists.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      user: UserExists,
+
+      
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update a user",
     });
   }
 };
