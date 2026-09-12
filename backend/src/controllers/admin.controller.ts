@@ -283,12 +283,12 @@ export const updateUserRole = async (req: Request, res: Response) => {
   try {
     const allowedRoles = ["READER", "PUBLISHER", "ADMIN", "EDITOR"] as const;
     const userId = req.params.userId;
-    const role = req.body;
+    const { role } = req.body;
 
     if (!userId || !role) {
       return res.status(400).json({
         success: false,
-        message: "User ID is missing",
+        message: "User ID or Role is missing",
       });
     }
 
@@ -315,8 +315,6 @@ export const updateUserRole = async (req: Request, res: Response) => {
       success: true,
       message: "User role updated successfully",
       user: UserExists,
-
-      
     });
   } catch (error) {
     return res.status(500).json({
