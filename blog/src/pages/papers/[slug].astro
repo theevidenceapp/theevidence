@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from "astro:transitions";
+import SEOHead from "../../components/SEOHead.astro";
 import "../../styles/globals.css";
 
 export const prerender = false;
@@ -96,6 +97,12 @@ function formatViewCount(num: number): string {
 }
 
 const formattedViews = formatViewCount(Number(blog.views) || 0);
+
+// SEO variables
+const pageTitle = `${blog.title} | The Evidence`;
+const pageDescription = blog.excerpt || "Explore professional research papers and academic publications.";
+const pageImage = blog.coverImage?.url || "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
+const authorName = blog.author?.name || "The Evidence Scholar";
 ---
 
 <!doctype html>
@@ -104,7 +111,30 @@ const formattedViews = formatViewCount(Number(blog.views) || 0);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <ClientRouter />
-    <title>{blog.title} - The Evidence</title>
+
+    <!-- Dynamic SEO Head Component -->
+    <SEOHead 
+      title={pageTitle}
+      description={pageDescription}
+      image={pageImage}
+      type="article"
+      publishDate={blog.createdAt}
+      author={authorName}
+    />
+
+    <!-- Google Structured Data (Scholarly Article / Blog Schema) -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": blog.title,
+      "description": pageDescription,
+      "image": pageImage,
+      "datePublished": blog.createdAt,
+      "author": {
+        "@type": "Person",
+        "name": authorName
+      }
+    })} />
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

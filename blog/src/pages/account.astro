@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
+import SEOHead from "@/components/SEOHead.astro";
 
 const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
 const backendUri = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BACKEND_URI || "http://localhost:5000";
@@ -26,6 +27,10 @@ let user = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <ClientRouter />
     <title>The Evidence - Account Settings</title>
+    <SEOHead 
+      title="Account Settings | The Evidence" 
+      description="Manage your personal profile, credentials, and security settings." 
+    />
     <style>
       html, body {
         background-color: #f9f9fb !important;

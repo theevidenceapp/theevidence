@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Keep search engines away from private user areas
+Disallow: /account
+Disallow: /desk
+
+Sitemap: https://theevidence.org/sitemap-index.xml
+

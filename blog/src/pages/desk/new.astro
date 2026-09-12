@@ -1806,8 +1806,8 @@ const categories = [
       document.addEventListener("astro:page-load", initStudio);
     </script>
     <script>
-  import { useAuthStore } from "../store/authStore";
-  import { apiClient } from "../api/api-client";
+  import { useAuthStore } from "@/store/authStore";
+  import { apiClient } from "@/api/api-client";
 
   async function quickGuard() {
     const store = useAuthStore.getState();
