@@ -6,7 +6,7 @@ interface IPdf {
   originalName: string;
 }
 
-interface IBlog {
+export interface IBlog {
   title: string;
   slug: string;
   content: string;

@@ -102,14 +102,6 @@ export default function AdminPanelLayout({ children }: AdminPanelLayoutProps) {
                     >
                         <User className="h-4 w-4" />
                     </button>
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="hidden items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 md:flex"
-                    >
-                        Logout
-                        <LogOut className="h-4 w-4" />
-                    </button>
                 </div>
             </header>
 

@@ -1,4 +1,9 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import {
   createBlog,
   getBlogs,
@@ -69,9 +74,10 @@ blogRouter.get("/published-by-type", async (req, res) => {
       .toString()
       .toUpperCase();
 
+    // Create a case-insensitive regex query to catch both uppercase and lowercase variations in MongoDB
     const docTypeRegex = new RegExp(`^${docTypeParam}$`, "i");
 
-    const query: Record<string, any> = {
+    const query = {
       status: "PUBLISHED",
       docType: docTypeRegex,
     };
@@ -87,8 +93,8 @@ blogRouter.get("/published-by-type", async (req, res) => {
       pagination: {
         page: 1,
         totalPages: 1,
-        hasMore: false
-      }
+        hasMore: false,
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });

@@ -11,6 +11,8 @@ import {
   getAllUsers,
   getAUser,
   updateUserRole,
+  getTop2Content,
+  getStatisticalContentData,
 } from "../controllers/admin.controller.js";
 
 export const adminRouter = Router();
@@ -26,4 +28,6 @@ adminRouter.get("/analytics", getAnalytics);
 adminRouter.get("/analytics/blogs", getBlogAnalytics);
 adminRouter.get("/get-all-users", getAllUsers);
 adminRouter.get("/user/:userId", getAUser);
-adminRouter.post('/user/role/:userId', updateUserRole)
+adminRouter.post("/user/role/:userId", updateUserRole);
+adminRouter.get("/get-statistical-content-data", getStatisticalContentData);
+adminRouter.get("/get-top-2-content", getTop2Content);
