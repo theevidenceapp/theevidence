@@ -2,6 +2,7 @@
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
 import SEOHead from "@/components/SEOHead.astro";
+import { apiClient } from "../api/api-client";
 
 const THE_EVIDENCE_LOGO =
   "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
@@ -38,29 +39,22 @@ let paginationMeta = {
 
 let researchers: any[] = [];
 
-const backendUri =
-  import.meta.env.VITE_BACKEND_URI ||
-  import.meta.env.PUBLIC_BACKEND_URI ||
-  "http://localhost:5000";
+const compactFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
-// Helper function to format view counts cleanly
-function formatViewCount(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M+ views`;
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}k+ views`;
-  }
-  return `${num} views`;
+function formatCompact(value: number): string {
+  return compactFormatter.format(Math.max(0, value ?? 0));
 }
 
 try {
-  const res = await fetch(`${backendUri}/blog/published?page=1&limit=100`, {
-    headers: { Accept: "application/json" },
+  const res = await apiClient.get("/blog/published", {
+    params: { page: 1, limit: 100 },
   });
 
-  if (res.ok) {
-    const data = await res.json();
+  const data = res.data;
+  {
     const rawList = data.blogs || data.papers || (Array.isArray(data) ? data : []);
 
     if (Array.isArray(rawList)) {
@@ -111,7 +105,7 @@ try {
               ? new Date(b.publishedAt || b.createdAt).getTime()
               : 0,
           views: viewNum,
-          viewsCount: formatViewCount(viewNum),
+          viewsCount: `${formatCompact(viewNum)} views`,
           readTimeMinutes: readMinutes,
           readTime: `${readMinutes} min read`,
           thumbnail: b.coverImage?.url || GLOBE_THUMB,
@@ -178,7 +172,7 @@ try {
       authorId: r.authorId,
       avatarUrl: r.avatar,
       views: r.totalViews,
-      viewsLabel: formatViewCount(r.totalViews),
+      viewsLabel: `${formatCompact(r.totalViews)} views`,
     }));
 } catch (e) {
   console.error("Error aggregating researcher views:", e);
@@ -248,7 +242,6 @@ papers.forEach((p) => {
   </head>
   <body
     class="bg-[#f9f9fb] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative"
-    data-backend-uri={backendUri}
     data-total-pages={paginationMeta.totalPages}
     data-current-page={paginationMeta.page}
     data-has-more={paginationMeta.hasMore ? "true" : "false"}
@@ -1133,10 +1126,9 @@ papers.forEach((p) => {
 
     <!-- Client Script -->
     <script>
+      import { apiClient } from "../api/api-client";
+
       function initDiscover() {
-        const backendUri =
-          document.body.getAttribute("data-backend-uri") ||
-          "http://localhost:5000";
         let currentPage =
           Number(document.body.getAttribute("data-current-page")) || 1;
         let totalPages =
@@ -1508,15 +1500,12 @@ papers.forEach((p) => {
 
           try {
             const nextPage = currentPage + 1;
-            const res = await fetch(
-              `${backendUri}/blog/published?page=${nextPage}&limit=50`,
-              {
-                headers: { Accept: "application/json" },
-              },
-            );
-            const data = await res.json();
+            const res = await apiClient.get("/blog/published", {
+              params: { page: nextPage, limit: 50 },
+            });
+            const data = res.data;
 
-            if (res.ok && data.success && Array.isArray(data.blogs)) {
+            if (data.success && Array.isArray(data.blogs)) {
               if (data.blogs.length === 0) {
                 hasMore = false;
               } else {

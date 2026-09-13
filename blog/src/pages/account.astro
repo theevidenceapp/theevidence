@@ -3,14 +3,15 @@ import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
 import SEOHead from "@/components/SEOHead.astro";
 
-const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
-const backendUri = import.meta.env.VITE_BACKEND_URI || import.meta.env.PUBLIC_BACKEND_URI || "http://localhost:5000";
+const THE_EVIDENCE_LOGO =
+  "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
 
 let user = {
   _id: "66c5d123456789abcdef0123",
   name: "Dr. Sarah Mitchell",
   email: "sarah.mitchell@theevidence.org",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+  avatar:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaq7q5sHbJh9yfx4MCJ3dHnyGGhyHmKedRmbXIS4vM4cYZ8aZLu5lMgJI&s=10",
   phone_number: "+1 (555) 382-9102",
   dob: "1992-08-20",
   role: "PUBLISHER",
@@ -24,127 +25,316 @@ let user = {
 <html lang="en" class="bg-[#f9f9fb]">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <ClientRouter />
     <title>The Evidence - Account Settings</title>
-    <SEOHead 
-      title="Account Settings | The Evidence" 
-      description="Manage your personal profile, credentials, and security settings." 
+    <SEOHead
+      title="Account Settings | The Evidence"
+      description="Manage your personal profile, credentials, and security settings."
     />
     <style>
-      html, body {
+      html,
+      body {
         background-color: #f9f9fb !important;
         -webkit-tap-highlight-color: transparent;
       }
-      .no-scroll::-webkit-scrollbar { display: none; }
-      .no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-      .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 12px); }
+      .no-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 12px);
+      }
     </style>
   </head>
-  <body class="bg-[#f9f9fb] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative" data-backend-uri={backendUri}>
-    
+  <body
+    class="bg-[#f9f9fb] text-[#111] antialiased h-screen w-screen overflow-hidden flex flex-col m-0 p-0 font-sans select-none relative"
+  >
     <!-- DESKTOP HOVER DRAWER SIDEBAR -->
     <aside
       class="hidden md:flex group absolute top-0 left-0 bottom-0 z-50 w-[74px] hover:w-[220px] bg-[#f9f9fb] hover:shadow-[10px_0_30px_rgba(0,0,0,0.06)] transition-all duration-300 ease-in-out flex-col items-start px-3.5 py-6 shrink-0 border-r border-neutral-200/60 overflow-hidden"
     >
-      <a href="/" class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full" title="The Evidence">
-        <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-12 w-auto max-w-none object-contain shrink-0" />
+      <a
+        href="/"
+        class="flex items-center h-[56px] px-1 mb-6 overflow-hidden shrink-0 w-full"
+        title="The Evidence"
+      >
+        <img
+          src={THE_EVIDENCE_LOGO}
+          alt="The Evidence"
+          class="h-12 w-auto max-w-none object-contain shrink-0"
+        />
       </a>
 
       <nav class="flex flex-col gap-3.5 w-full">
         <!-- Discover -->
-        <a href="/discover" class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0" title="Discover">
+        <a
+          href="/discover"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0"
+          title="Discover"
+        >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0 overflow-visible">
-              <path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.8166 14.2071 12.7929L17 10" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0 overflow-visible"
+            >
+              <path
+                d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.8166 14.2071 12.7929L17 10"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">Discover</span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Discover</span
+          >
         </a>
 
         <!-- Desk -->
-        <a href="/desk" class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0" title="Desk">
+        <a
+          href="/desk"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0"
+          title="Desk"
+        >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0 overflow-visible">
-              <path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0 overflow-visible"
+            >
+              <path
+                d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M9 17C11 11.5 12.9604 9.63636 15 8"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">Desk</span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Desk</span
+          >
         </a>
 
         <!-- Notification -->
-        <a href="/notification" class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0" title="Notification">
+        <a
+          href="/notification"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full text-[#0d0d0c] hover:bg-[#e8f0fe] transition-all duration-300 overflow-hidden shrink-0"
+          title="Notification"
+        >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0 overflow-visible">
-              <path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0 overflow-visible"
+            >
+              <path
+                d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z"
+                fill="#2563EB"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">Notification</span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Notification</span
+          >
         </a>
 
         <!-- Account (Active Blue Pill) -->
-        <a href="/account" class="flex items-center h-11 w-11 group-hover:w-full rounded-full bg-[#e8f0fe] text-[#0d0d0c] transition-all duration-300 overflow-hidden shrink-0" title="Account">
+        <a
+          href="/account"
+          class="flex items-center h-11 w-11 group-hover:w-full rounded-full bg-[#e8f0fe] text-[#0d0d0c] transition-all duration-300 overflow-hidden shrink-0"
+          title="Account"
+        >
           <div class="w-11 h-11 shrink-0 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="shrink-0 overflow-visible">
-              <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#0D0D0C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="shrink-0 overflow-visible"
+            >
+              <path
+                d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+              <path
+                d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                stroke="#0D0D0C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </div>
-          <span class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4">Account</span>
+          <span
+            class="text-[15px] font-medium text-[#0d0d0c] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pl-1 pr-4"
+            >Account</span
+          >
         </a>
       </nav>
     </aside>
 
     <!-- Top Header -->
-    <header class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f9f9fb] gap-3">
+    <header
+      class="h-[68px] sm:h-[76px] px-4 md:pl-[90px] md:pr-8 flex items-center justify-between shrink-0 z-20 bg-[#f9f9fb] gap-3"
+    >
       <div class="flex items-center gap-2.5 sm:gap-4 shrink-0 mr-1">
         <a href="/" class="flex md:hidden items-center" title="The Evidence">
-          <img src={THE_EVIDENCE_LOGO} alt="The Evidence" class="h-7 sm:h-8 w-auto object-contain" />
+          <img
+            src={THE_EVIDENCE_LOGO}
+            alt="The Evidence"
+            class="h-7 sm:h-8 w-auto object-contain"
+          />
         </a>
-        <span class="text-[14px] sm:text-[17px] font-extrabold text-[#111] tracking-tight">Account Settings</span>
+        <span
+          class="text-[14px] sm:text-[17px] font-extrabold text-[#111] tracking-tight"
+          >Account Settings</span
+        >
       </div>
 
       <div class="flex-1 max-w-[560px]">
         <div class="relative w-full">
-          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input type="text" placeholder="Search account settings..." class="w-full pl-9 sm:pl-11 pr-3.5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"/>
+          <svg
+            class="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[#666]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg
+          >
+          <input
+            type="text"
+            placeholder="Search account settings..."
+            class="w-full pl-9 sm:pl-11 pr-3.5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] bg-white text-[#111] placeholder-[#777] rounded-full border border-neutral-200/50 shadow-[0_1px_3px_rgba(0,0,0,0.02)] focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+          />
         </div>
       </div>
       <div class="hidden lg:block w-[180px]"></div>
     </header>
 
     <!-- Main Viewport Layout -->
-    <div class="flex-1 flex px-3.5 sm:px-6 md:pl-[90px] md:pr-8 pb-16 md:pb-6 pt-0 gap-5 overflow-hidden max-w-[1280px] w-full mx-auto">
-      <main class="flex-1 h-full overflow-y-auto no-scroll flex flex-col items-center">
+    <div
+      class="flex-1 flex px-3.5 sm:px-6 md:pl-[90px] md:pr-8 pb-16 md:pb-6 pt-0 gap-5 overflow-hidden max-w-[1280px] w-full mx-auto"
+    >
+      <main
+        class="flex-1 h-full overflow-y-auto no-scroll flex flex-col items-center"
+      >
         <div class="w-full max-w-[680px] flex flex-col pt-1 pb-16">
-          
           <form id="account-form" class="flex flex-col gap-4">
-            
             <!-- SECTION 1: Avatar & Identity Header -->
-            <div class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-between gap-4">
+            <div
+              class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-between gap-4"
+            >
               <div class="flex items-center gap-4 sm:gap-5 min-w-0">
                 <div class="relative group">
-                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center shrink-0 border border-neutral-200 shadow-sm">
-                    <img id="avatar-preview" src={user.avatar} alt="Avatar" class="w-full h-full object-cover" />
+                  <div
+                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center shrink-0 border border-neutral-200 shadow-sm"
+                  >
+                    <img
+                      id="avatar-preview"
+                      src={user.avatar}
+                      alt="Avatar"
+                      class="w-full h-full object-cover"
+                    />
                   </div>
-                  <label for="avatar-file" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-white text-[11px] font-bold">Change</label>
-                  <input type="file" id="avatar-file" accept="image/*" class="hidden" />
+                  <label
+                    for="avatar-file"
+                    class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-white text-[11px] font-bold"
+                    >Change</label
+                  >
+                  <input
+                    type="file"
+                    id="avatar-file"
+                    accept="image/*"
+                    class="hidden"
+                  />
                 </div>
 
                 <div class="flex flex-col min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h3 id="ui-name" class="text-[15px] sm:text-[17px] font-extrabold text-[#0f172a] leading-tight truncate">Loading...</h3>
-                    <span id="ui-verified" class="hidden items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">Verified</span>
-                    <span id="ui-role" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-neutral-100 text-neutral-800">USER</span>
+                    <h3
+                      id="ui-name"
+                      class="text-[15px] sm:text-[17px] font-extrabold text-[#0f172a] leading-tight truncate"
+                    >
+                      Loading...
+                    </h3>
+                    <span
+                      id="ui-verified"
+                      class="hidden items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
+                      >Verified</span
+                    >
+                    <span
+                      id="ui-role"
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-neutral-100 text-neutral-800"
+                      >USER</span
+                    >
                   </div>
-                  <p id="ui-email" class="text-[12px] sm:text-[13px] text-neutral-500 mt-1 truncate">Loading...</p>
-                  <span id="ui-member" class="text-[10.5px] sm:text-[11px] text-neutral-400 mt-0.5">Member since...</span>
+                  <p
+                    id="ui-email"
+                    class="text-[12px] sm:text-[13px] text-neutral-500 mt-1 truncate"
+                  >
+                    Loading...
+                  </p>
+                  <span
+                    id="ui-member"
+                    class="text-[10.5px] sm:text-[11px] text-neutral-400 mt-0.5"
+                    >Member since...</span
+                  >
                 </div>
               </div>
 
@@ -155,58 +345,141 @@ let user = {
                 class="px-3.5 sm:px-4 py-2 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-extrabold transition cursor-pointer active:scale-95 border border-rose-200/60 shadow-sm shrink-0 flex items-center gap-1.5"
                 title="Log out of account"
               >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  ></path>
                 </svg>
                 <span class="hidden sm:inline">Logout</span>
               </button>
             </div>
 
             <!-- SECTION 2: Editable Personal Details -->
-            <div class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-4">
-              <h4 class="text-[13.5px] sm:text-[14.5px] font-extrabold text-[#0f172a]">Personal Details</h4>
+            <div
+              class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-4"
+            >
+              <h4
+                class="text-[13.5px] sm:text-[14.5px] font-extrabold text-[#0f172a]"
+              >
+                Personal Details
+              </h4>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div class="flex flex-col gap-1.5">
-                  <label for="name" class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Full Name</label>
-                  <input type="text" id="name" name="name" class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+                  <label
+                    for="name"
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Full Name</label
+                  >
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    required
+                  />
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                  <label for="email" class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Email Address</label>
-                  <input type="email" id="email" name="email" class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-neutral-100 text-neutral-500 rounded-2xl border border-neutral-200/50 cursor-not-allowed focus:outline-none" readonly />
+                  <label
+                    for="email"
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Email Address</label
+                  >
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-neutral-100 text-neutral-500 rounded-2xl border border-neutral-200/50 cursor-not-allowed focus:outline-none"
+                    readonly
+                  />
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                  <label for="phone_number" class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Phone Number</label>
-                  <input type="tel" id="phone_number" name="phone_number" placeholder="+1 (555) 000-0000" class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  <label
+                    for="phone_number"
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Phone Number</label
+                  >
+                  <input
+                    type="tel"
+                    id="phone_number"
+                    name="phone_number"
+                    placeholder="+1 (555) 000-0000"
+                    class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                  <label for="dob" class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Date of Birth</label>
-                  <input type="date" id="dob" name="dob" class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  <label
+                    for="dob"
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Date of Birth</label
+                  >
+                  <input
+                    type="date"
+                    id="dob"
+                    name="dob"
+                    class="w-full px-4 py-2.5 text-[12.5px] sm:text-[13px] bg-[#f9f9fb] text-[#111] rounded-2xl border border-neutral-200/70 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
               </div>
             </div>
 
             <!-- SECTION 3: System Role & Status (Read-Only) -->
-            <div class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-4">
-              <h4 class="text-[13.5px] sm:text-[14.5px] font-extrabold text-[#0f172a]">Account Status & Role</h4>
+            <div
+              class="bg-white rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-4"
+            >
+              <h4
+                class="text-[13.5px] sm:text-[14.5px] font-extrabold text-[#0f172a]"
+              >
+                Account Status & Role
+              </h4>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div class="flex flex-col gap-1.5">
-                  <label class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Assigned Role</label>
-                  <div class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between">
-                    <span id="ui-role-box" class="text-[12.5px] sm:text-[13px] text-neutral-800 font-bold">USER</span>
-                    <span class="text-[10px] text-neutral-400 font-semibold">Managed</span>
+                  <label
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Assigned Role</label
+                  >
+                  <div
+                    class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between"
+                  >
+                    <span
+                      id="ui-role-box"
+                      class="text-[12.5px] sm:text-[13px] text-neutral-800 font-bold"
+                      >USER</span
+                    >
+                    <span class="text-[10px] text-neutral-400 font-semibold"
+                      >Managed</span
+                    >
                   </div>
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                  <label class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold">Account Status</label>
-                  <div class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between">
-                    <span id="ui-status-box" class="text-[12.5px] sm:text-[13px] text-neutral-800 font-bold">Active</span>
-                    <span id="ui-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <label
+                    class="text-[11px] sm:text-[11.5px] text-neutral-500 font-bold"
+                    >Account Status</label
+                  >
+                  <div
+                    class="flex items-center h-[42px] px-4 bg-neutral-100 rounded-2xl border border-neutral-200/50 justify-between"
+                  >
+                    <span
+                      id="ui-status-box"
+                      class="text-[12.5px] sm:text-[13px] text-neutral-800 font-bold"
+                      >Active</span
+                    >
+                    <span
+                      id="ui-status-dot"
+                      class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                   </div>
                 </div>
               </div>
@@ -214,44 +487,131 @@ let user = {
 
             <!-- Action Save Bar -->
             <div class="flex items-center justify-end gap-3 pt-2">
-              <button type="reset" class="px-5 h-[40px] flex items-center justify-center rounded-full text-xs font-bold text-neutral-600 hover:text-black hover:bg-neutral-100 transition cursor-pointer">Cancel</button>
-              <button type="submit" id="save-btn" class="w-[150px] h-[40px] flex items-center justify-center rounded-full text-xs font-extrabold bg-[#1b62f2] text-white hover:bg-[#1855d4] shadow-[0_2px_8px_rgba(27,98,242,0.3)] transition-all active:scale-95 cursor-pointer"><span>Save Changes</span></button>
+              <button
+                type="reset"
+                class="px-5 h-[40px] flex items-center justify-center rounded-full text-xs font-bold text-neutral-600 hover:text-black hover:bg-neutral-100 transition cursor-pointer"
+                >Cancel</button
+              >
+              <button
+                type="submit"
+                id="save-btn"
+                class="w-[150px] h-[40px] flex items-center justify-center rounded-full text-xs font-extrabold bg-[#1b62f2] text-white hover:bg-[#1855d4] shadow-[0_2px_8px_rgba(27,98,242,0.3)] transition-all active:scale-95 cursor-pointer"
+                ><span>Save Changes</span></button
+              >
             </div>
-
           </form>
         </div>
       </main>
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION DOCK -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#f9f9fb]/95 backdrop-blur-lg border-t border-neutral-200/60 px-4 py-1.5 flex items-center justify-around h-[56px] safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
-      <a href="/discover" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900" title="Discover">
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#f9f9fb]/95 backdrop-blur-lg border-t border-neutral-200/60 px-4 py-1.5 flex items-center justify-around h-[56px] safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.03)]"
+    >
+      <a
+        href="/discover"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+        title="Discover"
+      >
         <div class="w-5 h-5 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.8166 14.2071 12.7929L17 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            ><path
+              d="M4.31802 19.682C3 18.364 3 16.2426 3 12C3 7.75736 3 5.63604 4.31802 4.31802C5.63604 3 7.75736 3 12 3C16.2426 3 18.364 3 19.682 4.31802C21 5.63604 21 7.75736 21 12C21 16.2426 21 18.364 19.682 19.682C18.364 21 16.2426 21 12 21C7.75736 21 5.63604 21 4.31802 19.682Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path><path
+              d="M7 14L9.79289 11.2071C10.1834 10.8166 10.8166 10.8166 11.2071 11.2071L12.7929 12.7929C13.1834 13.1834 13.8166 13.8166 14.2071 12.7929L17 10"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path></svg
+          >
         </div>
         <span class="text-[10px] font-medium tracking-tight">Discover</span>
       </a>
 
-      <a href="/desk" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900" title="Desk">
+      <a
+        href="/desk"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+        title="Desk"
+      >
         <div class="w-5 h-5 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 17C11 11.5 12.9604 9.63636 15 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            ><path
+              d="M10.5502 3C6.69782 3.00694 4.6805 3.10152 3.39128 4.39073C2 5.78202 2 8.02125 2 12.4997C2 16.9782 2 19.2174 3.39128 20.6087"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path><path
+              d="M11.0557 13C10.3323 3.86635 16.8024 1.27554 21.9806 2.16439"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path><path
+              d="M9 17C11 11.5 12.9604 9.63636 15 8"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path></svg
+          >
         </div>
         <span class="text-[10px] font-medium tracking-tight">Desk</span>
       </a>
 
-      <a href="/notification" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900" title="Notification">
+      <a
+        href="/notification"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-neutral-500 hover:text-neutral-900"
+        title="Notification"
+      >
         <div class="w-5 h-5 flex items-center justify-center relative">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z" fill="#2563EB"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            ><path
+              d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path><path
+              d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path><path
+              d="M19 9C21.2088 9 23 7.2088 23 5C23 2.7904 21.2088 1 19 1C16.7912 1 15 2.7904 15 5C15 7.2088 16.7912 9 19 9Z"
+              fill="#2563EB"></path></svg
+          >
         </div>
         <span class="text-[10px] font-medium tracking-tight">Alerts</span>
       </a>
 
       <!-- Account (Active) -->
-      <a href="/account" class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-[#1b62f2]" title="Account">
-        <div class="w-8 h-6 rounded-full bg-[#e8f0fe] flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="w-5 h-5 overflow-visible">
-            <path d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511" stroke="#1B62F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z" stroke="#1B62F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <a
+        href="/account"
+        class="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-[#1b62f2]"
+        title="Account"
+      >
+        <div
+          class="w-8 h-6 rounded-full bg-[#e8f0fe] flex items-center justify-center"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            class="w-5 h-5 overflow-visible"
+          >
+            <path
+              d="M18.4984 19.1511C17.3377 17.4018 15.2947 16.2009 12.9313 16.0569L11.9984 16C11.6652 16.0083 11.3547 16.0194 11.0617 16.0325C8.71722 16.1376 6.66598 17.3796 5.5 19.1511"
+              stroke="#1B62F2"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <path
+              d="M14.9961 10C14.9961 11.6569 13.6529 13 11.9961 13C10.3392 13 8.99609 11.6569 8.99609 10C8.99609 8.34315 10.3392 7 11.9961 7C13.6529 7 14.9961 8.34315 14.9961 10Z"
+              stroke="#1B62F2"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
         </div>
         <span class="text-[10px] font-bold tracking-tight">Account</span>
@@ -290,8 +650,12 @@ let user = {
           return;
         }
 
-        const avatarInput = document.getElementById("avatar-file") as HTMLInputElement;
-        const avatarPreview = document.getElementById("avatar-preview") as HTMLImageElement;
+        const avatarInput = document.getElementById(
+          "avatar-file",
+        ) as HTMLInputElement;
+        const avatarPreview = document.getElementById(
+          "avatar-preview",
+        ) as HTMLImageElement;
         let newAvatarBase64 = "";
 
         avatarInput?.addEventListener("change", (e) => {
@@ -313,16 +677,22 @@ let user = {
         // Fetch User Data via GET /user/me
         try {
           const res = await apiClient.get("/user/me", {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           });
 
           if (res.data && res.data.success && res.data.user) {
             const u = res.data.user;
             activeUserId = u._id;
 
-            const nameInput = document.getElementById("name") as HTMLInputElement;
-            const emailInput = document.getElementById("email") as HTMLInputElement;
-            const phoneInput = document.getElementById("phone_number") as HTMLInputElement;
+            const nameInput = document.getElementById(
+              "name",
+            ) as HTMLInputElement;
+            const emailInput = document.getElementById(
+              "email",
+            ) as HTMLInputElement;
+            const phoneInput = document.getElementById(
+              "phone_number",
+            ) as HTMLInputElement;
             const dobInput = document.getElementById("dob") as HTMLInputElement;
 
             const uiName = document.getElementById("ui-name");
@@ -337,7 +707,7 @@ let user = {
             if (nameInput) nameInput.value = u.name || "";
             if (emailInput) emailInput.value = u.email || "";
             if (phoneInput) phoneInput.value = u.phone_number || "";
-            if (dobInput && u.dob) dobInput.value = u.dob.split('T')[0];
+            if (dobInput && u.dob) dobInput.value = u.dob.split("T")[0];
             if (avatarPreview && u.avatar) avatarPreview.src = u.avatar;
 
             if (uiName) uiName.textContent = u.name || "User";
@@ -358,7 +728,9 @@ let user = {
               }
             }
 
-            if (uiStatusBox) uiStatusBox.textContent = u.isActive !== false ? "Active" : "Disabled";
+            if (uiStatusBox)
+              uiStatusBox.textContent =
+                u.isActive !== false ? "Active" : "Disabled";
             if (uiStatusDot) {
               uiStatusDot.className = `w-2.5 h-2.5 rounded-full ${u.isActive !== false ? "bg-emerald-500" : "bg-neutral-400"}`;
             }
@@ -392,17 +764,24 @@ let user = {
           }
 
           try {
-            const res = await apiClient.put(`/user/update/${activeUserId}`, payload, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await apiClient.put(
+              `/user/update/${activeUserId}`,
+              payload,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
 
             if (res.status === 200 || res.data?.success) {
               const updatedUser = res.data.user || {};
-              
+
               const uiName = document.getElementById("ui-name");
-              const nameInput = document.getElementById("name") as HTMLInputElement;
+              const nameInput = document.getElementById(
+                "name",
+              ) as HTMLInputElement;
               if (uiName && nameInput) uiName.textContent = nameInput.value;
-              if (updatedUser.avatar && avatarPreview) avatarPreview.src = updatedUser.avatar;
+              if (updatedUser.avatar && avatarPreview)
+                avatarPreview.src = updatedUser.avatar;
 
               saveBtn.innerHTML = "<span>Saved ✓</span>";
               setTimeout(() => {
@@ -435,7 +814,10 @@ let user = {
             document.cookie.split(";").forEach((c) => {
               document.cookie = c
                 .replace(/^ +/, "")
-                .replace(/=/g, "=;expires=" + new Date(0).toUTCString() + ";path=/");
+                .replace(
+                  /=/g,
+                  "=;expires=" + new Date(0).toUTCString() + ";path=/",
+                );
             });
           } catch {}
           window.location.replace("/");
@@ -443,7 +825,10 @@ let user = {
       }
 
       document.addEventListener("astro:page-load", initAccount);
-      if (document.readyState === "complete" || document.readyState === "interactive") {
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
         initAccount();
       }
     </script>
