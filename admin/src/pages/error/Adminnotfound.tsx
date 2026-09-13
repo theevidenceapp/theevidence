@@ -23,7 +23,7 @@
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-import * as React from "react";
+import * as React from 'react';
 import {
     Search,
     Bell,
@@ -44,11 +44,11 @@ import {
     CircleSlash2,
     Ban,
     Check,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 /* ────────────────────────────────────────────────────────────────────── *
  * Types
@@ -113,57 +113,57 @@ export interface AdminNotFoundProps {
 
 const DEFAULT_DESKTOP_QUICK_NAV: QuickNavItem[] = [
     {
-        id: "dashboard",
+        id: 'dashboard',
         icon: LayoutDashboard,
-        title: "Dashboard",
-        description: "System overview, active telemetry & key metrics",
+        title: 'Dashboard',
+        description: 'System overview, active telemetry & key metrics',
     },
     {
-        id: "user-directory",
+        id: 'user-directory',
         icon: Users,
-        title: "User Directory",
-        description: "Account roles, federated identities & seats",
+        title: 'User Directory',
+        description: 'Account roles, federated identities & seats',
     },
     {
-        id: "content-workflows",
+        id: 'content-workflows',
         icon: FileText,
-        title: "Content Workflows",
-        description: "Editorial drafts, localization & assets",
+        title: 'Content Workflows',
+        description: 'Editorial drafts, localization & assets',
     },
     {
-        id: "security-exclusions",
+        id: 'security-exclusions',
         icon: UserX,
-        title: "Security Exclusions",
-        description: "Blacklist filters, bans & compliance logs",
+        title: 'Security Exclusions',
+        description: 'Blacklist filters, bans & compliance logs',
     },
 ];
 
 const DEFAULT_MOBILE_QUICK_NAV: QuickNavItem[] = [
     {
-        id: "console-overview",
+        id: 'console-overview',
         icon: BarChart3,
-        title: "Console Overview",
-        description: "System health, metrics & logs",
+        title: 'Console Overview',
+        description: 'System health, metrics & logs',
     },
     {
-        id: "content-manager",
+        id: 'content-manager',
         icon: FileText,
-        title: "Content Manager",
-        description: "Articles, media & drafts",
+        title: 'Content Manager',
+        description: 'Articles, media & drafts',
     },
     {
-        id: "access-control",
+        id: 'access-control',
         icon: ShieldCheck,
-        title: "Access Control",
-        description: "Restricted and blocked IPs",
+        title: 'Access Control',
+        description: 'Restricted and blocked IPs',
     },
 ];
 
 const DEFAULT_DIAGNOSTICS: RouteDiagnostics = {
-    errorSlug: "404_PAGE_NOT_FOUND",
-    sessionTimestampUtc: "2026-09-12 16:52:42 UTC",
-    nodeId: "gateway-prod-us-east-04",
-    targetRequest: "srcdoc",
+    errorSlug: '404_PAGE_NOT_FOUND',
+    sessionTimestampUtc: '2026-09-12 16:52:42 UTC',
+    nodeId: 'gateway-prod-us-east-04',
+    targetRequest: 'srcdoc',
 };
 
 /* ────────────────────────────────────────────────────────────────────── *
@@ -171,8 +171,8 @@ const DEFAULT_DIAGNOSTICS: RouteDiagnostics = {
  * ────────────────────────────────────────────────────────────────────── */
 
 export function AdminNotFound({
-    environment = "PRODUCTION",
-    errorCode = "404",
+    environment = 'PRODUCTION',
+    errorCode = '404',
     onBackToDashboard,
     onBrowseUsers,
     onOpenDocs,
@@ -185,7 +185,7 @@ export function AdminNotFound({
     className,
 }: AdminNotFoundProps) {
     return (
-        <div className={cn("min-h-full w-full bg-slate-50", className)}>
+        <div className={cn('min-h-full w-full bg-slate-50', className)}>
             <DesktopNotFound
                 environment={environment}
                 errorCode={errorCode}
@@ -288,7 +288,10 @@ function DesktopNotFound({
             <main className="flex-1 px-8 py-14">
                 <div className="mx-auto max-w-3xl text-center">
                     <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50">
-                        <Compass className="h-7 w-7 text-indigo-600" strokeWidth={1.75} />
+                        <Compass
+                            className="h-7 w-7 text-indigo-600"
+                            strokeWidth={1.75}
+                        />
                     </div>
 
                     <Badge
@@ -302,7 +305,10 @@ function DesktopNotFound({
                         <span className="text-6xl font-bold tracking-tight text-slate-900">
                             {errorCode}
                         </span>
-                        <span className="h-9 w-px bg-slate-300" aria-hidden="true" />
+                        <span
+                            className="h-9 w-px bg-slate-300"
+                            aria-hidden="true"
+                        />
                         <span className="text-left">
                             <span className="block text-xs font-bold tracking-wide text-indigo-600">
                                 ROUTING EXCEPTION
@@ -314,9 +320,9 @@ function DesktopNotFound({
                     </div>
 
                     <p className="mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-slate-500">
-                        The admin resource or endpoint you are attempting to reach does
-                        not exist, was deprecated, or requires elevated system
-                        permissions to inspect.
+                        The admin resource or endpoint you are attempting to
+                        reach does not exist, was deprecated, or requires
+                        elevated system permissions to inspect.
                     </p>
 
                     <div className="mt-8 flex items-center justify-center gap-3">
@@ -347,14 +353,18 @@ function DesktopNotFound({
                 </div>
 
                 {/* Quick navigation */}
-                <section className="mx-auto mt-16 max-w-5xl" aria-label="Quick navigation">
+                <section
+                    className="mx-auto mt-16 max-w-5xl"
+                    aria-label="Quick navigation"
+                >
                     <div className="mb-5 flex items-end justify-between">
                         <div>
                             <h2 className="text-lg font-bold text-slate-900">
                                 Quick Navigation
                             </h2>
                             <p className="mt-1 text-sm text-slate-500">
-                                Common administrative paths within your active session scope
+                                Common administrative paths within your active
+                                session scope
                             </p>
                         </div>
                         <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
@@ -379,12 +389,14 @@ function DesktopNotFound({
                                     {diagnostics.errorSlug}
                                 </code>
                                 <span className="text-slate-300">•</span>
-                                <span>Session: {diagnostics.sessionTimestampUtc}</span>
+                                <span>
+                                    Session: {diagnostics.sessionTimestampUtc}
+                                </span>
                                 <span className="text-slate-300">•</span>
                                 <span>Node: {diagnostics.nodeId}</span>
                             </div>
                             <div className="text-sm text-slate-500">
-                                Target Request:{" "}
+                                Target Request:{' '}
                                 <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-700">
                                     {diagnostics.targetRequest}
                                 </code>
@@ -403,7 +415,7 @@ function DesktopNotFound({
                                 ) : (
                                     <Copy className="h-3.5 w-3.5" />
                                 )}
-                                {copied ? "Copied" : "Copy URL"}
+                                {copied ? 'Copied' : 'Copy URL'}
                             </Button>
                             <Button
                                 onClick={onReportRoute}
@@ -423,18 +435,20 @@ function DesktopNotFound({
 
 function QuickNavCard({ item }: { item: QuickNavItem }) {
     const Icon = item.icon;
-    const Tag = item.href ? "a" : "button";
+    const Tag = item.href ? 'a' : 'button';
 
     return (
         <Tag
-            {...(item.href ? { href: item.href } : { type: "button" })}
+            {...(item.href ? { href: item.href } : { type: 'button' })}
             onClick={item.onSelect}
             className="group flex flex-col items-start rounded-xl border border-slate-200 bg-white p-5 text-left transition-colors hover:border-indigo-200 hover:bg-indigo-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         >
             <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100">
                 <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
             </span>
-            <span className="text-sm font-bold text-slate-900">{item.title}</span>
+            <span className="text-sm font-bold text-slate-900">
+                {item.title}
+            </span>
             <span className="mt-1 text-sm leading-snug text-slate-500">
                 {item.description}
             </span>
@@ -463,7 +477,7 @@ function MobileNotFound({
 }: MobileNotFoundProps) {
     // Render the error code with the middle character accented, matching the
     // reference state, without assuming the code is literally "404".
-    const codeChars = errorCode.split("");
+    const codeChars = errorCode.split('');
     const midIndex = Math.floor(codeChars.length / 2);
 
     return (
@@ -484,7 +498,11 @@ function MobileNotFound({
                     </span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-500">
-                    <button type="button" aria-label="Notifications" className="p-1">
+                    <button
+                        type="button"
+                        aria-label="Notifications"
+                        className="p-1"
+                    >
                         <Bell className="h-[18px] w-[18px]" />
                     </button>
                     <button
@@ -524,7 +542,11 @@ function MobileNotFound({
                         {codeChars.map((char, i) => (
                             <span
                                 key={i}
-                                className={i === midIndex ? "text-indigo-600" : undefined}
+                                className={
+                                    i === midIndex
+                                        ? 'text-indigo-600'
+                                        : undefined
+                                }
                             >
                                 {char}
                             </span>
@@ -535,8 +557,8 @@ function MobileNotFound({
                     </p>
 
                     <p className="mb-8 text-sm leading-relaxed text-slate-500">
-                        The screen or admin resource you requested cannot be located. It
-                        may have been relocated or removed.
+                        The screen or admin resource you requested cannot be
+                        located. It may have been relocated or removed.
                     </p>
 
                     <div className="flex w-full flex-col gap-3">
@@ -599,11 +621,11 @@ function MobileNotFound({
 
 function MobileQuickNavRow({ item }: { item: QuickNavItem }) {
     const Icon = item.icon;
-    const Tag = item.href ? "a" : "button";
+    const Tag = item.href ? 'a' : 'button';
 
     return (
         <Tag
-            {...(item.href ? { href: item.href } : { type: "button" })}
+            {...(item.href ? { href: item.href } : { type: 'button' })}
             onClick={item.onSelect}
             className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-left transition-colors active:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
         >

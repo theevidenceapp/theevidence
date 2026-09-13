@@ -1,35 +1,30 @@
-import React, { useEffect } from 'react'
-import { apiClient } from '../../api/api-client'
-import { useAuthStore } from '../../store/authStore'
+import React, { useEffect } from 'react';
+import { apiClient } from '../../api/api-client';
+import { useAuthStore } from '../../store/authStore';
 
 const ExchangeAccessToken = () => {
-    const setToken = useAuthStore((state) => state.setToken)
-    const setInitialized = useAuthStore((state) => state.setInitialized)
+    const setToken = useAuthStore((state) => state.setToken);
+    const setInitialized = useAuthStore((state) => state.setInitialized);
 
     useEffect(() => {
         const fetchAccessToken = async () => {
             try {
-                const res = await apiClient.get('/user/get-access-token')
+                const res = await apiClient.get('/user/get-access-token');
 
-                setToken(res.data.accessToken)
-
+                setToken(res.data.accessToken);
             } catch (error) {
-                console.error(
-                    'Failed to restore authentication:',
-                    error
-                )
+                console.error('Failed to restore authentication:', error);
 
-                setToken(null)
-
+                setToken(null);
             } finally {
-                setInitialized(true)
+                setInitialized(true);
             }
-        }
+        };
 
-        fetchAccessToken()
-    }, [setToken, setInitialized])
+        fetchAccessToken();
+    }, [setToken, setInitialized]);
 
-    return null
-}
+    return null;
+};
 
-export default ExchangeAccessToken
+export default ExchangeAccessToken;

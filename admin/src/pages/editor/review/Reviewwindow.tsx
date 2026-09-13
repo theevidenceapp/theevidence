@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -15,9 +15,9 @@ import {
     X,
     Edit3,
     ImageIcon,
-} from "lucide-react";
-import { apiClient } from "@/api/api-client";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { apiClient } from '@/api/api-client';
+import { cn } from '@/lib/utils';
 
 // =====================================================================
 // Types based on the backend Models
@@ -42,7 +42,7 @@ interface CsvAttachment {
 }
 
 interface CoverImage {
-    url: string
+    url: string;
 }
 
 interface Blog {
@@ -54,7 +54,7 @@ interface Blog {
     coverImage?: CoverImage;
     docType: string;
     category: string;
-    status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
+    status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'PUBLISHED' | 'REJECTED';
     tags: string[];
     createdAt: string;
     publishedAt?: string | null;
@@ -86,11 +86,12 @@ export default function ReviewWindow() {
         formatting: false,
     });
 
-    const [feedbackNotes, setFeedbackNotes] = useState("");
+    const [feedbackNotes, setFeedbackNotes] = useState('');
 
     const checkedCount = Object.values(checklist).filter(Boolean).length;
     const totalChecklist = Object.keys(checklist).length;
-    const progressPercentage = totalChecklist === 0 ? 0 : (checkedCount / totalChecklist) * 100;
+    const progressPercentage =
+        totalChecklist === 0 ? 0 : (checkedCount / totalChecklist) * 100;
 
     // =====================================================================
     // API Calls
@@ -98,19 +99,26 @@ export default function ReviewWindow() {
 
     useEffect(() => {
         const fetchBlog = async () => {
-            const fetchSlug = slug || "autonomous-edge-inference-sensor-processing";
+            const fetchSlug =
+                slug || 'autonomous-edge-inference-sensor-processing';
 
             try {
                 setIsLoading(true);
-                const response = await apiClient.get<{ success: boolean; blog: Blog }>(`/blog/get/${fetchSlug}`);
+                const response = await apiClient.get<{
+                    success: boolean;
+                    blog: Blog;
+                }>(`/blog/get/${fetchSlug}`);
 
                 if (response.data.success) {
                     setBlog(response.data.blog);
                 } else {
-                    setError("Failed to fetch manuscript details.");
+                    setError('Failed to fetch manuscript details.');
                 }
             } catch (err: any) {
-                setError(err.response?.data?.message || "An error occurred while fetching.");
+                setError(
+                    err.response?.data?.message ||
+                        'An error occurred while fetching.',
+                );
             } finally {
                 setIsLoading(false);
             }
@@ -119,19 +127,25 @@ export default function ReviewWindow() {
         fetchBlog();
     }, [slug]);
 
-    const handleUpdateStatus = async (newStatus: Blog["status"]) => {
+    const handleUpdateStatus = async (newStatus: Blog['status']) => {
         if (!blog) return;
         try {
             setIsUpdatingStatus(true);
-            const response = await apiClient.put(`/blog/statusupdate/${blog._id}`, {
-                status: newStatus,
-            });
+            const response = await apiClient.put(
+                `/blog/statusupdate/${blog._id}`,
+                {
+                    status: newStatus,
+                },
+            );
 
             if (response.data.success) {
                 setBlog({ ...blog, status: newStatus });
             }
         } catch (err: any) {
-            alert("Failed to update status: " + (err.response?.data?.message || err.message));
+            alert(
+                'Failed to update status: ' +
+                    (err.response?.data?.message || err.message),
+            );
         } finally {
             setIsUpdatingStatus(false);
         }
@@ -158,8 +172,12 @@ export default function ReviewWindow() {
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 mb-6">
                     <ShieldCheck className="h-10 w-10 text-slate-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Manuscript Not Found</h2>
-                <p className="mt-2 max-w-sm text-slate-500">{error || "The requested document could not be loaded."}</p>
+                <h2 className="text-2xl font-bold text-slate-900">
+                    Manuscript Not Found
+                </h2>
+                <p className="mt-2 max-w-sm text-slate-500">
+                    {error || 'The requested document could not be loaded.'}
+                </p>
                 <button
                     onClick={() => navigate(-1)}
                     className="mt-8 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
@@ -174,10 +192,10 @@ export default function ReviewWindow() {
     // Derived Data Rendering
     // =====================================================================
 
-    const createdDate = new Date(blog.createdAt).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
+    const createdDate = new Date(blog.createdAt).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
     });
 
     const wordCount = blog.content ? blog.content.split(/\s+/).length : 0;
@@ -207,16 +225,18 @@ export default function ReviewWindow() {
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                             Submission Date
                         </span>
-                        <span className="text-xs font-semibold text-slate-600">{createdDate}</span>
+                        <span className="text-xs font-semibold text-slate-600">
+                            {createdDate}
+                        </span>
                     </div>
                     <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-                    {blog.status === "PENDING" && (
+                    {blog.status === 'PENDING' && (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-600/20">
                             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                             Pending Review
                         </span>
                     )}
-                    {blog.status === "PUBLISHED" && (
+                    {blog.status === 'PUBLISHED' && (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             Published
@@ -230,10 +250,8 @@ export default function ReviewWindow() {
             ------------------------------------------------------------------ */}
             <main className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8">
                 <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
-
                     {/* ======================= LEFT COLUMN ======================= */}
                     <div className="space-y-8 xl:col-span-8">
-
                         {/* Header & Meta Card with Cover Image */}
                         <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all hover:shadow-md">
                             {/* Cover Image Section */}
@@ -250,7 +268,9 @@ export default function ReviewWindow() {
                                 <div className="flex h-48 w-full items-center justify-center bg-slate-50 sm:h-64">
                                     <div className="flex flex-col items-center gap-2 text-slate-400">
                                         <ImageIcon className="h-12 w-12 opacity-50" />
-                                        <span className="text-sm font-medium">No cover image provided</span>
+                                        <span className="text-sm font-medium">
+                                            No cover image provided
+                                        </span>
                                     </div>
                                 </div>
                             )}
@@ -258,13 +278,16 @@ export default function ReviewWindow() {
                             <div className="p-6 sm:p-10">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="rounded-md bg-slate-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
-                                        {blog.docType || "RESEARCH"}
+                                        {blog.docType || 'RESEARCH'}
                                     </span>
                                     <span className="rounded-md bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-600/10">
                                         {blog.category}
                                     </span>
                                     {blog.tags?.map((tag) => (
-                                        <span key={tag} className="rounded-md bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+                                        <span
+                                            key={tag}
+                                            className="rounded-md bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-inset ring-slate-200"
+                                        >
                                             #{tag}
                                         </span>
                                     ))}
@@ -283,7 +306,10 @@ export default function ReviewWindow() {
                                     <div className="flex items-center gap-4">
                                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-white shadow-md sm:h-16 sm:w-16">
                                             <img
-                                                src={blog.author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(blog.author.name)}&background=random`}
+                                                src={
+                                                    blog.author.avatar ||
+                                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(blog.author.name)}&background=random`
+                                                }
                                                 alt={blog.author.name}
                                                 className="h-full w-full object-cover"
                                             />
@@ -303,7 +329,8 @@ export default function ReviewWindow() {
                                                 <span className="h-1 w-1 rounded-full bg-slate-300"></span>
                                                 <span className="flex items-center gap-1.5">
                                                     <Eye className="h-4 w-4 text-slate-400" />
-                                                    {blog.views.toLocaleString()} views
+                                                    {blog.views.toLocaleString()}{' '}
+                                                    views
                                                 </span>
                                             </div>
                                         </div>
@@ -322,7 +349,9 @@ export default function ReviewWindow() {
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 shadow-inner">
                                         <FileText className="h-5 w-5 text-indigo-600" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900">Attached Assets</h3>
+                                    <h3 className="text-xl font-bold text-slate-900">
+                                        Attached Assets
+                                    </h3>
                                 </div>
                                 <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 shadow-sm ring-1 ring-inset ring-slate-200">
                                     {totalAttachments} files
@@ -332,21 +361,37 @@ export default function ReviewWindow() {
                             <div className="p-6 space-y-4">
                                 {/* PDFs */}
                                 {blog.pdfs?.map((pdf, idx) => (
-                                    <div key={idx} className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:border-slate-200 hover:shadow-md">
+                                    <div
+                                        key={idx}
+                                        className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:border-slate-200 hover:shadow-md"
+                                    >
                                         <div className="flex items-center gap-4">
                                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 ring-1 ring-inset ring-red-100">
                                                 <FileText className="h-6 w-6" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pdf.originalName}</p>
-                                                <p className="text-xs font-medium text-slate-500">PDF Document</p>
+                                                <p className="truncate text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                    {pdf.originalName}
+                                                </p>
+                                                <p className="text-xs font-medium text-slate-500">
+                                                    PDF Document
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <a href={pdf.url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none justify-center rounded-xl bg-slate-50 px-5 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-100 text-center">
+                                            <a
+                                                href={pdf.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex-1 sm:flex-none justify-center rounded-xl bg-slate-50 px-5 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-100 text-center"
+                                            >
                                                 Preview
                                             </a>
-                                            <a href={pdf.url} download className="flex h-[38px] w-[38px] items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 hover:text-slate-900">
+                                            <a
+                                                href={pdf.url}
+                                                download
+                                                className="flex h-[38px] w-[38px] items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                                            >
                                                 <Download className="h-4 w-4" />
                                             </a>
                                         </div>
@@ -361,12 +406,21 @@ export default function ReviewWindow() {
                                                 <FileSpreadsheet className="h-6 w-6" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">dataset_telemetry.csv</p>
-                                                <p className="text-xs font-medium text-slate-500">Raw Data / CSV</p>
+                                                <p className="truncate text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                    dataset_telemetry.csv
+                                                </p>
+                                                <p className="text-xs font-medium text-slate-500">
+                                                    Raw Data / CSV
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <a href={blog.csv.url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none justify-center rounded-xl bg-indigo-50 px-5 py-2.5 text-xs font-bold text-indigo-700 ring-1 ring-inset ring-indigo-600/10 transition-colors hover:bg-indigo-100 text-center">
+                                            <a
+                                                href={blog.csv.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex-1 sm:flex-none justify-center rounded-xl bg-indigo-50 px-5 py-2.5 text-xs font-bold text-indigo-700 ring-1 ring-inset ring-indigo-600/10 transition-colors hover:bg-indigo-100 text-center"
+                                            >
                                                 Inspect Dataset
                                             </a>
                                         </div>
@@ -376,7 +430,9 @@ export default function ReviewWindow() {
                                 {totalAttachments === 0 && (
                                     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10">
                                         <FileText className="mb-2 h-8 w-8 text-slate-300" />
-                                        <p className="text-sm font-medium text-slate-500">No external assets attached.</p>
+                                        <p className="text-sm font-medium text-slate-500">
+                                            No external assets attached.
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -385,34 +441,39 @@ export default function ReviewWindow() {
                         {/* Manuscript Content Preview */}
                         <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm">
                             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/30 px-8 py-5">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Manuscript Content</h3>
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                                    Manuscript Content
+                                </h3>
                             </div>
                             <div className="p-8">
                                 <div
                                     className="prose prose-slate max-w-none prose-headings:font-extrabold prose-headings:tracking-tight prose-h2:text-2xl prose-p:text-slate-600 prose-p:leading-relaxed prose-a:font-semibold prose-a:text-indigo-600 hover:prose-a:text-indigo-500 prose-img:rounded-2xl prose-img:shadow-sm"
-                                    dangerouslySetInnerHTML={{ __html: blog.content }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: blog.content,
+                                    }}
                                 />
                                 <div className="mt-10 flex justify-center border-t border-slate-100 pt-8">
                                     <button className="flex items-center gap-2 rounded-full bg-slate-50 px-6 py-2.5 text-sm font-bold text-indigo-600 shadow-sm ring-1 ring-inset ring-slate-200 transition-all hover:bg-indigo-50 hover:ring-indigo-200">
-                                        Read full draft ({wordCount.toLocaleString()} words)
+                                        Read full draft (
+                                        {wordCount.toLocaleString()} words)
                                         <ChevronDown className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
                     {/* ======================= RIGHT COLUMN ======================= */}
                     <div className="space-y-6 xl:col-span-4">
-
                         {/* Checklist */}
                         <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm">
                             <div className="border-b border-slate-100 p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
                                         <ShieldCheck className="h-6 w-6 text-indigo-600" />
-                                        <h3 className="text-lg font-bold text-slate-900">Editorial Checklist</h3>
+                                        <h3 className="text-lg font-bold text-slate-900">
+                                            Editorial Checklist
+                                        </h3>
                                     </div>
                                     <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
                                         {checkedCount}/{totalChecklist}
@@ -422,7 +483,9 @@ export default function ReviewWindow() {
                                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                                     <div
                                         className="h-full bg-indigo-500 transition-all duration-500 ease-out"
-                                        style={{ width: `${progressPercentage}%` }}
+                                        style={{
+                                            width: `${progressPercentage}%`,
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -430,22 +493,43 @@ export default function ReviewWindow() {
                             <div className="p-4 space-y-2">
                                 <ChecklistItem
                                     checked={checklist.titleAndSlug}
-                                    onChange={() => setChecklist(p => ({ ...p, titleAndSlug: !p.titleAndSlug }))}
+                                    onChange={() =>
+                                        setChecklist((p) => ({
+                                            ...p,
+                                            titleAndSlug: !p.titleAndSlug,
+                                        }))
+                                    }
                                     label="Title and slug format verified"
                                 />
                                 <ChecklistItem
                                     checked={checklist.authorCredentials}
-                                    onChange={() => setChecklist(p => ({ ...p, authorCredentials: !p.authorCredentials }))}
+                                    onChange={() =>
+                                        setChecklist((p) => ({
+                                            ...p,
+                                            authorCredentials:
+                                                !p.authorCredentials,
+                                        }))
+                                    }
                                     label="Author credentials & identity confirmed"
                                 />
                                 <ChecklistItem
                                     checked={checklist.attachments}
-                                    onChange={() => setChecklist(p => ({ ...p, attachments: !p.attachments }))}
+                                    onChange={() =>
+                                        setChecklist((p) => ({
+                                            ...p,
+                                            attachments: !p.attachments,
+                                        }))
+                                    }
                                     label={`Assets validated (${blog.pdfs?.length || 0} PDFs, ${blog.csv?.url ? 1 : 0} CSV)`}
                                 />
                                 <ChecklistItem
                                     checked={checklist.formatting}
-                                    onChange={() => setChecklist(p => ({ ...p, formatting: !p.formatting }))}
+                                    onChange={() =>
+                                        setChecklist((p) => ({
+                                            ...p,
+                                            formatting: !p.formatting,
+                                        }))
+                                    }
                                     label="Content formatting & tags categorized correctly"
                                 />
                             </div>
@@ -453,23 +537,31 @@ export default function ReviewWindow() {
 
                         {/* Metadata Settings */}
                         <div className="rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
-                            <h3 className="mb-6 text-lg font-bold text-slate-900">Metadata Details</h3>
+                            <h3 className="mb-6 text-lg font-bold text-slate-900">
+                                Metadata Details
+                            </h3>
 
                             <div className="space-y-5">
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Category</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                        Category
+                                    </label>
                                     <div className="mt-1.5 w-full rounded-xl bg-slate-50 p-3 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200/60">
                                         {blog.category}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">URL Slug</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                        URL Slug
+                                    </label>
                                     <div className="mt-1.5 w-full truncate rounded-xl bg-slate-50 p-3 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200/60">
                                         {blog.slug}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Document Type</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                        Document Type
+                                    </label>
                                     <div className="mt-1.5 w-full rounded-xl bg-slate-50 p-3 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200/60">
                                         {blog.docType}
                                     </div>
@@ -481,15 +573,22 @@ export default function ReviewWindow() {
                         <div className="sticky top-28 rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
                             <div className="mb-2 flex items-center gap-3">
                                 <MessageSquare className="h-5 w-5 text-slate-400" />
-                                <h3 className="text-lg font-bold text-slate-900">Decision & Feedback</h3>
+                                <h3 className="text-lg font-bold text-slate-900">
+                                    Decision & Feedback
+                                </h3>
                             </div>
-                            <p className="mb-5 text-xs font-medium text-slate-500">Leave revision notes or guidance (Visible to Author)</p>
+                            <p className="mb-5 text-xs font-medium text-slate-500">
+                                Leave revision notes or guidance (Visible to
+                                Author)
+                            </p>
 
                             <div className="relative">
                                 <textarea
                                     rows={4}
                                     value={feedbackNotes}
-                                    onChange={(e) => setFeedbackNotes(e.target.value)}
+                                    onChange={(e) =>
+                                        setFeedbackNotes(e.target.value)
+                                    }
                                     placeholder={`Add specific guidance or praise for ${blog.author.name}...`}
                                     className="w-full resize-none rounded-2xl border-0 bg-slate-50 p-4 text-sm font-medium text-slate-900 shadow-inner ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 transition-all"
                                 />
@@ -502,8 +601,13 @@ export default function ReviewWindow() {
                             {/* Action Buttons */}
                             <div className="mt-8 flex flex-col gap-3">
                                 <button
-                                    onClick={() => handleUpdateStatus("PUBLISHED")}
-                                    disabled={isUpdatingStatus || checkedCount < totalChecklist}
+                                    onClick={() =>
+                                        handleUpdateStatus('PUBLISHED')
+                                    }
+                                    disabled={
+                                        isUpdatingStatus ||
+                                        checkedCount < totalChecklist
+                                    }
                                     className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-4 text-sm font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50 disabled:hover:bg-indigo-600 disabled:hover:shadow-md"
                                 >
                                     <Check className="h-5 w-5 transition-transform group-hover:scale-110" />
@@ -518,7 +622,9 @@ export default function ReviewWindow() {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
-                                        onClick={() => handleUpdateStatus("PENDING")}
+                                        onClick={() =>
+                                            handleUpdateStatus('PENDING')
+                                        }
                                         disabled={isUpdatingStatus}
                                         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-700 ring-1 ring-inset ring-slate-200 transition-all hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
                                     >
@@ -526,7 +632,9 @@ export default function ReviewWindow() {
                                         Request Revision
                                     </button>
                                     <button
-                                        onClick={() => handleUpdateStatus("REJECTED")}
+                                        onClick={() =>
+                                            handleUpdateStatus('REJECTED')
+                                        }
                                         disabled={isUpdatingStatus}
                                         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 py-3.5 text-sm font-bold text-red-600 ring-1 ring-inset ring-red-100 transition-all hover:bg-red-100 hover:text-red-700 disabled:opacity-50"
                                     >
@@ -536,7 +644,6 @@ export default function ReviewWindow() {
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </main>
@@ -548,7 +655,15 @@ export default function ReviewWindow() {
 // Small Helper Components
 // =====================================================================
 
-function ChecklistItem({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+function ChecklistItem({
+    checked,
+    onChange,
+    label,
+}: {
+    checked: boolean;
+    onChange: () => void;
+    label: string;
+}) {
     return (
         <label className="group flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50">
             <div className="relative flex items-center justify-center pt-0.5">
@@ -559,9 +674,19 @@ function ChecklistItem({ checked, onChange, label }: { checked: boolean; onChang
                     onChange={onChange}
                 />
                 <div className="h-5 w-5 rounded-md bg-white border-2 border-slate-200 peer-checked:bg-indigo-600 peer-checked:border-indigo-600 transition-all group-hover:border-indigo-400"></div>
-                <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={3} />
+                <Check
+                    className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                    strokeWidth={3}
+                />
             </div>
-            <span className={cn("text-sm transition-colors", checked ? "text-slate-900 font-bold" : "text-slate-600 font-medium")}>
+            <span
+                className={cn(
+                    'text-sm transition-colors',
+                    checked
+                        ? 'text-slate-900 font-bold'
+                        : 'text-slate-600 font-medium',
+                )}
+            >
                 {label}
             </span>
         </label>

@@ -1,10 +1,10 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from '../store/authStore';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.PUBLIC_API_URL,
-  withCredentials: true,
+    baseURL: import.meta.env.PUBLIC_API_URL,
+    withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -16,16 +16,16 @@ let refreshPromise: Promise<string> | null = null;
 // --------------------------------------------------
 
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().token;
+    (config: InternalAxiosRequestConfig) => {
+        const token = useAuthStore.getState().token;
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
-    return config;
-  },
-  (error) => Promise.reject(error),
+        return config;
+    },
+    (error) => Promise.reject(error),
 );
 
 // --------------------------------------------------
@@ -33,76 +33,77 @@ apiClient.interceptors.request.use(
 // --------------------------------------------------
 
 apiClient.interceptors.response.use(
-  (response) => response,
+    (response) => response,
 
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & {
+            _retry?: boolean;
+        };
 
-    if (!originalRequest) {
-      return Promise.reject(error);
-    }
+        if (!originalRequest) {
+            return Promise.reject(error);
+        }
 
-    const is401 = error.response?.status === 401;
+        const is401 = error.response?.status === 401;
 
-    const isRefreshRequest = originalRequest.url?.includes("/refresh-token");
+        const isRefreshRequest =
+            originalRequest.url?.includes('/refresh-token');
 
-    if (!is401 || originalRequest._retry || isRefreshRequest) {
-      return Promise.reject(error);
-    }
+        if (!is401 || originalRequest._retry || isRefreshRequest) {
+            return Promise.reject(error);
+        }
 
-    originalRequest._retry = true;
+        originalRequest._retry = true;
 
-    try {
-      // ----------------------------------------------
-      // Someone else is already refreshing
-      // ----------------------------------------------
+        try {
+            // ----------------------------------------------
+            // Someone else is already refreshing
+            // ----------------------------------------------
 
-      if (isRefreshing && refreshPromise) {
-        const newToken = await refreshPromise;
+            if (isRefreshing && refreshPromise) {
+                const newToken = await refreshPromise;
 
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
-        return apiClient(originalRequest);
-      }
+                return apiClient(originalRequest);
+            }
 
-      // ----------------------------------------------
-      // Start refresh
-      // ----------------------------------------------
+            // ----------------------------------------------
+            // Start refresh
+            // ----------------------------------------------
 
-      isRefreshing = true;
+            isRefreshing = true;
 
-      refreshPromise = apiClient
-        .get("/user/refresh-token")
-        .then((response) => {
-          const newToken = response.data.accessToken;
+            refreshPromise = apiClient
+                .get('/user/refresh-token')
+                .then((response) => {
+                    const newToken = response.data.accessToken;
 
-          useAuthStore.getState().setToken(newToken);
+                    useAuthStore.getState().setToken(newToken);
 
-          return newToken;
-        })
-        .finally(() => {
-          isRefreshing = false;
-          refreshPromise = null;
-        });
+                    return newToken;
+                })
+                .finally(() => {
+                    isRefreshing = false;
+                    refreshPromise = null;
+                });
 
-      const newToken = await refreshPromise;
+            const newToken = await refreshPromise;
 
-      // ----------------------------------------------
-      // Retry original request
-      // ----------------------------------------------
+            // ----------------------------------------------
+            // Retry original request
+            // ----------------------------------------------
 
-      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      // Refresh token itself is invalid/expired
-      useAuthStore.getState().clear();
+            return apiClient(originalRequest);
+        } catch (refreshError) {
+            // Refresh token itself is invalid/expired
+            useAuthStore.getState().clear();
 
-      return Promise.reject(refreshError);
-    }
-  },
+            return Promise.reject(refreshError);
+        }
+    },
 );
 
 export { apiClient };

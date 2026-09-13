@@ -1,5 +1,5 @@
-import * as React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import * as React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutGrid,
     Users,
@@ -9,15 +9,15 @@ import {
     Network,
     LogOut,
     Paperclip,
-} from "lucide-react";
-import { apiClient } from "@/api/api-client";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { apiClient } from '@/api/api-client';
+import { cn } from '@/lib/utils';
 
 // =====================================================================
 // Types
 // =====================================================================
 
-type BadgeTone = "indigo" | "rose" | "slate";
+type BadgeTone = 'indigo' | 'rose' | 'slate';
 
 interface NavBadge {
     label: string;
@@ -60,18 +60,42 @@ interface AdminSidebarProps {
 // =====================================================================
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
-    { label: "Dashboard Overview", icon: LayoutGrid, navigateTo: '/admin/dashboard' },
-    { label: "Editor Overview", icon: FileText, badge: { label: "", tone: "indigo" }, navigateTo: '/editor/overview' },
-    { label: "Review Queue", icon: Paperclip, badge: { label: "", tone: "indigo" }, navigateTo: '/editor/review/queue' },
-    { label: "User Role Management", icon: Users, badge: { label: '', tone: "slate", }, navigateTo: '/admin/users' },
-    { label: "Blocked Users", icon: Ban, badge: { label: "", tone: "rose" }, navigateTo: '/admin/blocked-users' },
-    { label: "Settings", icon: Settings },
+    {
+        label: 'Dashboard Overview',
+        icon: LayoutGrid,
+        navigateTo: '/admin/dashboard',
+    },
+    {
+        label: 'Editor Overview',
+        icon: FileText,
+        badge: { label: '', tone: 'indigo' },
+        navigateTo: '/editor/overview',
+    },
+    {
+        label: 'Review Queue',
+        icon: Paperclip,
+        badge: { label: '', tone: 'indigo' },
+        navigateTo: '/editor/review/queue',
+    },
+    {
+        label: 'User Role Management',
+        icon: Users,
+        badge: { label: '', tone: 'slate' },
+        navigateTo: '/admin/users',
+    },
+    {
+        label: 'Blocked Users',
+        icon: Ban,
+        badge: { label: '', tone: 'rose' },
+        navigateTo: '/admin/blocked-users',
+    },
+    { label: 'Settings', icon: Settings },
 ];
 
 const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
-    indigo: "bg-indigo-600 text-white",
-    rose: "bg-rose-50 text-rose-500",
-    slate: "bg-slate-100 text-slate-600",
+    indigo: 'bg-indigo-600 text-white',
+    rose: 'bg-rose-50 text-rose-500',
+    slate: 'bg-slate-100 text-slate-600',
 };
 
 // =====================================================================
@@ -87,11 +111,11 @@ const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
 function isPathActive(pathname: string, target?: string): boolean {
     if (!target) return false;
 
-    const normalize = (path: string) => path.replace(/\/+$/, "") || "/";
+    const normalize = (path: string) => path.replace(/\/+$/, '') || '/';
     const normalizedPathname = normalize(pathname);
     const normalizedTarget = normalize(target);
 
-    if (normalizedTarget === "/") return normalizedPathname === "/";
+    if (normalizedTarget === '/') return normalizedPathname === '/';
 
     return (
         normalizedPathname === normalizedTarget ||
@@ -112,8 +136,8 @@ export default function AdminSidebar({
     const location = useLocation();
 
     const handleLogout = async () => {
-        const res = await apiClient.get("/user/logout");
-        if (res.status === 200) navigate("/");
+        const res = await apiClient.get('/user/logout');
+        if (res.status === 200) navigate('/');
     };
 
     return (
@@ -123,17 +147,19 @@ export default function AdminSidebar({
                 aria-hidden="true"
                 onClick={onClose}
                 className={cn(
-                    "fixed inset-0 z-30 bg-slate-900/50 transition-opacity duration-300 md:hidden",
-                    isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+                    'fixed inset-0 z-30 bg-slate-900/50 transition-opacity duration-300 md:hidden',
+                    isOpen
+                        ? 'pointer-events-auto opacity-100'
+                        : 'pointer-events-none opacity-0',
                 )}
             />
 
             {/* Sidebar / drawer */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 flex h-dvh w-72 shrink-0 flex-col overflow-hidden bg-white transition-transform duration-300 ease-in-out",
-                    "md:sticky md:top-0 md:z-auto md:h-screen md:w-72 md:translate-x-0 md:border-r md:border-slate-200 lg:w-80",
-                    isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
+                    'fixed inset-y-0 left-0 z-40 flex h-dvh w-72 shrink-0 flex-col overflow-hidden bg-white transition-transform duration-300 ease-in-out',
+                    'md:sticky md:top-0 md:z-auto md:h-screen md:w-72 md:translate-x-0 md:border-r md:border-slate-200 lg:w-80',
+                    isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
                 )}
             >
                 {/* Body (scrollable) */}
@@ -164,53 +190,72 @@ export default function AdminSidebar({
                         Navigation
                     </p>
                     <nav className="space-y-1">
-                        {navItems.map(({ label, icon: Icon, active: forcedActive, badge, navigateTo }) => {
-                            const active = forcedActive ?? isPathActive(location.pathname, navigateTo);
+                        {navItems.map(
+                            ({
+                                label,
+                                icon: Icon,
+                                active: forcedActive,
+                                badge,
+                                navigateTo,
+                            }) => {
+                                const active =
+                                    forcedActive ??
+                                    isPathActive(location.pathname, navigateTo);
 
-                            return (
-                                <Link
-                                    to={navigateTo ?? "#"}
-                                    key={label}
-                                    aria-current={active ? "page" : undefined}
-                                    onClick={(event) => {
-                                        // Items without a real destination (e.g. "Settings" until
-                                        // it's wired up) shouldn't navigate to a broken route.
-                                        if (!navigateTo) event.preventDefault();
-                                        onClose();
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm font-medium transition-colors",
-                                        active
-                                            ? "border-indigo-600 bg-indigo-50 text-indigo-600"
-                                            : "border-transparent text-slate-600 hover:bg-slate-50",
-                                    )}
-                                >
-                                    <Icon
+                                return (
+                                    <Link
+                                        to={navigateTo ?? '#'}
+                                        key={label}
+                                        aria-current={
+                                            active ? 'page' : undefined
+                                        }
+                                        onClick={(event) => {
+                                            // Items without a real destination (e.g. "Settings" until
+                                            // it's wired up) shouldn't navigate to a broken route.
+                                            if (!navigateTo)
+                                                event.preventDefault();
+                                            onClose();
+                                        }}
                                         className={cn(
-                                            "h-[18px] w-[18px] shrink-0",
-                                            active ? "text-indigo-600" : "text-slate-400",
+                                            'flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm font-medium transition-colors',
+                                            active
+                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+                                                : 'border-transparent text-slate-600 hover:bg-slate-50',
                                         )}
-                                    />
-                                    <span className="min-w-0 flex-1 truncate">{label}</span>
-                                    {active ? (
-                                        <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
-                                            Active
+                                    >
+                                        <Icon
+                                            className={cn(
+                                                'h-[18px] w-[18px] shrink-0',
+                                                active
+                                                    ? 'text-indigo-600'
+                                                    : 'text-slate-400',
+                                            )}
+                                        />
+                                        <span className="min-w-0 flex-1 truncate">
+                                            {label}
                                         </span>
-                                    ) : (
-                                        badge && (
-                                            <span
-                                                className={cn(
-                                                    "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                                                    BADGE_TONE_CLASSES[badge.tone],
-                                                )}
-                                            >
-                                                {badge.label}
+                                        {active ? (
+                                            <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                                                Active
                                             </span>
-                                        )
-                                    )}
-                                </Link>
-                            );
-                        })}
+                                        ) : (
+                                            badge && (
+                                                <span
+                                                    className={cn(
+                                                        'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                                                        BADGE_TONE_CLASSES[
+                                                            badge.tone
+                                                        ],
+                                                    )}
+                                                >
+                                                    {badge.label}
+                                                </span>
+                                            )
+                                        )}
+                                    </Link>
+                                );
+                            },
+                        )}
                     </nav>
                 </div>
 

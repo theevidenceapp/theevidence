@@ -37,7 +37,7 @@
  * ------------------------------------------------------------------
  */
 
-import * as React from "react";
+import * as React from 'react';
 import {
     Area,
     AreaChart,
@@ -46,7 +46,7 @@ import {
     Tooltip,
     XAxis,
     YAxis,
-} from "recharts";
+} from 'recharts';
 import {
     Ban,
     ChevronRight,
@@ -56,18 +56,14 @@ import {
     RefreshCw,
     TrendingUp,
     UserCog,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { apiClient } from "@/api/api-client";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-    Alert,
-    AlertDescription,
-    AlertTitle,
-} from "@/components/ui/alert";
-import { useAuthStore } from "@/store/authStore";
+import { apiClient } from '@/api/api-client';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuthStore } from '@/store/authStore';
 
 // =====================================================================
 // Types — mirrored 1:1 from backend controllers, do not widen loosely
@@ -96,7 +92,7 @@ interface BlogAnalyticsResponse {
     blogs: BlogAnalyticsItem[];
 }
 
-type AdminRole = "READER" | "PUBLISHER" | "ADMIN" | "EDITOR";
+type AdminRole = 'READER' | 'PUBLISHER' | 'ADMIN' | 'EDITOR';
 
 interface AdminUser {
     _id: string;
@@ -131,12 +127,12 @@ interface DashboardData {
 // Helpers
 // =====================================================================
 
-const compactFormatter = new Intl.NumberFormat("en-US", {
-    notation: "compact",
+const compactFormatter = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
     maximumFractionDigits: 1,
 });
 
-const preciseFormatter = new Intl.NumberFormat("en-US");
+const preciseFormatter = new Intl.NumberFormat('en-US');
 
 function formatCompact(value: number): string {
     return compactFormatter.format(Math.max(0, value ?? 0));
@@ -144,11 +140,11 @@ function formatCompact(value: number): string {
 
 function formatDate(iso: string): string {
     const parsed = new Date(iso);
-    if (Number.isNaN(parsed.getTime())) return "—";
-    return parsed.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
+    if (Number.isNaN(parsed.getTime())) return '—';
+    return parsed.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
     });
 }
 
@@ -180,7 +176,7 @@ function useDashboardData() {
         const token = useAuthStore.getState().accessToken;
         if (!token) {
             setIsLoading(false);
-            setError("Not authenticated.");
+            setError('Not authenticated.');
             return;
         }
 
@@ -188,41 +184,46 @@ function useDashboardData() {
         setError(null);
         try {
             const results = await Promise.allSettled([
-                apiClient.get<AnalyticsResponse>("/admin/analytics"),
-                apiClient.get<BlogAnalyticsResponse>("/admin/analytics/blogs"),
-                apiClient.get<BlockedUsersResponse>("/admin/get-blocked-users"),
-                apiClient.get<RoleListResponse>("/admin/get-editor"),
-                apiClient.get<RoleListResponse>("/admin/get-publisher"),
+                apiClient.get<AnalyticsResponse>('/admin/analytics'),
+                apiClient.get<BlogAnalyticsResponse>('/admin/analytics/blogs'),
+                apiClient.get<BlockedUsersResponse>('/admin/get-blocked-users'),
+                apiClient.get<RoleListResponse>('/admin/get-editor'),
+                apiClient.get<RoleListResponse>('/admin/get-publisher'),
             ]);
 
-            const [analyticsRes, blogsRes, blockedRes, editorRes, publisherRes] =
-                results;
+            const [
+                analyticsRes,
+                blogsRes,
+                blockedRes,
+                editorRes,
+                publisherRes,
+            ] = results;
 
-            if (analyticsRes.status === "rejected") {
-                throw new Error("Failed to load analytics summary.");
+            if (analyticsRes.status === 'rejected') {
+                throw new Error('Failed to load analytics summary.');
             }
-            if (blogsRes.status === "rejected") {
-                throw new Error("Failed to load blog analytics.");
+            if (blogsRes.status === 'rejected') {
+                throw new Error('Failed to load blog analytics.');
             }
 
             const analytics = analyticsRes.value.data.analytics;
             const blogs = blogsRes.value.data.blogs ?? [];
 
             const blockedCount =
-                blockedRes.status === "fulfilled"
-                    ? blockedRes.value.data.count ??
-                    blockedRes.value.data.users?.length ??
-                    0
+                blockedRes.status === 'fulfilled'
+                    ? (blockedRes.value.data.count ??
+                      blockedRes.value.data.users?.length ??
+                      0)
                     : 0;
 
             const editorCount =
-                editorRes.status === "fulfilled"
-                    ? editorRes.value.data.editor?.length ?? 0
+                editorRes.status === 'fulfilled'
+                    ? (editorRes.value.data.editor?.length ?? 0)
                     : 0;
 
             const publisherCount =
-                publisherRes.status === "fulfilled"
-                    ? publisherRes.value.data.editor?.length ?? 0
+                publisherRes.status === 'fulfilled'
+                    ? (publisherRes.value.data.editor?.length ?? 0)
                     : 0;
 
             setData({
@@ -237,7 +238,7 @@ function useDashboardData() {
             setError(
                 err instanceof Error
                     ? err.message
-                    : "Something went wrong while loading the dashboard.",
+                    : 'Something went wrong while loading the dashboard.',
             );
         } finally {
             setIsLoading(false);
@@ -260,7 +261,7 @@ function useDashboardData() {
 // Range pill control (presentational only — no backend date filter yet)
 // =====================================================================
 
-const RANGE_OPTIONS = ["7 Days", "30 Days", "All Time"] as const;
+const RANGE_OPTIONS = ['7 Days', '30 Days', 'All Time'] as const;
 type RangeOption = (typeof RANGE_OPTIONS)[number];
 
 function RangeToggle({
@@ -278,10 +279,10 @@ function RangeToggle({
                     type="button"
                     onClick={() => onChange(option)}
                     className={cn(
-                        "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm",
+                        'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm',
                         value === option
-                            ? "bg-indigo-600 text-white"
-                            : "text-slate-500 hover:text-slate-700",
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-500 hover:text-slate-700',
                     )}
                 >
                     {option}
@@ -298,7 +299,7 @@ function RangeToggle({
 interface StatCardProps {
     label: string;
     value: string;
-    delta?: { value: string; direction: "up" | "down" };
+    delta?: { value: string; direction: 'up' | 'down' };
     icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -312,10 +313,10 @@ function StatCard({ label, value, delta, icon: Icon }: StatCardProps) {
                 {delta && (
                     <span
                         className={cn(
-                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                            delta.direction === "up"
-                                ? "bg-emerald-50 text-emerald-600"
-                                : "bg-red-50 text-red-500",
+                            'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                            delta.direction === 'up'
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-red-50 text-red-500',
                         )}
                     >
                         {delta.value}
@@ -385,8 +386,16 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
             >
                 <defs>
                     <linearGradient id="viewsFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
+                        <stop
+                            offset="0%"
+                            stopColor="#4f46e5"
+                            stopOpacity={0.22}
+                        />
+                        <stop
+                            offset="100%"
+                            stopColor="#4f46e5"
+                            stopOpacity={0}
+                        />
                     </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="#eef0f4" />
@@ -396,9 +405,12 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                     tickLine={false}
                     tick={(props) => {
                         const { x, y, payload } = props;
-                        const isPeak = payload.value === truncateLabel(
-                            chartData.find((d) => d.views === peakViews)?.name ?? "",
-                        );
+                        const isPeak =
+                            payload.value ===
+                            truncateLabel(
+                                chartData.find((d) => d.views === peakViews)
+                                    ?.name ?? '',
+                            );
                         return (
                             <text
                                 x={x}
@@ -406,7 +418,7 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                                 textAnchor="middle"
                                 fontSize={12}
                                 fontWeight={isPeak ? 700 : 400}
-                                fill={isPeak ? "#4f46e5" : "#94a3b8"}
+                                fill={isPeak ? '#4f46e5' : '#94a3b8'}
                             >
                                 {payload.value}
                             </text>
@@ -416,7 +428,7 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                 <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    tick={{ fontSize: 12, fill: '#94a3b8' }}
                     tickFormatter={(v: number) => formatCompact(v)}
                     width={42}
                 />
@@ -428,17 +440,19 @@ function ViewsByBlogChart({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                         return [preciseFormatter.format(value), 'Views'];
                     }}
 
-                    labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName ?? ""}
+                    labelFormatter={(_, payload) =>
+                        payload?.[0]?.payload?.fullName ?? ''
+                    }
                     contentStyle={{
                         borderRadius: 12,
-                        border: "none",
-                        background: "#0f172a",
-                        color: "#fff",
+                        border: 'none',
+                        background: '#0f172a',
+                        color: '#fff',
                         fontSize: 12,
-                        padding: "6px 10px",
+                        padding: '6px 10px',
                     }}
-                    itemStyle={{ color: "#fff" }}
-                    labelStyle={{ color: "#cbd5e1", marginBottom: 2 }}
+                    itemStyle={{ color: '#fff' }}
+                    labelStyle={{ color: '#cbd5e1', marginBottom: 2 }}
                 />
                 <Area
                     type="monotone"
@@ -490,11 +504,29 @@ function AccessBreakdown({
     blockedCount: number;
 }) {
     const rows: AccessRow[] = [
-        { label: "Editors", count: editorCount, icon: UserCog, color: "bg-indigo-600" },
-        { label: "Publishers", count: publisherCount, icon: FileText, color: "bg-indigo-300" },
-        { label: "Blocked", count: blockedCount, icon: Ban, color: "bg-slate-300" },
+        {
+            label: 'Editors',
+            count: editorCount,
+            icon: UserCog,
+            color: 'bg-indigo-600',
+        },
+        {
+            label: 'Publishers',
+            count: publisherCount,
+            icon: FileText,
+            color: 'bg-indigo-300',
+        },
+        {
+            label: 'Blocked',
+            count: blockedCount,
+            icon: Ban,
+            color: 'bg-slate-300',
+        },
     ];
-    const total = Math.max(1, rows.reduce((sum, r) => sum + r.count, 0));
+    const total = Math.max(
+        1,
+        rows.reduce((sum, r) => sum + r.count, 0),
+    );
 
     return (
         <div>
@@ -502,7 +534,7 @@ function AccessBreakdown({
                 {rows.map((row) => (
                     <div
                         key={row.label}
-                        className={cn("h-full", row.color)}
+                        className={cn('h-full', row.color)}
                         style={{ width: `${(row.count / total) * 100}%` }}
                     />
                 ))}
@@ -512,7 +544,12 @@ function AccessBreakdown({
                 {rows.map(({ label, count, color }) => (
                     <div key={label} className="min-w-0">
                         <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                            <span className={cn("h-2 w-2 shrink-0 rounded-full", color)} />
+                            <span
+                                className={cn(
+                                    'h-2 w-2 shrink-0 rounded-full',
+                                    color,
+                                )}
+                            />
                             <span className="truncate">{label}</span>
                         </div>
                         <p className="mt-1 text-sm font-bold text-slate-900">
@@ -554,7 +591,7 @@ function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                         onClick={() => setExpanded((prev) => !prev)}
                         className="flex shrink-0 items-center gap-1 text-sm font-semibold text-indigo-600 hover:underline"
                     >
-                        {expanded ? "Show Less" : "View All"}
+                        {expanded ? 'Show Less' : 'View All'}
                         {!expanded && <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
                 )}
@@ -567,7 +604,10 @@ function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
             ) : (
                 <div className="mt-4 divide-y divide-slate-100">
                     {visible.map((blog, index) => (
-                        <div key={blog._id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                        <div
+                            key={blog._id}
+                            className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                        >
                             <div className="relative shrink-0">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
                                     <FileText className="h-5 w-5 text-white" />
@@ -586,7 +626,9 @@ function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                                 </p>
                                 <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
                                     <Eye className="h-3.5 w-3.5" />
-                                    <span>{preciseFormatter.format(blog.views)}</span>
+                                    <span>
+                                        {preciseFormatter.format(blog.views)}
+                                    </span>
                                     <span>·</span>
                                     <span>{formatDate(blog.createdAt)}</span>
                                 </div>
@@ -606,19 +648,19 @@ function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
 // =====================================================================
 
 function exportBlogsToCsv(blogs: BlogAnalyticsItem[]) {
-    const header = ["Title", "Slug", "Views", "Created Date"];
+    const header = ['Title', 'Slug', 'Views', 'Created Date'];
     const rows = blogs.map((b) => [
         `"${b.title.replace(/"/g, '""')}"`,
         b.slug,
         String(b.views),
         formatDate(b.createdAt),
     ]);
-    const csv = [header, ...rows].map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const csv = [header, ...rows].map((row) => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-    link.download = "blog-analytics.csv";
+    link.download = 'blog-analytics.csv';
     link.click();
     URL.revokeObjectURL(url);
 }
@@ -631,8 +673,8 @@ function exportBlogsToCsv(blogs: BlogAnalyticsItem[]) {
 
 export default function Dashboard() {
     const { data, isLoading, error, refetch } = useDashboardData();
-    console.log(data)
-    const [range, setRange] = React.useState<RangeOption>("7 Days");
+    console.log(data);
+    const [range, setRange] = React.useState<RangeOption>('7 Days');
 
     const avgViewsPerBlog =
         data && data.totalBlogs > 0
@@ -652,7 +694,12 @@ export default function Dashboard() {
                         aria-label="Refresh"
                         className="h-9 w-9 rounded-lg border-slate-200 bg-white text-slate-500 shadow-sm"
                     >
-                        <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                        <RefreshCw
+                            className={cn(
+                                'h-4 w-4',
+                                isLoading && 'animate-spin',
+                            )}
+                        />
                     </Button>
                     <Button
                         variant="outline"
@@ -672,7 +719,11 @@ export default function Dashboard() {
                     <AlertTitle>Couldn&apos;t load dashboard data</AlertTitle>
                     <AlertDescription className="flex items-center justify-between gap-4">
                         <span>{error}</span>
-                        <Button size="sm" variant="outline" onClick={() => refetch()}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => refetch()}
+                        >
                             Try again
                         </Button>
                     </AlertDescription>
@@ -682,7 +733,9 @@ export default function Dashboard() {
             {/* Stat cards */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {isLoading || !data ? (
-                    Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+                    Array.from({ length: 4 }).map((_, i) => (
+                        <StatCardSkeleton key={i} />
+                    ))
                 ) : (
                     <>
                         <StatCard
@@ -770,7 +823,10 @@ export default function Dashboard() {
                     <div className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
                         <Skeleton className="mb-6 h-6 w-48" />
                         {Array.from({ length: 3 }).map((_, i) => (
-                            <Skeleton key={i} className="mb-3 h-12 w-full rounded-lg" />
+                            <Skeleton
+                                key={i}
+                                className="mb-3 h-12 w-full rounded-lg"
+                            />
                         ))}
                     </div>
                 ) : (

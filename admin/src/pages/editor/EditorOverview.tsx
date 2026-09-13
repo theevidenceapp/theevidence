@@ -46,7 +46,7 @@
  * ------------------------------------------------------------------
  */
 
-import * as React from "react";
+import * as React from 'react';
 import {
     Hourglass,
     CheckCircle2,
@@ -61,23 +61,23 @@ import {
     RefreshCw,
     ArrowRight,
     ImageOff,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { apiClient } from "@/api/api-client";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuthStore } from "@/store/authStore";
-import { Link } from "react-router-dom";
+import { apiClient } from '@/api/api-client';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuthStore } from '@/store/authStore';
+import { Link } from 'react-router-dom';
 
 // =====================================================================
 // Types — mirrored 1:1 from the Blog document / controller responses.
 // Do not widen these loosely; every field here is backed by the API.
 // =====================================================================
 
-type ContentStatus = "PUBLISHED" | "DRAFT";
-type ContentDocType = "RESEARCH" | "BLOG";
+type ContentStatus = 'PUBLISHED' | 'DRAFT';
+type ContentDocType = 'RESEARCH' | 'BLOG';
 
 interface CoverImage {
     url: string;
@@ -172,7 +172,7 @@ interface AdminUserResponse {
     user: AdminUserRecord;
 }
 
-type AuthorFetchStatus = "loading" | "loaded" | "error";
+type AuthorFetchStatus = 'loading' | 'loaded' | 'error';
 
 interface AuthorDirectoryEntry {
     status: AuthorFetchStatus;
@@ -186,11 +186,11 @@ type AuthorDirectory = Record<string, AuthorDirectoryEntry>;
 // Formatting helpers
 // =====================================================================
 
-const compactFormatter = new Intl.NumberFormat("en-US", {
-    notation: "compact",
+const compactFormatter = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
     maximumFractionDigits: 1,
 });
-const preciseFormatter = new Intl.NumberFormat("en-US");
+const preciseFormatter = new Intl.NumberFormat('en-US');
 
 function formatCompact(value: number): string {
     return compactFormatter.format(Math.max(0, value ?? 0));
@@ -201,18 +201,18 @@ function formatCount(value: number): string {
 }
 
 function formatDate(iso: string | null | undefined): string {
-    if (!iso) return "Not published";
+    if (!iso) return 'Not published';
     const parsed = new Date(iso);
-    if (Number.isNaN(parsed.getTime())) return "—";
-    return parsed.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
+    if (Number.isNaN(parsed.getTime())) return '—';
+    return parsed.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
     });
 }
 
 function truncateAuthorId(id: string): string {
-    if (!id) return "Unknown";
+    if (!id) return 'Unknown';
     return id.length > 10 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
 }
 
@@ -229,7 +229,7 @@ function normalizeAuthors(
     const seen = new Set<string>();
     const result: string[] = [];
     for (const candidate of raw) {
-        const trimmed = typeof candidate === "string" ? candidate.trim() : "";
+        const trimmed = typeof candidate === 'string' ? candidate.trim() : '';
         if (trimmed && !seen.has(trimmed)) {
             seen.add(trimmed);
             result.push(trimmed);
@@ -259,7 +259,7 @@ function getDisplayName(
 
 function getInitials(name: string): string {
     const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
+    if (parts.length === 0) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
@@ -280,14 +280,14 @@ function deriveStats(content: ContentItem[]): DerivedStats {
     for (const item of content) {
         totalViews += item.views ?? 0;
 
-        if (item.docType === "RESEARCH") {
+        if (item.docType === 'RESEARCH') {
             researchTotal += 1;
-            if (item.status === "DRAFT") draftResearch += 1;
-            if (item.status === "PUBLISHED") publishedResearch += 1;
-        } else if (item.docType === "BLOG") {
+            if (item.status === 'DRAFT') draftResearch += 1;
+            if (item.status === 'PUBLISHED') publishedResearch += 1;
+        } else if (item.docType === 'BLOG') {
             blogTotal += 1;
-            if (item.status === "DRAFT") draftBlog += 1;
-            if (item.status === "PUBLISHED") publishedBlog += 1;
+            if (item.status === 'DRAFT') draftBlog += 1;
+            if (item.status === 'PUBLISHED') publishedBlog += 1;
         }
     }
 
@@ -322,7 +322,7 @@ function useOverviewData() {
         const token = useAuthStore.getState().accessToken;
         if (!token) {
             setIsLoading(false);
-            setError("Not authenticated.");
+            setError('Not authenticated.');
             return;
         }
 
@@ -332,34 +332,38 @@ function useOverviewData() {
         try {
             const results = await Promise.allSettled([
                 apiClient.get<StatisticalContentResponse>(
-                    "/admin/get-statistical-content-data",
+                    '/admin/get-statistical-content-data',
                 ),
-                apiClient.get<Top2ContentResponse>("/admin/get-top-2-content"),
+                apiClient.get<Top2ContentResponse>('/admin/get-top-2-content'),
             ]);
 
             const [statsRes, topRes] = results;
 
-            if (statsRes.status === "rejected") {
-                throw new Error("Failed to load repository statistics.");
+            if (statsRes.status === 'rejected') {
+                throw new Error('Failed to load repository statistics.');
             }
 
             const allContent = statsRes.value.data.content ?? [];
             const stats = deriveStats(allContent);
 
             const topContent =
-                topRes.status === "fulfilled" ? topRes.value.data.content ?? [] : [];
+                topRes.status === 'fulfilled'
+                    ? (topRes.value.data.content ?? [])
+                    : [];
 
             const topResearch = topContent.filter(
-                (item) => item.docType === "RESEARCH",
+                (item) => item.docType === 'RESEARCH',
             );
-            const topBlogs = topContent.filter((item) => item.docType === "BLOG");
+            const topBlogs = topContent.filter(
+                (item) => item.docType === 'BLOG',
+            );
 
             setData({ stats, topResearch, topBlogs });
         } catch (err) {
             setError(
                 err instanceof Error
                     ? err.message
-                    : "Something went wrong while loading the overview.",
+                    : 'Something went wrong while loading the overview.',
             );
         } finally {
             setIsLoading(false);
@@ -381,12 +385,19 @@ function useOverviewData() {
 // across refetches of the underlying content.
 // =====================================================================
 
-async function fetchAuthorRecord(userId: string): Promise<AdminUserRecord | null> {
+async function fetchAuthorRecord(
+    userId: string,
+): Promise<AdminUserRecord | null> {
     try {
-        const response = await apiClient.get<AdminUserResponse>(`/admin/user/${userId}`);
+        const response = await apiClient.get<AdminUserResponse>(
+            `/admin/user/${userId}`,
+        );
 
         // TEMPORARY DIAGNOSTIC — remove once shape is confirmed.
-        console.log(`[authorDirectory] /admin/user/${userId} raw response:`, response);
+        console.log(
+            `[authorDirectory] /admin/user/${userId} raw response:`,
+            response,
+        );
 
         // Defensive: handle both "apiClient unwraps to body" and
         // "apiClient returns full Axios response" conventions, since
@@ -423,14 +434,14 @@ function useAuthorDirectory(authorIds: string[]): AuthorDirectory {
 
     // Stable dependency key so the effect only re-runs when the actual
     // set of IDs changes, not on every render of the parent.
-    const authorIdsKey = authorIds.join("|");
+    const authorIdsKey = authorIds.join('|');
 
     React.useEffect(() => {
         if (authorIds.length === 0) return;
 
         const idsToFetch = authorIds.filter((id) => {
             const existing = directoryRef.current[id];
-            return !existing || existing.status === "error";
+            return !existing || existing.status === 'error';
         });
 
         if (idsToFetch.length === 0) return;
@@ -438,7 +449,7 @@ function useAuthorDirectory(authorIds: string[]): AuthorDirectory {
         setDirectory((prev) => {
             const next = { ...prev };
             idsToFetch.forEach((id) => {
-                next[id] = { status: "loading" };
+                next[id] = { status: 'loading' };
             });
             return next;
         });
@@ -449,14 +460,14 @@ function useAuthorDirectory(authorIds: string[]): AuthorDirectory {
                     setDirectory((prev) => ({
                         ...prev,
                         [id]: record
-                            ? { status: "loaded", record }
-                            : { status: "error" },
+                            ? { status: 'loaded', record }
+                            : { status: 'error' },
                     }));
                 })
                 .catch(() => {
                     setDirectory((prev) => ({
                         ...prev,
-                        [id]: { status: "error" },
+                        [id]: { status: 'error' },
                     }));
                 });
         });
@@ -495,11 +506,7 @@ function SyncPill({
             </span>
         );
     }
-    return (
-        <>
-        {/* Return no UI */}
-        </>
-    );
+    return <>{/* Return no UI */}</>;
 }
 
 // =====================================================================
@@ -523,7 +530,7 @@ function StatCard({ label, value, sub, icon: Icon, accent }: StatCardProps) {
                 </p>
                 <span
                     className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
                         accent,
                     )}
                 >
@@ -558,14 +565,14 @@ function StatCardSkeleton() {
 // =====================================================================
 
 function StatusBadge({ status }: { status: ContentStatus }) {
-    const isPublished = status === "PUBLISHED";
+    const isPublished = status === 'PUBLISHED';
     return (
         <span
             className={cn(
-                "shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide",
+                'shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide',
                 isPublished
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "bg-amber-50 text-amber-600",
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : 'bg-amber-50 text-amber-600',
             )}
         >
             {status}
@@ -615,9 +622,8 @@ function AttachmentChips({ item }: { item: ContentItem }) {
                     <Table2 className="h-3 w-3 shrink-0" />
                     dataset.csv
                 </Link>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 }
 
@@ -649,7 +655,7 @@ function AuthorPill({
     id: string;
     entry?: AuthorDirectoryEntry;
 }) {
-    if (!entry || entry.status === "loading") {
+    if (!entry || entry.status === 'loading') {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5">
                 <Skeleton className="h-3.5 w-3.5 rounded-full" />
@@ -659,11 +665,11 @@ function AuthorPill({
     }
 
     const resolvedName =
-        entry.status === "loaded"
+        entry.status === 'loaded'
             ? getDisplayName(entry.record, id)
             : truncateAuthorId(id);
     const tooltip =
-        entry.status === "loaded" ? entry.record?.email ?? id : id;
+        entry.status === 'loaded' ? (entry.record?.email ?? id) : id;
 
     return (
         <span
@@ -714,7 +720,7 @@ function AuthorList({
             {overflowCount > 0 && (
                 <span
                     className="text-[11px] font-semibold text-slate-400"
-                    title={authorIds.slice(MAX_VISIBLE_AUTHORS).join(", ")}
+                    title={authorIds.slice(MAX_VISIBLE_AUTHORS).join(', ')}
                 >
                     +{overflowCount} more
                 </span>
@@ -740,13 +746,17 @@ function MetaRow({
             <AuthorList authorIds={authorIds} directory={authorDirectory} />
             <span className="inline-flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" />
-                {item.readTime > 0 ? `${item.readTime} min read` : "Read time N/A"}
+                {item.readTime > 0
+                    ? `${item.readTime} min read`
+                    : 'Read time N/A'}
             </span>
             <span className="inline-flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5" />
                 {formatCount(item.views)} views
             </span>
-            <span className="text-slate-400">{formatDate(item.publishedAt)}</span>
+            <span className="text-slate-400">
+                {formatDate(item.publishedAt)}
+            </span>
         </div>
     );
 }
@@ -975,7 +985,9 @@ export default function EditorOverview({
     const allAuthorIds = React.useMemo(() => {
         if (!data) return [];
         const ids = [
-            ...data.topResearch.flatMap((item) => normalizeAuthors(item.author)),
+            ...data.topResearch.flatMap((item) =>
+                normalizeAuthors(item.author),
+            ),
             ...data.topBlogs.flatMap((item) => normalizeAuthors(item.author)),
         ];
         return normalizeAuthors(ids);
@@ -993,21 +1005,25 @@ export default function EditorOverview({
                             Triage &amp; Editorial Pipeline
                         </p>
                         <span className="h-1 w-1 rounded-full bg-slate-300" />
-                        <SyncPill isLoading={isLoading} hasError={Boolean(error)} />
+                        <SyncPill
+                            isLoading={isLoading}
+                            hasError={Boolean(error)}
+                        />
                     </div>
                     <h1 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">
                         Editorial Repository Triage
                     </h1>
                     <p className="mt-1 max-w-xl text-sm text-slate-500">
-                        Evaluate submitted manuscripts and articles strictly grounded to
-                        schema entries.
+                        Evaluate submitted manuscripts and articles strictly
+                        grounded to schema entries.
                     </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-100">
                         <Database className="h-3.5 w-3.5 text-slate-400" />
-                        {stats ? formatCount(stats.totalEntries) : "—"} entries total
+                        {stats ? formatCount(stats.totalEntries) : '—'} entries
+                        total
                     </span>
                     <Button
                         variant="outline"
@@ -1017,17 +1033,28 @@ export default function EditorOverview({
                         aria-label="Refresh"
                         className="h-9 w-9 rounded-lg border-slate-200 bg-white text-slate-500 shadow-sm"
                     >
-                        <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                        <RefreshCw
+                            className={cn(
+                                'h-4 w-4',
+                                isLoading && 'animate-spin',
+                            )}
+                        />
                     </Button>
                 </div>
             </div>
 
             {error && (
                 <Alert variant="destructive" className="mb-6">
-                    <AlertTitle>Couldn&apos;t load the editorial overview</AlertTitle>
+                    <AlertTitle>
+                        Couldn&apos;t load the editorial overview
+                    </AlertTitle>
                     <AlertDescription className="flex items-center justify-between gap-4">
                         <span>{error}</span>
-                        <Button size="sm" variant="outline" onClick={() => refetch()}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => refetch()}
+                        >
                             Try again
                         </Button>
                     </AlertDescription>
@@ -1037,7 +1064,9 @@ export default function EditorOverview({
             {/* Stat cards */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {isLoading || !stats ? (
-                    Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+                    Array.from({ length: 4 }).map((_, i) => (
+                        <StatCardSkeleton key={i} />
+                    ))
                 ) : (
                     <>
                         <StatCard

@@ -1,13 +1,13 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { ShieldX, ArrowLeft, LogIn } from "lucide-react";
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ShieldX, ArrowLeft, LogIn } from 'lucide-react';
 
 const AdminAccessDenied = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    const error = searchParams.get("error");
+    const error = searchParams.get('error');
 
-    if (error !== "admin_access_denied") {
+    if (error !== 'admin_access_denied') {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background px-6">
                 <div className="text-center">
@@ -21,7 +21,7 @@ const AdminAccessDenied = () => {
 
                     <button
                         type="button"
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate('/')}
                         className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -58,8 +58,8 @@ const AdminAccessDenied = () => {
                         </h1>
 
                         <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-                            Your Google account is authenticated, but it doesn't have
-                            administrator permissions for this application.
+                            Your Google account is authenticated, but it doesn't
+                            have administrator permissions for this application.
                         </p>
                     </div>
 
@@ -74,8 +74,9 @@ const AdminAccessDenied = () => {
                                 </p>
 
                                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                                    Sign in with an administrator account or contact an
-                                    administrator if you believe you should have access.
+                                    Sign in with an administrator account or
+                                    contact an administrator if you believe you
+                                    should have access.
                                 </p>
                             </div>
                         </div>
@@ -85,7 +86,7 @@ const AdminAccessDenied = () => {
                     <div className="mt-6 flex flex-col gap-3">
                         <button
                             type="button"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate('/')}
                             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                         >
                             <LogIn className="h-4 w-4" />
@@ -104,7 +105,8 @@ const AdminAccessDenied = () => {
                 </div>
 
                 <p className="mt-6 text-center text-xs text-muted-foreground">
-                    If you believe this is a mistake, contact your system administrator.
+                    If you believe this is a mistake, contact your system
+                    administrator.
                 </p>
             </div>
         </div>

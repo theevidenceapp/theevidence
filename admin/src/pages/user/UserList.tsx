@@ -48,10 +48,10 @@
  * -----------------------------------------------------------------------------
  */
 
-import { useCallback, useEffect, useMemo, useState, memo } from "react";
-import type { ReactNode, KeyboardEvent } from "react";
-import axios from "axios";
-import * as Dialog from "@radix-ui/react-dialog";
+import { useCallback, useEffect, useMemo, useState, memo } from 'react';
+import type { ReactNode, KeyboardEvent } from 'react';
+import axios from 'axios';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
     Search,
     Users as UsersIcon,
@@ -82,16 +82,16 @@ import {
     UserCog,
     Lock,
     PauseCircle,
-} from "lucide-react";
+} from 'lucide-react';
 
 // NOTE: adjust this import to match your project's folder structure.
-import { apiClient } from "@/api/api-client";
+import { apiClient } from '@/api/api-client';
 
 /* =============================================================================
  * Types
  * ========================================================================== */
 
-type UserRole = "ADMIN" | "PUBLISHER" | "READER" | "EDITOR";
+type UserRole = 'ADMIN' | 'PUBLISHER' | 'READER' | 'EDITOR';
 
 /**
  * Shape of a single user record as returned by GET /admin/get-all-users and
@@ -136,56 +136,64 @@ interface UpdateUserRoleResponse {
 }
 
 type FilterKey =
-    | "all"
-    | "admin"
-    | "publisher"
-    | "editor"
-    | "reader"
-    | "verified"
-    | "suspended";
-type FetchStatus = "loading" | "success" | "error";
-type PageToken = number | "ellipsis";
-type RoleSaveState = "idle" | "confirming" | "saving" | "success" | "error";
+    | 'all'
+    | 'admin'
+    | 'publisher'
+    | 'editor'
+    | 'reader'
+    | 'verified'
+    | 'suspended';
+type FetchStatus = 'loading' | 'success' | 'error';
+type PageToken = number | 'ellipsis';
+type RoleSaveState = 'idle' | 'confirming' | 'saving' | 'success' | 'error';
 
 /* =============================================================================
  * Constants & static configuration
  * ========================================================================== */
 
-const USERS_ENDPOINT = "/admin/get-all-users";
-const USER_ROLE_ENDPOINT = "/admin/user/role";
+const USERS_ENDPOINT = '/admin/get-all-users';
+const USER_ROLE_ENDPOINT = '/admin/user/role';
 const PAGE_SIZE_OPTIONS = [10, 25] as const;
 const DEFAULT_PAGE_SIZE: (typeof PAGE_SIZE_OPTIONS)[number] = 10;
 
 /** Every role the console can assign, in the order they should be offered. */
-const ASSIGNABLE_ROLES: UserRole[] = ["READER", "PUBLISHER", "EDITOR", "ADMIN"];
+const ASSIGNABLE_ROLES: UserRole[] = ['READER', 'PUBLISHER', 'EDITOR', 'ADMIN'];
 
 const ROLE_CONFIG: Record<
     UserRole,
-    { label: string; icon: typeof ShieldCheck; badgeClass: string; iconClass: string }
+    {
+        label: string;
+        icon: typeof ShieldCheck;
+        badgeClass: string;
+        iconClass: string;
+    }
 > = {
     ADMIN: {
-        label: "Admin",
+        label: 'Admin',
         icon: ShieldCheck,
-        badgeClass: "bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200",
-        iconClass: "text-indigo-500",
+        badgeClass:
+            'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200',
+        iconClass: 'text-indigo-500',
     },
     PUBLISHER: {
-        label: "Publisher",
+        label: 'Publisher',
         icon: PenSquare,
-        badgeClass: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200",
-        iconClass: "text-amber-500",
+        badgeClass:
+            'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200',
+        iconClass: 'text-amber-500',
     },
     EDITOR: {
-        label: "Editor",
+        label: 'Editor',
         icon: FilePenLine,
-        badgeClass: "bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200",
-        iconClass: "text-teal-500",
+        badgeClass: 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200',
+        iconClass: 'text-teal-500',
     },
     READER: {
-        label: "Reader",
+        label: 'Reader',
         icon: BookOpenText,
-        badgeClass: "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200",
-        iconClass: "text-slate-500",
+        badgeClass:
+            'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200',
+        iconClass: 'text-slate-500',
     },
 };
 
@@ -196,19 +204,19 @@ const ROLE_CONFIG: Record<
  * than a blank screen.
  */
 const UNKNOWN_ROLE_CONFIG = {
-    label: "Unknown role",
+    label: 'Unknown role',
     icon: ShieldQuestion,
-    badgeClass: "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200",
-    iconClass: "text-rose-500",
+    badgeClass: 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200',
+    iconClass: 'text-rose-500',
 };
 
 /** Deterministic avatar palette so the same user always renders the same color. */
 const AVATAR_PALETTE: Array<{ bg: string; text: string }> = [
-    { bg: "bg-slate-900", text: "text-white" },
-    { bg: "bg-indigo-100", text: "text-indigo-700" },
-    { bg: "bg-amber-100", text: "text-amber-800" },
-    { bg: "bg-violet-100", text: "text-violet-700" },
-    { bg: "bg-slate-100", text: "text-slate-600" },
+    { bg: 'bg-slate-900', text: 'text-white' },
+    { bg: 'bg-indigo-100', text: 'text-indigo-700' },
+    { bg: 'bg-amber-100', text: 'text-amber-800' },
+    { bg: 'bg-violet-100', text: 'text-violet-700' },
+    { bg: 'bg-slate-100', text: 'text-slate-600' },
 ];
 
 /* =============================================================================
@@ -216,7 +224,7 @@ const AVATAR_PALETTE: Array<{ bg: string; text: string }> = [
  * ========================================================================== */
 
 function cn(...classes: Array<string | false | null | undefined>): string {
-    return classes.filter(Boolean).join(" ");
+    return classes.filter(Boolean).join(' ');
 }
 
 /**
@@ -232,22 +240,30 @@ function cn(...classes: Array<string | false | null | undefined>): string {
  * a perfectly valid role — that gap is closed below.
  */
 function normalizeRole(role: unknown): UserRole | null {
-    if (typeof role !== "string") return null;
+    if (typeof role !== 'string') return null;
     const upper = role.trim().toUpperCase();
-    return upper === "ADMIN" || upper === "PUBLISHER" || upper === "READER" || upper === "EDITOR"
+    return upper === 'ADMIN' ||
+        upper === 'PUBLISHER' ||
+        upper === 'READER' ||
+        upper === 'EDITOR'
         ? (upper as UserRole)
         : null;
 }
 
 /** Looks up display config for a raw role value, falling back to the "unknown" config. */
-function getRoleConfig(role: unknown): { label: string; icon: typeof ShieldCheck; badgeClass: string; iconClass: string } {
+function getRoleConfig(role: unknown): {
+    label: string;
+    icon: typeof ShieldCheck;
+    badgeClass: string;
+    iconClass: string;
+} {
     const normalized = normalizeRole(role);
     return normalized ? ROLE_CONFIG[normalized] : UNKNOWN_ROLE_CONFIG;
 }
 // /** get Initials */
 function getInitials(name: string): string {
-    const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
+    const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
 }
@@ -255,7 +271,7 @@ function getInitials(name: string): string {
 /** Stable index into AVATAR_PALETTE derived from the user's immutable id. */
 function paletteFor(id: string): { bg: string; text: string } {
     let hash = 0;
-    const safeId = id ?? "";
+    const safeId = id ?? '';
     for (let i = 0; i < safeId.length; i += 1) {
         hash = (hash * 31 + safeId.charCodeAt(i)) >>> 0;
     }
@@ -263,36 +279,39 @@ function paletteFor(id: string): { bg: string; text: string } {
 }
 
 /** Formats an ISO timestamp into UTC date + time strings, matching the design. */
-function formatUtc(iso: string | null | undefined): { date: string; time: string } {
-    if (!iso) return { date: "—", time: "" };
+function formatUtc(iso: string | null | undefined): {
+    date: string;
+    time: string;
+} {
+    if (!iso) return { date: '—', time: '' };
     const parsed = new Date(iso);
-    if (Number.isNaN(parsed.getTime())) return { date: "—", time: "" };
+    if (Number.isNaN(parsed.getTime())) return { date: '—', time: '' };
 
-    const date = parsed.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        timeZone: "UTC",
+    const date = parsed.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        timeZone: 'UTC',
     });
-    const time = `${parsed.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
+    const time = `${parsed.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
         hour12: false,
-        timeZone: "UTC",
+        timeZone: 'UTC',
     })} UTC`;
 
     return { date, time };
 }
 
 function formatDobOnly(iso: string | null | undefined): string {
-    if (!iso) return "Not provided";
+    if (!iso) return 'Not provided';
     const parsed = new Date(iso);
-    if (Number.isNaN(parsed.getTime())) return "Not provided";
-    return parsed.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        timeZone: "UTC",
+    if (Number.isNaN(parsed.getTime())) return 'Not provided';
+    return parsed.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
     });
 }
 
@@ -308,13 +327,13 @@ function getPageWindow(current: number, total: number): PageToken[] {
 
     const pages: PageToken[] = [1];
 
-    if (current > 3) pages.push("ellipsis");
+    if (current > 3) pages.push('ellipsis');
 
     const start = Math.max(2, current - 1);
     const end = Math.min(total - 1, current + 1);
     for (let page = start; page <= end; page += 1) pages.push(page);
 
-    if (current < total - 2) pages.push("ellipsis");
+    if (current < total - 2) pages.push('ellipsis');
 
     pages.push(total);
 
@@ -328,7 +347,9 @@ function getPageWindow(current: number, total: number): PageToken[] {
  */
 function extractErrorMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
-        const serverMessage = (error.response?.data as { message?: string } | undefined)?.message;
+        const serverMessage = (
+            error.response?.data as { message?: string } | undefined
+        )?.message;
         if (serverMessage) return serverMessage;
     }
     if (error instanceof Error && error.message) return error.message;
@@ -341,7 +362,7 @@ function extractErrorMessage(error: unknown, fallback: string): string {
 
 function useAdminUsers() {
     const [users, setUsers] = useState<ApiUser[]>([]);
-    const [status, setStatus] = useState<FetchStatus>("loading");
+    const [status, setStatus] = useState<FetchStatus>('loading');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [reloadToken, setReloadToken] = useState(0);
 
@@ -350,22 +371,34 @@ function useAdminUsers() {
     useEffect(() => {
         const controller = new AbortController();
 
-        setStatus("loading");
+        setStatus('loading');
         setErrorMessage(null);
 
         apiClient
-            .get<GetAllUsersResponse>(USERS_ENDPOINT, { signal: controller.signal })
+            .get<GetAllUsersResponse>(USERS_ENDPOINT, {
+                signal: controller.signal,
+            })
             .then((response) => {
-                if (!response.data?.success || !Array.isArray(response.data.users)) {
-                    throw new Error("The server responded without a valid user list.");
+                if (
+                    !response.data?.success ||
+                    !Array.isArray(response.data.users)
+                ) {
+                    throw new Error(
+                        'The server responded without a valid user list.',
+                    );
                 }
                 setUsers(response.data.users);
-                setStatus("success");
+                setStatus('success');
             })
             .catch((error: unknown) => {
                 if (axios.isCancel(error) || controller.signal.aborted) return;
-                setStatus("error");
-                setErrorMessage(extractErrorMessage(error, "Unable to load the user directory. Please try again."));
+                setStatus('error');
+                setErrorMessage(
+                    extractErrorMessage(
+                        error,
+                        'Unable to load the user directory. Please try again.',
+                    ),
+                );
             });
 
         return () => controller.abort();
@@ -380,39 +413,54 @@ function useAdminUsers() {
      * Throws (with a display-ready message) on failure so callers can surface
      * the error inline next to the control that triggered the change.
      */
-    const updateUserRole = useCallback(async (userId: string, role: UserRole): Promise<ApiUser> => {
-        try {
-            const response = await apiClient.post<UpdateUserRoleResponse>(
-                `${USER_ROLE_ENDPOINT}/${userId}`,
-                { role },
-            );
+    const updateUserRole = useCallback(
+        async (userId: string, role: UserRole): Promise<ApiUser> => {
+            try {
+                const response = await apiClient.post<UpdateUserRoleResponse>(
+                    `${USER_ROLE_ENDPOINT}/${userId}`,
+                    { role },
+                );
 
-            if (!response.data?.success) {
-                throw new Error(response.data?.message || "Failed to update user role.");
+                if (!response.data?.success) {
+                    throw new Error(
+                        response.data?.message || 'Failed to update user role.',
+                    );
+                }
+
+                const returnedUser = response.data.user;
+
+                setUsers((prev) =>
+                    prev.map((existing) =>
+                        existing._id === userId
+                            ? returnedUser
+                                ? { ...existing, ...returnedUser }
+                                : { ...existing, role }
+                            : existing,
+                    ),
+                );
+
+                return (
+                    returnedUser ?? {
+                        ...(users.find((u) => u._id === userId) as ApiUser),
+                        role,
+                    }
+                );
+            } catch (error) {
+                throw new Error(
+                    extractErrorMessage(
+                        error,
+                        'Failed to update user role. Please try again.',
+                    ),
+                );
             }
-
-            const returnedUser = response.data.user;
-
-            setUsers((prev) =>
-                prev.map((existing) =>
-                    existing._id === userId
-                        ? returnedUser
-                            ? { ...existing, ...returnedUser }
-                            : { ...existing, role }
-                        : existing,
-                ),
-            );
-
-            return returnedUser ?? { ...(users.find((u) => u._id === userId) as ApiUser), role };
-        } catch (error) {
-            throw new Error(extractErrorMessage(error, "Failed to update user role. Please try again."));
-        }
-        // `users` is intentionally excluded from deps: it is only read inside the
-        // rare fallback branch above (server omitted the updated user in its
-        // response) and re-creating this callback on every users change would
-        // needlessly churn consumers such as the modal.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            // `users` is intentionally excluded from deps: it is only read inside the
+            // rare fallback branch above (server omitted the updated user in its
+            // response) and re-creating this callback on every users change would
+            // needlessly churn consumers such as the modal.
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [],
+    );
 
     return { users, status, errorMessage, reload, updateUserRole };
 }
@@ -425,18 +473,22 @@ function Avatar({
     name,
     avatar,
     seed,
-    size = "md",
+    size = 'md',
 }: {
     name: string;
     avatar?: string;
     seed: string;
-    size?: "sm" | "md" | "lg";
+    size?: 'sm' | 'md' | 'lg';
 }) {
     const [imageFailed, setImageFailed] = useState(false);
     const palette = paletteFor(seed);
 
     const sizeClass =
-        size === "lg" ? "h-16 w-16 text-lg" : size === "sm" ? "h-9 w-9 text-xs" : "h-11 w-11 text-sm";
+        size === 'lg'
+            ? 'h-16 w-16 text-lg'
+            : size === 'sm'
+              ? 'h-9 w-9 text-xs'
+              : 'h-11 w-11 text-sm';
 
     if (avatar && !imageFailed) {
         return (
@@ -445,7 +497,10 @@ function Avatar({
                 alt=""
                 aria-hidden="true"
                 onError={() => setImageFailed(true)}
-                className={cn(sizeClass, "shrink-0 rounded-xl object-cover ring-1 ring-black/5")}
+                className={cn(
+                    sizeClass,
+                    'shrink-0 rounded-xl object-cover ring-1 ring-black/5',
+                )}
             />
         );
     }
@@ -457,7 +512,7 @@ function Avatar({
                 sizeClass,
                 palette.bg,
                 palette.text,
-                "flex shrink-0 items-center justify-center rounded-xl font-semibold",
+                'flex shrink-0 items-center justify-center rounded-xl font-semibold',
             )}
         >
             {getInitials(name)}
@@ -478,11 +533,14 @@ function RoleBadge({ role }: { role: unknown }) {
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold",
+                'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold',
                 config.badgeClass,
             )}
         >
-            <Icon className={cn("h-3.5 w-3.5", config.iconClass)} aria-hidden="true" />
+            <Icon
+                className={cn('h-3.5 w-3.5', config.iconClass)}
+                aria-hidden="true"
+            />
             {config.label}
         </span>
     );
@@ -492,17 +550,20 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold",
+                'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold',
                 isActive
-                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
-                    : "bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200",
+                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200'
+                    : 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
             )}
         >
             <span
-                className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-emerald-500" : "bg-slate-400")}
+                className={cn(
+                    'h-1.5 w-1.5 rounded-full',
+                    isActive ? 'bg-emerald-500' : 'bg-slate-400',
+                )}
                 aria-hidden="true"
             />
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? 'Active' : 'Inactive'}
         </span>
     );
 }
@@ -511,10 +572,10 @@ function VerificationBadge({ isVerified }: { isVerified: boolean }) {
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold",
+                'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold',
                 isVerified
-                    ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200"
-                    : "bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200",
+                    ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200'
+                    : 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
             )}
         >
             {isVerified ? (
@@ -522,7 +583,7 @@ function VerificationBadge({ isVerified }: { isVerified: boolean }) {
             ) : (
                 <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
             )}
-            {isVerified ? "Verified" : "Pending"}
+            {isVerified ? 'Verified' : 'Pending'}
         </span>
     );
 }
@@ -548,15 +609,25 @@ function StatCard({
                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {label}
                 </span>
-                <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", iconWrapperClass)}>
+                <span
+                    className={cn(
+                        'flex h-9 w-9 items-center justify-center rounded-lg',
+                        iconWrapperClass,
+                    )}
+                >
                     {/* h-4.5/w-4.5 is not a valid Tailwind spacing step (scale jumps 3.5 -> 4 -> 5),
                         so it silently rendered at the browser default icon size. Using an arbitrary
                         value keeps the intended 18px icon. */}
-                    <Icon className={cn("h-[18px] w-[18px]", iconClass)} aria-hidden="true" />
+                    <Icon
+                        className={cn('h-[18px] w-[18px]', iconClass)}
+                        aria-hidden="true"
+                    />
                 </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight text-slate-900">{value}</span>
+                <span className="text-3xl font-bold tracking-tight text-slate-900">
+                    {value}
+                </span>
             </div>
             <div className="mt-2 text-xs text-slate-500">{footer}</div>
         </div>
@@ -584,8 +655,10 @@ function FilterPill({
             onClick={onClick}
             aria-pressed={isActive}
             className={cn(
-                "inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2",
-                isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                'inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2',
+                isActive
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                 className,
             )}
         >
@@ -593,8 +666,10 @@ function FilterPill({
             {label}
             <span
                 className={cn(
-                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold",
-                    isActive ? "bg-white/20 text-white" : "bg-white text-slate-500",
+                    'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold',
+                    isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white text-slate-500',
                 )}
             >
                 {count}
@@ -626,14 +701,17 @@ function PaginationBar({
     onPageChange: (page: number) => void;
     onPageSizeChange: (size: number) => void;
 }) {
-    const pageTokens = useMemo(() => getPageWindow(currentPage, totalPages), [currentPage, totalPages]);
+    const pageTokens = useMemo(
+        () => getPageWindow(currentPage, totalPages),
+        [currentPage, totalPages],
+    );
 
     return (
         <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center justify-between gap-3 sm:justify-start">
                 <span className="text-xs text-slate-500 sm:text-sm">
                     {totalItems === 0
-                        ? "No results"
+                        ? 'No results'
                         : `Showing ${rangeStart}\u2013${rangeEnd} of ${totalItems}`}
                 </span>
 
@@ -641,7 +719,9 @@ function PaginationBar({
                     <span className="text-xs text-slate-400">Rows</span>
                     <select
                         value={pageSize}
-                        onChange={(event) => onPageSizeChange(Number(event.target.value))}
+                        onChange={(event) =>
+                            onPageSizeChange(Number(event.target.value))
+                        }
                         aria-label="Rows per page"
                         className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                     >
@@ -667,7 +747,7 @@ function PaginationBar({
 
                 <div className="flex items-center gap-1">
                     {pageTokens.map((token, index) =>
-                        token === "ellipsis" ? (
+                        token === 'ellipsis' ? (
                             <span
                                 key={`ellipsis-${index}`}
                                 className="flex h-8 w-8 items-center justify-center text-sm text-slate-400"
@@ -679,12 +759,14 @@ function PaginationBar({
                                 key={token}
                                 type="button"
                                 onClick={() => onPageChange(token)}
-                                aria-current={token === currentPage ? "page" : undefined}
+                                aria-current={
+                                    token === currentPage ? 'page' : undefined
+                                }
                                 className={cn(
-                                    "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold transition-colors",
+                                    'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold transition-colors',
                                     token === currentPage
-                                        ? "bg-slate-900 text-white"
-                                        : "text-slate-600 hover:bg-slate-100",
+                                        ? 'bg-slate-900 text-white'
+                                        : 'text-slate-600 hover:bg-slate-100',
                                 )}
                             >
                                 {token}
@@ -723,7 +805,7 @@ function InteractiveRow({
     ariaLabel: string;
 }) {
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === "Enter" || event.key === " ") {
+        if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             onOpen();
         }
@@ -737,7 +819,7 @@ function InteractiveRow({
             onClick={onOpen}
             onKeyDown={handleKeyDown}
             className={cn(
-                "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500",
+                'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500',
                 className,
             )}
         >
@@ -765,8 +847,12 @@ const DesktopUserRow = memo(function DesktopUserRow({
             <div className="flex min-w-0 items-center gap-3">
                 <Avatar name={user.name} avatar={user.avatar} seed={user._id} />
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                    <p className="truncate text-sm text-slate-500">{user.email}</p>
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                        {user.name}
+                    </p>
+                    <p className="truncate text-sm text-slate-500">
+                        {user.email}
+                    </p>
                 </div>
             </div>
 
@@ -783,12 +869,16 @@ const DesktopUserRow = memo(function DesktopUserRow({
             </div>
 
             <div className="text-right">
-                <p className="text-sm font-semibold text-slate-900">{memberSince.date}</p>
+                <p className="text-sm font-semibold text-slate-900">
+                    {memberSince.date}
+                </p>
                 <p className="text-xs text-slate-400">{memberSince.time}</p>
             </div>
 
             <div className="text-right">
-                <p className="text-sm font-semibold text-slate-900">{lastActive.date}</p>
+                <p className="text-sm font-semibold text-slate-900">
+                    {lastActive.date}
+                </p>
                 <p className="text-xs text-slate-400">{lastActive.time}</p>
             </div>
         </InteractiveRow>
@@ -813,10 +903,19 @@ const MobileUserCard = memo(function MobileUserCard({
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                    <Avatar name={user.name} avatar={user.avatar} seed={user._id} size="sm" />
+                    <Avatar
+                        name={user.name}
+                        avatar={user.avatar}
+                        seed={user._id}
+                        size="sm"
+                    />
                     <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                        <p className="truncate text-xs text-slate-500">{user.email}</p>
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                            {user.name}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">
+                            {user.email}
+                        </p>
                     </div>
                 </div>
                 <RoleBadge role={user.role} />
@@ -830,15 +929,21 @@ const MobileUserCard = memo(function MobileUserCard({
             <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
                 <div className="flex items-center justify-between text-slate-500">
                     <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" /> Joined
+                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />{' '}
+                        Joined
                     </span>
-                    <span className="font-medium text-slate-700">{memberSince.date}</span>
+                    <span className="font-medium text-slate-700">
+                        {memberSince.date}
+                    </span>
                 </div>
                 <div className="flex items-center justify-between text-slate-500">
                     <span className="inline-flex items-center gap-1.5">
-                        <History className="h-3.5 w-3.5" aria-hidden="true" /> Last updated
+                        <History className="h-3.5 w-3.5" aria-hidden="true" />{' '}
+                        Last updated
                     </span>
-                    <span className="font-medium text-slate-700">{lastActive.date}</span>
+                    <span className="font-medium text-slate-700">
+                        {lastActive.date}
+                    </span>
                 </div>
             </div>
         </InteractiveRow>
@@ -880,8 +985,12 @@ function DetailRow({
                     <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-                    <div className="mt-0.5 break-all text-sm font-medium text-slate-800">{value}</div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        {label}
+                    </p>
+                    <div className="mt-0.5 break-all text-sm font-medium text-slate-800">
+                        {value}
+                    </div>
                 </div>
             </div>
 
@@ -893,7 +1002,10 @@ function DetailRow({
                     className="mt-1 shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 >
                     {copied ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+                        <Check
+                            className="h-3.5 w-3.5 text-emerald-500"
+                            aria-hidden="true"
+                        />
                     ) : (
                         <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
@@ -935,18 +1047,20 @@ function RoleManagementControl({
     onUpdateRole: (userId: string, role: UserRole) => Promise<void>;
 }) {
     const currentRole = normalizeRole(user.role);
-    const isProtectedAdmin = currentRole === "ADMIN";
+    const isProtectedAdmin = currentRole === 'ADMIN';
 
-    const [draftRole, setDraftRole] = useState<UserRole>(currentRole ?? "READER");
-    const [saveState, setSaveState] = useState<RoleSaveState>("idle");
+    const [draftRole, setDraftRole] = useState<UserRole>(
+        currentRole ?? 'READER',
+    );
+    const [saveState, setSaveState] = useState<RoleSaveState>('idle');
     const [errorText, setErrorText] = useState<string | null>(null);
 
     // Whenever the selected user (or their confirmed role) changes, drop any
     // stale draft/confirmation/error state from a previous session with this
     // control so it never carries over between users or after a save.
     useEffect(() => {
-        setDraftRole(currentRole ?? "READER");
-        setSaveState("idle");
+        setDraftRole(currentRole ?? 'READER');
+        setSaveState('idle');
         setErrorText(null);
     }, [user._id, currentRole]);
 
@@ -957,43 +1071,56 @@ function RoleManagementControl({
                     <Lock className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                    <p className="text-sm font-semibold text-slate-700">Administrator role is protected</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                        Administrator role is protected
+                    </p>
                     <p className="mt-0.5 text-xs text-slate-500">
-                        This account's role can't be changed from the user directory. Administrator access must be
-                        managed separately.
+                        This account's role can't be changed from the user
+                        directory. Administrator access must be managed
+                        separately.
                     </p>
                 </div>
             </div>
         );
     }
 
-    const hasChanged = draftRole !== (currentRole ?? "READER");
-    const isPromotingToAdmin = draftRole === "ADMIN";
-    const isSaving = saveState === "saving";
+    const hasChanged = draftRole !== (currentRole ?? 'READER');
+    const isPromotingToAdmin = draftRole === 'ADMIN';
+    const isSaving = saveState === 'saving';
 
     const handleRoleSelect = (nextRole: UserRole) => {
         setDraftRole(nextRole);
         setErrorText(null);
-        if (saveState !== "saving") setSaveState("idle");
+        if (saveState !== 'saving') setSaveState('idle');
     };
 
     const handleSaveClick = async () => {
         if (!hasChanged || isSaving) return;
 
-        if (isPromotingToAdmin && saveState !== "confirming") {
-            setSaveState("confirming");
+        if (isPromotingToAdmin && saveState !== 'confirming') {
+            setSaveState('confirming');
             return;
         }
 
-        setSaveState("saving");
+        setSaveState('saving');
         setErrorText(null);
         try {
             await onUpdateRole(user._id, draftRole);
-            setSaveState("success");
-            window.setTimeout(() => setSaveState((prev) => (prev === "success" ? "idle" : prev)), 2500);
+            setSaveState('success');
+            window.setTimeout(
+                () =>
+                    setSaveState((prev) =>
+                        prev === 'success' ? 'idle' : prev,
+                    ),
+                2500,
+            );
         } catch (error) {
-            setSaveState("error");
-            setErrorText(error instanceof Error ? error.message : "Failed to update user role.");
+            setSaveState('error');
+            setErrorText(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to update user role.',
+            );
         }
     };
 
@@ -1004,15 +1131,21 @@ function RoleManagementControl({
                     <UserCog className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Role management</p>
-                    <p className="text-sm font-semibold text-slate-700">Reassign this account's role</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        Role management
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                        Reassign this account's role
+                    </p>
                 </div>
             </div>
 
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <select
                     value={draftRole}
-                    onChange={(event) => handleRoleSelect(event.target.value as UserRole)}
+                    onChange={(event) =>
+                        handleRoleSelect(event.target.value as UserRole)
+                    }
                     disabled={isSaving}
                     aria-label={`Change role for ${user.name}`}
                     className="w-full flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 disabled:opacity-60 sm:w-auto"
@@ -1029,46 +1162,58 @@ function RoleManagementControl({
                     onClick={handleSaveClick}
                     disabled={!hasChanged || isSaving}
                     className={cn(
-                        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40",
-                        saveState === "confirming"
-                            ? "bg-amber-500 text-white hover:bg-amber-600"
-                            : "bg-slate-900 text-white hover:bg-slate-800",
+                        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40',
+                        saveState === 'confirming'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'bg-slate-900 text-white hover:bg-slate-800',
                     )}
                 >
                     {isSaving ? (
                         <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            <Loader2
+                                className="h-3.5 w-3.5 animate-spin"
+                                aria-hidden="true"
+                            />
                             Saving
                         </>
-                    ) : saveState === "confirming" ? (
+                    ) : saveState === 'confirming' ? (
                         <>
-                            <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                            <ShieldAlert
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                            />
                             Confirm Admin
                         </>
                     ) : (
-                        "Save role"
+                        'Save role'
                     )}
                 </button>
             </div>
 
-            {saveState === "confirming" ? (
+            {saveState === 'confirming' ? (
                 <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-amber-700">
-                    <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    This grants full administrator access. Click "Confirm Admin" again to proceed, or pick a
-                    different role to cancel.
+                    <ShieldAlert
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                        aria-hidden="true"
+                    />
+                    This grants full administrator access. Click "Confirm Admin"
+                    again to proceed, or pick a different role to cancel.
                 </p>
             ) : null}
 
-            {saveState === "success" ? (
+            {saveState === 'success' ? (
                 <p className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600">
                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                     Role updated successfully.
                 </p>
             ) : null}
 
-            {saveState === "error" && errorText ? (
+            {saveState === 'error' && errorText ? (
                 <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-red-600">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <AlertTriangle
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                        aria-hidden="true"
+                    />
                     {errorText}
                 </p>
             ) : null}
@@ -1092,7 +1237,11 @@ function UserDetailModal({
     const isOpen = user !== null;
     const memberSince = user ? formatUtc(user.createdAt) : null;
     const lastActive = user ? formatUtc(user.updatedAt) : null;
-    const authProvider = user?.googleId ? "Google" : user?.authProviderId ? "Direct sign-up" : "Unknown";
+    const authProvider = user?.googleId
+        ? 'Google'
+        : user?.authProviderId
+          ? 'Direct sign-up'
+          : 'Unknown';
 
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
@@ -1106,19 +1255,29 @@ function UserDetailModal({
                         <>
                             <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-100 bg-white/95 px-6 py-5 backdrop-blur">
                                 <div className="flex items-center gap-3">
-                                    <Avatar name={user.name} avatar={user.avatar} seed={user._id} size="lg" />
+                                    <Avatar
+                                        name={user.name}
+                                        avatar={user.avatar}
+                                        seed={user._id}
+                                        size="lg"
+                                    />
                                     <div className="min-w-0">
                                         <Dialog.Title className="truncate text-base font-bold text-slate-900">
                                             {user.name}
                                         </Dialog.Title>
-                                        <p className="truncate text-sm text-slate-500">{user.email}</p>
+                                        <p className="truncate text-sm text-slate-500">
+                                            {user.email}
+                                        </p>
                                     </div>
                                 </div>
                                 <Dialog.Close
                                     aria-label="Close"
                                     className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
                                 >
-                                    <X className="h-[18px] w-[18px]" aria-hidden="true" />
+                                    <X
+                                        className="h-[18px] w-[18px]"
+                                        aria-hidden="true"
+                                    />
                                 </Dialog.Close>
                             </div>
 
@@ -1126,20 +1285,34 @@ function UserDetailModal({
                                 <div className="flex flex-wrap items-center gap-2 py-3">
                                     <RoleBadge role={user.role} />
                                     <StatusBadge isActive={user.isActive} />
-                                    <VerificationBadge isVerified={Boolean(user.isVerified)} />
+                                    <VerificationBadge
+                                        isVerified={Boolean(user.isVerified)}
+                                    />
                                 </div>
 
                                 <div className="pb-4">
-                                    <RoleManagementControl user={user} onUpdateRole={onUpdateRole} />
+                                    <RoleManagementControl
+                                        user={user}
+                                        onUpdateRole={onUpdateRole}
+                                    />
                                 </div>
 
                                 <div className="divide-y divide-slate-100 border-t border-slate-100">
-                                    <DetailRow icon={Mail} label="Email address" value={user.email} copyable={user.email} />
+                                    <DetailRow
+                                        icon={Mail}
+                                        label="Email address"
+                                        value={user.email}
+                                        copyable={user.email}
+                                    />
 
                                     <DetailRow
                                         icon={Fingerprint}
                                         label="User ID"
-                                        value={<span className="font-mono text-xs uppercase">{user._id}</span>}
+                                        value={
+                                            <span className="font-mono text-xs uppercase">
+                                                {user._id}
+                                            </span>
+                                        }
                                         copyable={user._id}
                                     />
 
@@ -1147,7 +1320,11 @@ function UserDetailModal({
                                         <DetailRow
                                             icon={KeyRound}
                                             label="Google account ID"
-                                            value={<span className="font-mono text-xs uppercase">{user.googleId}</span>}
+                                            value={
+                                                <span className="font-mono text-xs uppercase">
+                                                    {user.googleId}
+                                                </span>
+                                            }
                                             copyable={user.googleId}
                                         />
                                     ) : null}
@@ -1156,20 +1333,37 @@ function UserDetailModal({
                                         <DetailRow
                                             icon={KeyRound}
                                             label="Auth provider ID"
-                                            value={<span className="font-mono text-xs">{user.authProviderId}</span>}
+                                            value={
+                                                <span className="font-mono text-xs">
+                                                    {user.authProviderId}
+                                                </span>
+                                            }
                                             copyable={user.authProviderId}
                                         />
                                     ) : null}
 
-                                    <DetailRow icon={ShieldQuestion} label="Sign-in method" value={authProvider} />
+                                    <DetailRow
+                                        icon={ShieldQuestion}
+                                        label="Sign-in method"
+                                        value={authProvider}
+                                    />
 
                                     <DetailRow
                                         icon={Phone}
                                         label="Phone number"
-                                        value={user.phone_number && user.phone_number.length > 0 ? user.phone_number : "Not provided"}
+                                        value={
+                                            user.phone_number &&
+                                            user.phone_number.length > 0
+                                                ? user.phone_number
+                                                : 'Not provided'
+                                        }
                                     />
 
-                                    <DetailRow icon={CakeSlice} label="Date of birth" value={formatDobOnly(user.dob)} />
+                                    <DetailRow
+                                        icon={CakeSlice}
+                                        label="Date of birth"
+                                        value={formatDobOnly(user.dob)}
+                                    />
 
                                     <DetailRow
                                         icon={Calendar}
@@ -1177,11 +1371,13 @@ function UserDetailModal({
                                         value={
                                             memberSince ? (
                                                 <span>
-                                                    {memberSince.date}{" "}
-                                                    <span className="text-slate-400">· {memberSince.time}</span>
+                                                    {memberSince.date}{' '}
+                                                    <span className="text-slate-400">
+                                                        · {memberSince.time}
+                                                    </span>
                                                 </span>
                                             ) : (
-                                                "—"
+                                                '—'
                                             )
                                         }
                                     />
@@ -1192,10 +1388,13 @@ function UserDetailModal({
                                         value={
                                             lastActive ? (
                                                 <span>
-                                                    {lastActive.date} <span className="text-slate-400">· {lastActive.time}</span>
+                                                    {lastActive.date}{' '}
+                                                    <span className="text-slate-400">
+                                                        · {lastActive.time}
+                                                    </span>
                                                 </span>
                                             ) : (
-                                                "—"
+                                                '—'
                                             )
                                         }
                                     />
@@ -1248,13 +1447,24 @@ function RowSkeleton() {
     );
 }
 
-function ErrorBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorBanner({
+    message,
+    onRetry,
+}: {
+    message: string;
+    onRetry: () => void;
+}) {
     return (
         <div className="flex flex-col items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" aria-hidden="true" />
+                <AlertTriangle
+                    className="mt-0.5 h-5 w-5 shrink-0 text-red-500"
+                    aria-hidden="true"
+                />
                 <div>
-                    <p className="text-sm font-semibold text-red-800">Couldn't load the user directory</p>
+                    <p className="text-sm font-semibold text-red-800">
+                        Couldn't load the user directory
+                    </p>
                     <p className="text-sm text-red-600">{message}</p>
                 </div>
             </div>
@@ -1274,11 +1484,13 @@ function EmptyState({ hasQuery }: { hasQuery: boolean }) {
     return (
         <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
             <Inbox className="h-8 w-8 text-slate-300" aria-hidden="true" />
-            <p className="text-sm font-semibold text-slate-700">No matching accounts</p>
+            <p className="text-sm font-semibold text-slate-700">
+                No matching accounts
+            </p>
             <p className="max-w-xs text-sm text-slate-500">
                 {hasQuery
-                    ? "No users match your search and filter combination. Try clearing the search or choosing a different filter."
-                    : "There are no registered users in this category yet."}
+                    ? 'No users match your search and filter combination. Try clearing the search or choosing a different filter.'
+                    : 'There are no registered users in this category yet.'}
             </p>
         </div>
     );
@@ -1289,9 +1501,10 @@ function EmptyState({ hasQuery }: { hasQuery: boolean }) {
  * ========================================================================== */
 
 export default function UsersList() {
-    const { users, status, errorMessage, reload, updateUserRole } = useAdminUsers();
-    const [query, setQuery] = useState("");
-    const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+    const { users, status, errorMessage, reload, updateUserRole } =
+        useAdminUsers();
+    const [query, setQuery] = useState('');
+    const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
     // Track the selected user by id rather than by object reference. Deriving
     // the live record from `users` on every render keeps the detail modal in
     // sync automatically after a role update, without a second copy of state
@@ -1301,7 +1514,10 @@ export default function UsersList() {
     const [currentPage, setCurrentPage] = useState<number>(1);
 
     const selectedUser = useMemo(
-        () => (selectedUserId ? users.find((u) => u._id === selectedUserId) ?? null : null),
+        () =>
+            selectedUserId
+                ? (users.find((u) => u._id === selectedUserId) ?? null)
+                : null,
         [users, selectedUserId],
     );
 
@@ -1311,10 +1527,18 @@ export default function UsersList() {
         // Role comparisons go through normalizeRole() so casing differences,
         // unexpected values, or (previously) the EDITOR role don't silently
         // drop users out of every role-based count.
-        const admins = users.filter((u) => normalizeRole(u.role) === "ADMIN").length;
-        const publishers = users.filter((u) => normalizeRole(u.role) === "PUBLISHER").length;
-        const editors = users.filter((u) => normalizeRole(u.role) === "EDITOR").length;
-        const readers = users.filter((u) => normalizeRole(u.role) === "READER").length;
+        const admins = users.filter(
+            (u) => normalizeRole(u.role) === 'ADMIN',
+        ).length;
+        const publishers = users.filter(
+            (u) => normalizeRole(u.role) === 'PUBLISHER',
+        ).length;
+        const editors = users.filter(
+            (u) => normalizeRole(u.role) === 'EDITOR',
+        ).length;
+        const readers = users.filter(
+            (u) => normalizeRole(u.role) === 'READER',
+        ).length;
         const verified = users.filter((u) => u.isVerified === true).length;
 
         return {
@@ -1334,19 +1558,25 @@ export default function UsersList() {
     const filteredUsers = useMemo(() => {
         let list = users;
 
-        if (activeFilter === "admin") list = list.filter((u) => normalizeRole(u.role) === "ADMIN");
-        else if (activeFilter === "publisher") list = list.filter((u) => normalizeRole(u.role) === "PUBLISHER");
-        else if (activeFilter === "editor") list = list.filter((u) => normalizeRole(u.role) === "EDITOR");
-        else if (activeFilter === "reader") list = list.filter((u) => normalizeRole(u.role) === "READER");
-        else if (activeFilter === "verified") list = list.filter((u) => u.isVerified === true);
-        else if (activeFilter === "suspended") list = list.filter((u) => u.isActive === false);
+        if (activeFilter === 'admin')
+            list = list.filter((u) => normalizeRole(u.role) === 'ADMIN');
+        else if (activeFilter === 'publisher')
+            list = list.filter((u) => normalizeRole(u.role) === 'PUBLISHER');
+        else if (activeFilter === 'editor')
+            list = list.filter((u) => normalizeRole(u.role) === 'EDITOR');
+        else if (activeFilter === 'reader')
+            list = list.filter((u) => normalizeRole(u.role) === 'READER');
+        else if (activeFilter === 'verified')
+            list = list.filter((u) => u.isVerified === true);
+        else if (activeFilter === 'suspended')
+            list = list.filter((u) => u.isActive === false);
 
         const trimmedQuery = query.trim().toLowerCase();
         if (trimmedQuery.length > 0) {
             list = list.filter(
                 (u) =>
-                    (u.name ?? "").toLowerCase().includes(trimmedQuery) ||
-                    (u.email ?? "").toLowerCase().includes(trimmedQuery),
+                    (u.name ?? '').toLowerCase().includes(trimmedQuery) ||
+                    (u.email ?? '').toLowerCase().includes(trimmedQuery),
             );
         }
 
@@ -1368,7 +1598,8 @@ export default function UsersList() {
         return filteredUsers.slice(startIndex, startIndex + pageSize);
     }, [filteredUsers, safeCurrentPage, pageSize]);
 
-    const rangeStart = totalItems === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+    const rangeStart =
+        totalItems === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
     const rangeEnd = Math.min(safeCurrentPage * pageSize, totalItems);
 
     const handlePageChange = useCallback(
@@ -1406,18 +1637,31 @@ export default function UsersList() {
         icon?: typeof CheckCircle2;
         className?: string;
     }> = [
-            { key: "all", label: "All Accounts", count: stats.total },
-            { key: "admin", label: "Admins", count: stats.admins },
-            { key: "publisher", label: "Publishers", count: stats.publishers },
-            { key: "editor", label: "Editors", count: stats.editors },
-            { key: "reader", label: "Readers", count: stats.readers },
-            { key: "verified", label: "Verified", count: stats.verified, icon: CheckCircle2, className: "hidden md:inline-flex" },
-            { key: "suspended", label: "Suspended", count: stats.suspended, icon: PauseCircle, className: "hidden md:inline-flex" },
-        ];
+        { key: 'all', label: 'All Accounts', count: stats.total },
+        { key: 'admin', label: 'Admins', count: stats.admins },
+        { key: 'publisher', label: 'Publishers', count: stats.publishers },
+        { key: 'editor', label: 'Editors', count: stats.editors },
+        { key: 'reader', label: 'Readers', count: stats.readers },
+        {
+            key: 'verified',
+            label: 'Verified',
+            count: stats.verified,
+            icon: CheckCircle2,
+            className: 'hidden md:inline-flex',
+        },
+        {
+            key: 'suspended',
+            label: 'Suspended',
+            count: stats.suspended,
+            icon: PauseCircle,
+            className: 'hidden md:inline-flex',
+        },
+    ];
 
-    const isLoading = status === "loading";
-    const isError = status === "error";
-    const hasActiveQueryOrFilter = query.trim().length > 0 || activeFilter !== "all";
+    const isLoading = status === 'loading';
+    const isError = status === 'error';
+    const hasActiveQueryOrFilter =
+        query.trim().length > 0 || activeFilter !== 'all';
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
@@ -1428,18 +1672,24 @@ export default function UsersList() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-2.5">
-                            <h1 className="text-2xl font-bold tracking-tight text-slate-900">User Directory</h1>
+                            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                                User Directory
+                            </h1>
                             <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
                                 {stats.total} Members
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-slate-500">
-                            Inspect registered team accounts, manage role privileges, and review activity status.
+                            Inspect registered team accounts, manage role
+                            privileges, and review activity status.
                         </p>
                     </div>
 
                     <span className="inline-flex items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                        <UserCog className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                        <UserCog
+                            className="h-4 w-4 text-slate-400"
+                            aria-hidden="true"
+                        />
                         Role Management Enabled
                     </span>
                 </div>
@@ -1447,7 +1697,12 @@ export default function UsersList() {
                 {/* ---------------------------------------------------------------- */}
                 {/* Error state                                                     */}
                 {/* ---------------------------------------------------------------- */}
-                {isError ? <ErrorBanner message={errorMessage ?? "Something went wrong."} onRetry={reload} /> : null}
+                {isError ? (
+                    <ErrorBanner
+                        message={errorMessage ?? 'Something went wrong.'}
+                        onRetry={reload}
+                    />
+                ) : null}
 
                 {/* ---------------------------------------------------------------- */}
                 {/* KPI stat cards                                                  */}
@@ -1494,7 +1749,8 @@ export default function UsersList() {
                                 footer={
                                     <span className="inline-flex items-center gap-1.5">
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        {stats.suspended} suspended or deactivated
+                                        {stats.suspended} suspended or
+                                        deactivated
                                     </span>
                                 }
                             />
@@ -1519,11 +1775,17 @@ export default function UsersList() {
                                     value={
                                         <span className="text-xl">
                                             {stats.publishers}
-                                            <span className="mx-1 text-sm font-medium text-slate-400">Pub</span>·{" "}
-                                            {stats.editors}
-                                            <span className="mx-1 text-sm font-medium text-slate-400">Edit</span>·{" "}
-                                            {stats.readers}
-                                            <span className="ml-1 text-sm font-medium text-slate-400">Read</span>
+                                            <span className="mx-1 text-sm font-medium text-slate-400">
+                                                Pub
+                                            </span>
+                                            · {stats.editors}
+                                            <span className="mx-1 text-sm font-medium text-slate-400">
+                                                Edit
+                                            </span>
+                                            · {stats.readers}
+                                            <span className="ml-1 text-sm font-medium text-slate-400">
+                                                Read
+                                            </span>
                                         </span>
                                     }
                                     icon={PenSquare}
@@ -1532,7 +1794,8 @@ export default function UsersList() {
                                     footer={
                                         <span className="inline-flex items-center gap-1.5">
                                             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                            {stats.contentTeam} publisher, editor & reader accounts
+                                            {stats.contentTeam} publisher,
+                                            editor & reader accounts
                                         </span>
                                     }
                                 />
@@ -1596,7 +1859,11 @@ export default function UsersList() {
                         <EmptyState hasQuery={hasActiveQueryOrFilter} />
                     ) : (
                         paginatedUsers.map((user) => (
-                            <DesktopUserRow key={user._id} user={user} onSelect={handleSelectUser} />
+                            <DesktopUserRow
+                                key={user._id}
+                                user={user}
+                                onSelect={handleSelectUser}
+                            />
                         ))
                     )}
 
@@ -1629,7 +1896,11 @@ export default function UsersList() {
                         </div>
                     ) : (
                         paginatedUsers.map((user) => (
-                            <MobileUserCard key={user._id} user={user} onSelect={handleSelectUser} />
+                            <MobileUserCard
+                                key={user._id}
+                                user={user}
+                                onSelect={handleSelectUser}
+                            />
                         ))
                     )}
 
@@ -1653,12 +1924,19 @@ export default function UsersList() {
                 {/* Footnote (desktop only)                                         */}
                 {/* ---------------------------------------------------------------- */}
                 <div className="hidden items-center justify-between text-xs text-slate-400 md:flex">
-                    <span>Directory reflects verified authentication records synchronized across all active organizations.</span>
+                    <span>
+                        Directory reflects verified authentication records
+                        synchronized across all active organizations.
+                    </span>
                     <span>System Timestamp · UTC Standard</span>
                 </div>
             </div>
 
-            <UserDetailModal user={selectedUser} onOpenChange={handleModalOpenChange} onUpdateRole={handleUpdateRole} />
+            <UserDetailModal
+                user={selectedUser}
+                onOpenChange={handleModalOpenChange}
+                onUpdateRole={handleUpdateRole}
+            />
         </div>
     );
 }

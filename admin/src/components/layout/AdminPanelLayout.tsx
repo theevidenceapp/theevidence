@@ -1,5 +1,5 @@
-import * as React from "react";
-import { apiClient } from "@/api/api-client";
+import * as React from 'react';
+import { apiClient } from '@/api/api-client';
 import {
     Menu,
     Search,
@@ -12,9 +12,9 @@ import {
     Ban,
     Settings,
     User,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import AdminSidebar from "@/components/siderbar/Adminsidebar";
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AdminSidebar from '@/components/siderbar/Adminsidebar';
 
 interface NavItem {
     label: string;
@@ -41,9 +41,9 @@ export default function AdminPanelLayout({ children }: AdminPanelLayoutProps) {
     // const activeItem = NAV_ITEMS.find((item) => item.active) ?? NAV_ITEMS[0];
 
     const handleLogout = async () => {
-        const res = await apiClient.get("/user/logout");
+        const res = await apiClient.get('/user/logout');
         console.log(res);
-        if (res.status === 200) navigate("/");
+        if (res.status === 200) navigate('/');
     };
 
     return (
@@ -107,7 +107,10 @@ export default function AdminPanelLayout({ children }: AdminPanelLayoutProps) {
 
             {/* Body: sidebar + main content */}
             <div className="flex flex-1 flex-col md:flex-row">
-                <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                <AdminSidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                />
 
                 <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
             </div>

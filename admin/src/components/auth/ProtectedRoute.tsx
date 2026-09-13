@@ -1,18 +1,18 @@
-import { useAuthStore } from "@/store/authStore";
-import { Navigate, Outlet } from "react-router-dom";
+import { useAuthStore } from '@/store/authStore';
+import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoute = () => {
-  const { accessToken, isLoading } = useAuthStore();
+    const { accessToken, isLoading } = useAuthStore();
 
-  if (isLoading) {
-    return null;
-  }
+    if (isLoading) {
+        return null;
+    }
 
-  if (!accessToken) {
-    return <Navigate to="/" replace />;
-  }
+    if (!accessToken) {
+        return <Navigate to="/" replace />;
+    }
 
-  return <Outlet />;
+    return <Outlet />;
 };
 
 export default ProtectedRoute;

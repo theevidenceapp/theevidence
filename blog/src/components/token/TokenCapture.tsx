@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react'
-import { useAuthStore } from '../../store/authStore'
+import React, { useEffect } from 'react';
+import { useAuthStore } from '../../store/authStore';
 import { navigate } from 'astro:transitions/client';
 
 const TokenCapture = () => {
-
     const setToken = useAuthStore((state) => state.setToken);
 
     useEffect(() => {
@@ -12,11 +11,11 @@ const TokenCapture = () => {
 
         if (token) {
             setToken(token);
-            navigate("/discover");
+            navigate('/discover');
         }
-    }, [setToken])
+    }, [setToken]);
 
     return null;
-}
+};
 
-export default TokenCapture
+export default TokenCapture;

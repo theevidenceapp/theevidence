@@ -1,9 +1,5 @@
 const Usermanagement = () => {
-  return (
-    <div>
-      
-    </div>
-  )
-}
+    return <div></div>;
+};
 
-export default Usermanagement
+export default Usermanagement;
