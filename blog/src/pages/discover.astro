@@ -740,7 +740,7 @@ papers.forEach((p) => {
                       <div class="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-[12px] text-[#64748b] flex-wrap font-medium pt-2 border-t border-neutral-200/60">
                         <div class="flex items-center gap-1.5 sm:gap-2">
                           {item.authorAvatar ? (
-                            <img src={item.authorAvatar} alt="" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shadow-sm" />
+                            <img  onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';" src={item.authorAvatar} alt="" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shadow-sm" />
                           ) : (
                             <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-neutral-300 flex items-center justify-center text-[10px] sm:text-[11px] font-bold text-neutral-700 shadow-sm">
                               {item.authorName.charAt(0)}
@@ -841,6 +841,7 @@ papers.forEach((p) => {
                       <div class="w-9 h-9 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 font-bold">
                         {res.avatarUrl ? (
                           <img
+                          onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
                             src={res.avatarUrl}
                             alt=""
                             class="w-full h-full object-cover"

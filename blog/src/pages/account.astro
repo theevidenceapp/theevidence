@@ -11,7 +11,7 @@ let user = {
   name: "Dr. Sarah Mitchell",
   email: "sarah.mitchell@theevidence.org",
   avatar:
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaq7q5sHbJh9yfx4MCJ3dHnyGGhyHmKedRmbXIS4vM4cYZ8aZLu5lMgJI&s=10",
+    "https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=",
   phone_number: "+1 (555) 382-9102",
   dob: "1992-08-20",
   role: "PUBLISHER",
@@ -286,6 +286,7 @@ let user = {
                     class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center shrink-0 border border-neutral-200 shadow-sm"
                   >
                     <img
+                      onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
                       id="avatar-preview"
                       src={user.avatar}
                       alt="Avatar"

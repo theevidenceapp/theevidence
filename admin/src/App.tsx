@@ -9,19 +9,20 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 import { apiClient } from "@/api/api-client";
 import { useAuthStore } from "@/store/authStore";
-import UserManagement from "@/pages/user/UserManagement";
 import Dashboard from "@/components/dashboard/dashboard";
 import UsersList from "@/pages/user/UserList";
 import AdminNotFound from "@/pages/error/Adminnotfound";
 import EditorOverview from "@/pages/editor/EditorOverview";
+import ReviewWindow from "@/pages/editor/review/Reviewwindow";
+import ReviewQueue from "@/pages/editor/review/Reviewqueue";
 
 function EditorOverviewRoute() {
   const navigate = useNavigate();
   return (
     <AdminPanelLayout>
       <EditorOverview
-        onReviewResearch={(item) => navigate(`/admin/research/${item.slug}`)}
-        onReviewBlog={(item) => navigate(`/admin/blogs/${item.slug}`)}
+        onReviewResearch={(item) => navigate(`/editor/review/${item.slug}`)}
+        onReviewBlog={(item) => navigate(`/editor/review/${item.slug}`)}
       />
     </AdminPanelLayout>
   );
@@ -74,6 +75,12 @@ const App = () => {
             }
           />
           <Route path="/editor/overview" element={<EditorOverviewRoute />} />
+          <Route path="/editor/review/queue" element={<AdminPanelLayout>
+            <ReviewQueue />
+          </AdminPanelLayout>} />
+          <Route path="/editor/review/:slug" element={<AdminPanelLayout>
+            <ReviewWindow />
+          </AdminPanelLayout>} />
           <Route
             path="/admin/app-content"
             element={
