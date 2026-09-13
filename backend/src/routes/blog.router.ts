@@ -63,17 +63,17 @@ blogRouter.delete("/delete/:id", deleteBlog);
 blogRouter.put("/statusupdate/:id", updateBlogStatus);
 blogRouter.get("/overview", getDeskOverview);
 
-// Add this exact GET route in your backend router (e.g., blog.routes.ts or similar)
 blogRouter.get("/published-by-type", async (req, res) => {
   try {
-    const docTypeParam = (req.query.docType || "RESEARCH").toString().toUpperCase();
-    
-    // Create a case-insensitive regex query to catch both uppercase and lowercase variations in MongoDB
+    const docTypeParam = (req.query.docType || "RESEARCH")
+      .toString()
+      .toUpperCase();
+
     const docTypeRegex = new RegExp(`^${docTypeParam}$`, "i");
 
-    const query = { 
-      status: "PUBLISHED", 
-      docType: docTypeRegex 
+    const query: Record<string, any> = {
+      status: "PUBLISHED",
+      docType: docTypeRegex,
     };
 
     const blogs = await Blog.find(query)
