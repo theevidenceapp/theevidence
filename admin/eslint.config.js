@@ -9,12 +9,16 @@ export default defineConfig([
     globalIgnores(['dist']),
     {
         files: ['**/*.{ts,tsx}'],
+        plugins: ['prettier'],
         extends: [
             js.configs.recommended,
             tseslint.configs.recommended,
             reactHooks.configs.flat.recommended,
             reactRefresh.configs.vite,
         ],
+        rules: {
+            'prettier/prettier': 'warn',
+        },
         languageOptions: {
             globals: globals.browser,
         },
