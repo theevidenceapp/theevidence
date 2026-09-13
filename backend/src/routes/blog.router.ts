@@ -97,8 +97,10 @@ blogRouter.get("/published-by-type", async (req, res) => {
         hasMore: false,
       },
     });
+    return;
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
+    return;
   }
 });
 
