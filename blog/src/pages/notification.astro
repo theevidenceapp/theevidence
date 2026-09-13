@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import "../styles/globals.css";
+import SEOHead from "@/components/SEOHead.astro";
 
 const THE_EVIDENCE_LOGO = "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
 
@@ -87,6 +88,10 @@ const extraPastNotifications = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <ClientRouter />
     <title>The Evidence - Notification</title>
+    <SEOHead 
+      title="Notifications | The Evidence" 
+      description="View your personal account notifications and platform alerts." 
+    />
     <style>
       html, body {
         background-color: #f3f3f5 !important;
@@ -432,5 +437,29 @@ const extraPastNotifications = [
         }
       });
     </script>
+    <script>
+  import { useAuthStore } from "../store/authStore";
+  import { apiClient } from "../api/api-client";
+
+  async function quickGuard() {
+    const store = useAuthStore.getState();
+    if (store.token) return;
+
+    try {
+      // Ask backend for a fresh key using the secure cookie
+      const res = await apiClient.get("/user/refresh-token");
+      if (res.data?.accessToken) {
+        store.setToken(res.data.accessToken);
+      }
+    } catch {
+      // If the cookie is dead or missing, bounce them to login
+      store.clear();
+      window.location.replace("/?auth=login");
+    }
+  }
+
+  document.addEventListener("astro:page-load", quickGuard);
+  quickGuard();
+</script>
   </body>
 </html>

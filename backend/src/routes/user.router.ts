@@ -7,17 +7,22 @@ import {
   googleCallback,
   handleAuthFailure,
   logout,
+  updateUser,
+  getMe,
   refreshAccessToken,
 } from "../controllers/auth.controller.js";
 import config from "../config/config.js";
 import passport from "../config/passport-config.js";
 import { authenticate } from "../middleware/auth.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 
 const userRouter = Router();
 const isProd = config.NODE_ENV === "production";
 
 userRouter.route("/signup").post(createUser);
 userRouter.get("/getuser/:id", authenticate, getUser);
+userRouter.put("/update/:id", authenticate, upload.single("avatar"), updateUser);
+userRouter.get("/me", authenticate, getMe);
 
 userRouter.get("/auth/google", authenticateWithPassport);
 
@@ -29,6 +34,16 @@ userRouter.get(
   }),
   googleCallback,
 );
+
+
+userRouter.post("/logout", (req, res) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  return res.status(200).json({ success: true, message: "Logged out successfully" });
+});
 
 userRouter.get("/auth/failure", handleAuthFailure);
 
