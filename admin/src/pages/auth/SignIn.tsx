@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/button';
+import useTitle from '@/hooks/useTitle';
 
 export default function SignIn() {
     const handleGoogleSignIn = () => {
         window.location.href = `${import.meta.env.VITE_API_URL}/user/auth/google?site=admin`;
     };
+
+    useTitle('Sign In')
 
     return (
         <>

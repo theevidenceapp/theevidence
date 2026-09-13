@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import useTitle from '@/hooks/useTitle';
 
 const VerifyToken = () => {
     const navigate = useNavigate();
+    useTitle('Verifying...')
 
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
 

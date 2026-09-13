@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/api/api-client';
 import { cn } from '@/lib/utils';
+import useTitle from '@/hooks/useTitle';
 
 // =====================================================================
 // Types based on the backend Models
@@ -66,9 +67,25 @@ interface Blog {
 
 // =====================================================================
 // Component
+//
+// LAYOUT NOTE: This component is designed to render as a *child* of
+// AdminPanelLayout (which already provides the app-level sticky header,
+// the sidebar, and outer <main> padding of `p-4 sm:p-6`). Accordingly:
+//   - This component does NOT render its own <main> (avoids nested
+//     landmark elements).
+//   - This component does NOT set `min-h-screen` (the shell already
+//     manages viewport height; doing so here breaks the layout box).
+//   - The contextual toolbar below docks at `top-16` (i.e. beneath the
+//     shell's 64px header) instead of `top-0`, and cancels the shell's
+//     padding locally (`-m-4 sm:-m-6`) so it can bleed edge-to-edge
+//     across the content pane, matching common dashboard conventions.
+//   - The right-rail "Decision & Feedback" card's sticky offset
+//     (`top-32` = 128px) is derived from: shell header (64px) +
+//     this toolbar (64px). If either height changes, recompute this.
 // =====================================================================
 
 export default function ReviewWindow() {
+    useTitle('Review Window')
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
 
@@ -117,7 +134,7 @@ export default function ReviewWindow() {
             } catch (err: any) {
                 setError(
                     err.response?.data?.message ||
-                        'An error occurred while fetching.',
+                    'An error occurred while fetching.',
                 );
             } finally {
                 setIsLoading(false);
@@ -144,7 +161,7 @@ export default function ReviewWindow() {
         } catch (err: any) {
             alert(
                 'Failed to update status: ' +
-                    (err.response?.data?.message || err.message),
+                (err.response?.data?.message || err.message),
             );
         } finally {
             setIsUpdatingStatus(false);
@@ -153,11 +170,16 @@ export default function ReviewWindow() {
 
     // =====================================================================
     // Loading & Error States
+    //
+    // `min-h-[60vh]` (rather than `min-h-screen`) keeps the spinner/error
+    // vertically centered within the content pane without forcing this
+    // nested component to claim the full viewport height, which is the
+    // shell's responsibility.
     // =====================================================================
 
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50">
+            <div className="flex min-h-[60vh] w-full items-center justify-center">
                 <div className="relative h-12 w-12">
                     <div className="absolute h-full w-full rounded-full border-4 border-slate-200"></div>
                     <div className="absolute h-full w-full animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
@@ -168,7 +190,7 @@ export default function ReviewWindow() {
 
     if (error || !blog) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center">
+            <div className="flex min-h-[60vh] w-full flex-col items-center justify-center p-6 text-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 mb-6">
                     <ShieldCheck className="h-10 w-10 text-slate-400" />
                 </div>
@@ -203,11 +225,14 @@ export default function ReviewWindow() {
     const totalAttachments = (blog.pdfs?.length || 0) + (blog.csv?.url ? 1 : 0);
 
     return (
-        <div className="min-h-screen w-full bg-slate-50/50 pb-24 font-sans text-slate-900 lg:pb-12 selection:bg-indigo-100 selection:text-indigo-900">
+        <div className="-m-4 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 sm:-m-6">
             {/* -----------------------------------------------------------------
-                TOP NAVIGATION
+                CONTEXTUAL PAGE TOOLBAR
+                Docks at top-16 (beneath the shell's 64px sticky header) and
+                bleeds edge-to-edge across the content pane via the negative
+                margin on the root element above.
             ------------------------------------------------------------------ */}
-            <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur-xl md:px-8">
+            <div className="sticky z-10 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-xl sm:px-6 md:px-8">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
@@ -229,7 +254,7 @@ export default function ReviewWindow() {
                             {createdDate}
                         </span>
                     </div>
-                    <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                    <div className="hidden h-8 w-px bg-slate-200 sm:block"></div>
                     {blog.status === 'PENDING' && (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-600/20">
                             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
@@ -243,12 +268,14 @@ export default function ReviewWindow() {
                         </span>
                     )}
                 </div>
-            </header>
+            </div>
 
             {/* -----------------------------------------------------------------
                 MAIN CONTENT GRID
+                Padding is reinstated here (the root cancelled the shell's
+                padding solely so the toolbar above could bleed edge-to-edge).
             ------------------------------------------------------------------ */}
-            <main className="mx-auto max-w-[1400px] p-4 md:p-6 lg:p-8">
+            <div className="mx-auto max-w-[1400px] p-4 sm:p-6 md:p-8">
                 <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
                     {/* ======================= LEFT COLUMN ======================= */}
                     <div className="space-y-8 xl:col-span-8">
@@ -569,8 +596,11 @@ export default function ReviewWindow() {
                             </div>
                         </div>
 
-                        {/* Decision & Feedback (Sticky) */}
-                        <div className="sticky top-28 rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
+                        {/* Decision & Feedback (Sticky)
+                            top-32 (128px) = shell header (64px) + this
+                            component's own docked toolbar (64px). Recompute
+                            if either height changes. */}
+                        <div className="sticky top-32 rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
                             <div className="mb-2 flex items-center gap-3">
                                 <MessageSquare className="h-5 w-5 text-slate-400" />
                                 <h3 className="text-lg font-bold text-slate-900">
@@ -646,7 +676,7 @@ export default function ReviewWindow() {
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }

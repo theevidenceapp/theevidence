@@ -240,16 +240,9 @@ export default function AdminSidebar({
                                             </span>
                                         ) : (
                                             badge && (
-                                                <span
-                                                    className={cn(
-                                                        'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                                                        BADGE_TONE_CLASSES[
-                                                            badge.tone
-                                                        ],
-                                                    )}
-                                                >
-                                                    {badge.label}
-                                                </span>
+                                                <>
+                                                    {/* Render no UI */}
+                                                </>
                                             )
                                         )}
                                     </Link>

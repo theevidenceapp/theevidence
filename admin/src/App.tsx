@@ -15,6 +15,7 @@ import AdminNotFound from '@/pages/error/Adminnotfound';
 import EditorOverview from '@/pages/editor/EditorOverview';
 import ReviewWindow from '@/pages/editor/review/Reviewwindow';
 import ReviewQueue from '@/pages/editor/review/Reviewqueue';
+import BlockedUsers from '@/pages/user/BlockedUsers';
 
 function EditorOverviewRoute() {
     const navigate = useNavigate();
@@ -108,7 +109,7 @@ const App = () => {
                         path="/admin/blocked-users"
                         element={
                             <AdminPanelLayout>
-                                <UsersList />
+                                <BlockedUsers />
                             </AdminPanelLayout>
                         }
                     />
