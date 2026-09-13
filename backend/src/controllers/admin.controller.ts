@@ -323,3 +323,47 @@ export const updateUserRole = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getTop2Content = async (req: Request, res: Response) => {
+  try {
+    const [research, blogs] = await Promise.all([
+      Blog.find({ docType: "RESEARCH" }).sort({ score: -1 }).limit(2),
+
+      Blog.find({ docType: "BLOG" }).sort({ score: -1 }).limit(2),
+    ]);
+
+    const allContent = [...research, ...blogs];
+
+    return res.status(200).json({
+      success: true,
+      message: "Data fetched successfully",
+      content: allContent,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get all content",
+    });
+  }
+};
+
+export const getStatisticalContentData = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const allContent = await Blog.find({}).select("-content");
+    return res.status(200).json({
+      success: true,
+      message: "Data fetched successfully",
+      content: allContent,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get data",
+    });
+  }
+};
