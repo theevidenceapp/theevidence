@@ -1,4 +1,9 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import {
   createBlog,
   getBlogs,
@@ -10,10 +15,11 @@ import {
   getDeskOverview,
 } from "../controllers/blog.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
-import Blog from "../models/blog.model.js";
+import Blog, { IBlog } from "../models/blog.model.js";
 import multer from "multer";
 
 import { authenticate } from "../middleware/auth.middleware.js";
+import mongoose from "mongoose";
 
 const blogRouter = Router();
 
@@ -62,23 +68,48 @@ blogRouter.put("/update/:id", handleUpload, updateBlog); // Reuses handleUpload 
 blogRouter.delete("/delete/:id", deleteBlog);
 blogRouter.put("/statusupdate/:id", updateBlogStatus);
 blogRouter.get("/overview", getDeskOverview);
+// Derive the filter type directly from Blog.find's actual parameter type.
+// This is robust across Mongoose versions since it doesn't depend on a
+// specific named/namespace export existing in the type declarations.
+type BlogFilterQuery = Parameters<typeof Blog.find>[0];
 
-// Add this exact GET route in your backend router (e.g., blog.routes.ts or similar)
+const ALLOWED_DOC_TYPES = ["RESEARCH", "BLOG"] as const;
+type DocType = (typeof ALLOWED_DOC_TYPES)[number];
+
+const DEFAULT_LIMIT = 24;
+const MAX_LIMIT = 100;
+
 blogRouter.get("/published-by-type", async (req: Request, res: Response) => {
   try {
-    const docType = (req.query.docType || "RESEARCH").toString().toUpperCase();
-    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit as string, 10) || 24);
+    const rawDocType =
+      (req.query.docType as string | undefined)?.toUpperCase() ?? "RESEARCH";
+
+    if (!ALLOWED_DOC_TYPES.includes(rawDocType as DocType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid docType. Allowed values: ${ALLOWED_DOC_TYPES.join(", ")}`,
+      });
+    }
+    const docType = rawDocType as DocType;
+
+    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(
+        1,
+        parseInt(String(req.query.limit ?? DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
+      ),
+    );
     const skip = (page - 1) * limit;
 
-    const query: Record<string, any> = {
+    const query: BlogFilterQuery = {
       status: "PUBLISHED",
-      docType: docType,
+      docType,
     };
 
-    // Execute queries in parallel for better database performance
     const [blogs, total] = await Promise.all([
       Blog.find(query)
+        .select("-content")
         .populate("author", "name avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -92,15 +123,17 @@ blogRouter.get("/published-by-type", async (req: Request, res: Response) => {
       blogs,
       pagination: {
         page,
+        limit,
         total,
-        totalPages: Math.ceil(total / limit) || 1,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
         hasMore: skip + blogs.length < total,
       },
     });
-  } catch (err: any) {
+  } catch (err) {
+    console.error("[GET /published-by-type] Error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message || "Internal Server Error",
+      message: "Internal Server Error",
     });
   }
 });

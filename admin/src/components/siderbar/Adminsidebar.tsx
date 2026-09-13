@@ -8,6 +8,7 @@ import {
     Settings,
     Network,
     LogOut,
+    Paperclip,
 } from "lucide-react";
 import { apiClient } from "@/api/api-client";
 import { cn } from "@/lib/utils";
@@ -59,9 +60,10 @@ interface AdminSidebarProps {
 // =====================================================================
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
-    { label: "Dashboard", icon: LayoutGrid, navigateTo: '/admin/dashboard' },
-    { label: "Users", icon: Users, badge: { label:'', tone: "slate", }, navigateTo: '/admin/users' },
-    { label: "Content", icon: FileText, badge: { label: "", tone: "indigo" }, navigateTo: '/admin/app-content' },
+    { label: "Dashboard Overview", icon: LayoutGrid, navigateTo: '/admin/dashboard' },
+    { label: "Editor Overview", icon: FileText, badge: { label: "", tone: "indigo" }, navigateTo: '/editor/overview' },
+    { label: "Review Queue", icon: Paperclip, badge: { label: "", tone: "indigo" }, navigateTo: '/editor/review/queue' },
+    { label: "User Role Management", icon: Users, badge: { label: '', tone: "slate", }, navigateTo: '/admin/users' },
     { label: "Blocked Users", icon: Ban, badge: { label: "", tone: "rose" }, navigateTo: '/admin/blocked-users' },
     { label: "Settings", icon: Settings },
 ];
