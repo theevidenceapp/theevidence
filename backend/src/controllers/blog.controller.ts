@@ -5,6 +5,7 @@ import {
   uploadoncloudinary,
   deleteCloudnery,
 } from "../services/cloudinary.service.js";
+import mongoose from "mongoose";
 
 // Helper to safely delete local temporary files
 const safeUnlink = (filePath?: string) => {
@@ -17,123 +18,107 @@ const safeUnlink = (filePath?: string) => {
   }
 };
 
+// ----------------------------------------------------
+// 1. CREATE BLOG / RESEARCH PAPER (With Co-Authors Support)
+// ----------------------------------------------------
 export const createBlog = async (req: Request, res: Response) => {
   try {
-    const docType = req.body.docType
-      ? req.body.docType.toUpperCase()
-      : "RESEARCH";
+    const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
     const authorId = (req as any).user?._id;
-    const { title, slug, content, excerpt, category, tags, status } = req.body;
+    const { title, slug, content, excerpt, category, tags, status, coAuthors, seoKeywords } = req.body;
 
-    // Typecast files from multer
-    const files = req.files as
-      | { [fieldname: string]: Express.Multer.File[] }
-      | undefined;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-    // Helper for safe cleanup if files exist
     const cleanupUploadedFiles = () => {
       if (files) {
-        if (files.coverImage)
-          files.coverImage.forEach((f) => safeUnlink(f.path));
+        if (files.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
         if (files.csv) files.csv.forEach((f) => safeUnlink(f.path));
         if (files.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
       }
     };
 
-    // 1. Validate Authentication
     if (!authorId) {
       cleanupUploadedFiles();
-      return res
-        .status(401)
-        .json({ success: false, message: "No user found in token" });
+      return res.status(401).json({ success: false, message: "No user found in token" });
     }
 
-    // 2. Validate Required Fields
     if (!title || !slug || !content) {
       cleanupUploadedFiles();
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Title, slug, and content are required",
-        });
+      return res.status(400).json({ success: false, message: "Title, slug, and content are required" });
     }
 
-    // 3. PROCESS CLOUDINARY UPLOADS FOR FILES
     let coverImage = {
       url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400",
       publicId: "default",
     };
     let csv = { url: "" };
-    let pdfs: Array<{ url: string; publicId: string; originalName: string }> =
-      [];
+    let pdfs: Array<{ url: string; publicId: string; originalName: string }> = [];
 
     if (files) {
-      // Upload coverImage if provided
       if (files.coverImage && files.coverImage[0]) {
         const coverResult = await uploadoncloudinary(files.coverImage[0].path);
         if (coverResult) {
-          coverImage = {
-            url: coverResult.secure_url,
-            publicId: coverResult.public_id,
-          };
+          coverImage = { url: coverResult.secure_url, publicId: coverResult.public_id };
         }
       }
-
-      // Upload csv if provided
       if (files.csv && files.csv[0]) {
         const csvResult = await uploadoncloudinary(files.csv[0].path);
         if (csvResult) {
-          csv = {
-            url: csvResult.secure_url,
-          };
+          csv = { url: csvResult.secure_url };
         }
       }
-
-      // Upload pdfs if provided
       if (files.pdfs && files.pdfs.length > 0) {
         const pdfUploadPromises = files.pdfs.map(async (file) => {
           const pdfResult = await uploadoncloudinary(file.path);
           if (pdfResult) {
-            return {
-              url: pdfResult.secure_url,
-              publicId: pdfResult.public_id,
-              originalName: file.originalname,
-            };
+            return { url: pdfResult.secure_url, publicId: pdfResult.public_id, originalName: file.originalname };
           }
           return null;
         });
-
         const uploadedPdfs = await Promise.all(pdfUploadPromises);
         pdfs = uploadedPdfs.filter(Boolean) as any;
       }
     }
 
-    // 4. PARSE TAGS & STATUS
     const parsedTags = Array.isArray(tags)
       ? tags
       : typeof tags === "string"
-        ? tags
-            .split(",")
-            .map((t: string) => t.trim())
-            .filter(Boolean)
+        ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
         : [];
 
-    // const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
-    // const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+    // 🛠️ Parse Sir's SEO keywords from comma-separated string to array
+    const parsedSeoKeywords = Array.isArray(seoKeywords)
+      ? seoKeywords
+      : typeof seoKeywords === "string"
+        ? seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+        : [];
 
-    // 5. CREATE & SAVE BLOG
+    // Safely parse coAuthors array of IDs from FormData or request body
+    let parsedCoAuthors: mongoose.Types.ObjectId[] = [];
+    const rawCoAuthors = coAuthors || req.body["coAuthors[]"];
+    if (rawCoAuthors) {
+      const coAuthorArray = Array.isArray(rawCoAuthors) ? rawCoAuthors : [rawCoAuthors];
+      parsedCoAuthors = coAuthorArray
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+    }
+
+    const finalStatus = status === "DRAFT" ? "DRAFT" : "DRAFT";
+    const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+
     const blog = await Blog.create({
       title,
       slug,
       content,
       excerpt,
+      seoKeywords: parsedSeoKeywords, // 👈 Saved into database
       docType,
       category: category || "General",
-      status: "DRAFT",
+      status: finalStatus,
       tags: parsedTags,
-      publishedAt: new Date(),
+      publishedAt,
       author: authorId,
+      coAuthors: parsedCoAuthors,
       coverImage,
       csv,
       pdfs,
@@ -151,16 +136,16 @@ export const createBlog = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
 // ----------------------------------------------------
-// 2. GET ALL BLOGS (Admin/Desk - Excludes heavy content)
+// 2. GET ALL BLOGS (Admin/Desk)
 // ----------------------------------------------------
 export const getBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find()
-      .select(
-        "title slug excerpt coverImage category status tags publishedAt createdAt author",
-      )
-      .populate("author", "name email")
+      .select("title slug excerpt seoKeywords coverImage category status tags publishedAt createdAt author coAuthors")
+      .populate("author", "name email avatar")
+      .populate("coAuthors", "name email avatar")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -179,14 +164,12 @@ export const getBlogs = async (req: Request, res: Response) => {
 };
 
 // ----------------------------------------------------
-// 3. GET SINGLE BLOG (Fast Reader View + Cached Response)
+// 3. GET SINGLE BLOG BY SLUG (Fast Reader View)
 // ----------------------------------------------------
-
 export const getBlogBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
 
-    // Notice the quotes: typeof slug !== "string"
     if (!slug || typeof slug !== "string") {
       return res.status(400).json({
         success: false,
@@ -194,9 +177,9 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
       });
     }
 
-    // Find by slug, populate author info
     const blog = await Blog.findOne({ slug: slug.trim() })
       .populate("author", "name username avatar bio")
+      .populate("coAuthors", "name username avatar bio")
       .lean();
 
     if (!blog) {
@@ -206,10 +189,8 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
       });
     }
 
-    // 2. Fire-and-forget view increment (Runs asynchronously in background)
     Blog.updateOne({ _id: blog._id }, { $inc: { views: 1 } }).exec();
 
-    // 3. Cache header: Allows browser & edge cache to serve instantly
     res.setHeader(
       "Cache-Control",
       "public, max-age=120, stale-while-revalidate=300",
@@ -229,7 +210,9 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
   }
 };
 
-// 3. GET PUBLISHED BLOGS (Fast Discover Feed & Search)
+// ----------------------------------------------------
+// 4. GET PUBLISHED BLOGS (Discover Feed)
+// ----------------------------------------------------
 export const getPublishedBlogs = async (req: Request, res: Response) => {
   try {
     const { search, category, tag, page = "1", limit = "12" } = req.query;
@@ -247,6 +230,7 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
         { title: searchRegex },
         { excerpt: searchRegex },
         { tags: searchRegex },
+        { seoKeywords: searchRegex }, // 👈 Include SEO keywords in search filtering
       ];
     }
 
@@ -268,10 +252,9 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
 
     const [blogs, totalBlogs] = await Promise.all([
       Blog.find(filter)
-        .select(
-          "title slug excerpt coverImage category tags publishedAt author views createdAt docType",
-        ) // <-- Added docType here!
+        .select("title slug excerpt seoKeywords coverImage category tags publishedAt author coAuthors views createdAt docType")
         .populate("author", "name email avatar")
+        .populate("coAuthors", "name email avatar")
         .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(perPage)
@@ -283,10 +266,7 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalBlogs / perPage);
     const hasMore = currentPage < totalPages;
 
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=60, stale-while-revalidate=120",
-    );
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
 
     return res.status(200).json({
       success: true,
@@ -309,6 +289,7 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
   }
 };
 
+
 export const getDeskOverview = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?._id;
@@ -318,9 +299,7 @@ export const getDeskOverview = async (req: Request, res: Response) => {
     }
 
     // Query blogs belonging to this researcher
-    const userBlogs = await Blog.find({ author: userId }).sort({
-      createdAt: -1,
-    });
+    const userBlogs = await Blog.find({ author: userId }).sort({ createdAt: -1 });
 
     const drafts = userBlogs.filter((b) => b.status === "DRAFT");
     const published = userBlogs.filter((b) => b.status === "PUBLISHED");

@@ -6,6 +6,8 @@ import connectDB from "./src/db/db.js";
 import passport from "./src/controllers/config/passport-config.js";
 import { sessionConfig } from "./src/controllers/config/session.js";
 import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 // routers
 import userRouter from "./src/routes/user.router.js";
@@ -20,6 +22,19 @@ const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
   : [];
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true, 
+  legacyHeaders: false, 
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again after 15 minutes.",
+  },
+});
+
+app.use(globalLimiter);
 
 app.use(
   cors({
@@ -39,6 +54,7 @@ app.use(compression());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
+app.use(helmet());
 
 app.get("/", (req: Request, res: Response) => {
   res.send("API Service is live at 5000");

@@ -70,10 +70,7 @@ blogRouter.get("/overview", getDeskOverview);
 
 blogRouter.get("/published-by-type", async (req, res) => {
   try {
-    const docTypeParam = (req.query.docType || "RESEARCH")
-      .toString()
-      .toUpperCase();
-
+    const docTypeParam = (req.query.docType || "RESEARCH").toString().toUpperCase();
     const docTypeRegex = new RegExp(`^${docTypeParam}$`, "i");
 
     const query: Record<string, any> = {
@@ -82,23 +79,19 @@ blogRouter.get("/published-by-type", async (req, res) => {
     };
 
     const blogs = await Blog.find(query)
+      .select("title slug excerpt seoKeywords coverImage category tags publishedAt author coAuthors views createdAt docType") // 👈 Added seoKeywords here
       .populate("author", "name avatar")
+      .populate("coAuthors", "name avatar")
       .sort({ createdAt: -1 })
       .lean();
 
     res.json({
       success: true,
       blogs,
-      pagination: {
-        page: 1,
-        totalPages: 1,
-        hasMore: false,
-      },
+      pagination: { page: 1, totalPages: 1, hasMore: false },
     });
-    return;
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
-    return;
   }
 });
 

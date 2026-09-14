@@ -68,14 +68,50 @@ if (!blog) {
     ],
     author: {
       name: "Dr. Sarah Mitchell",
-      email: "sarah.mitchell@theevidence.org"
+      email: "sarah.mitchell@theevidence.org",
+      avatar: ""
     },
+    coAuthors: [
+      { name: "Divyesh Moraniya", email: "divyesh@example.com", avatar: "" },
+      { name: "Viral Vaghela", email: "viral@example.com", avatar: "" },
+      { name: "Weborium", email: "support@weborium.me", avatar: "" }
+    ],
     category: "International Relations",
     tags: ["Diplomacy", "AI", "Geopolitics", "Cyber Governance"],
+    seoKeywords: ["diplomacy", "cyber governance", "policy simulation"],
     views: 128450,
     createdAt: new Date().toISOString()
   };
 }
+
+// 🛠️ Unified Authors List (combines primary author and co-authors safely without duplication)
+const authorMap = new Map();
+if (blog.author) {
+  const pAuth = typeof blog.author === 'object' ? blog.author : { name: "Researcher", email: "" };
+  const pKey = String(pAuth._id || pAuth.name);
+  authorMap.set(pKey, {
+    name: pAuth.name || "Researcher",
+    email: pAuth.email || "Academic Contributor",
+    avatar: pAuth.avatar || ""
+  });
+}
+if (Array.isArray(blog.coAuthors)) {
+  blog.coAuthors.forEach((co: any) => {
+    if (co) {
+      const coObj = typeof co === 'object' ? co : { name: "Contributor", email: "" };
+      const coKey = String(coObj._id || coObj.name);
+      if (!authorMap.has(coKey)) {
+        authorMap.set(coKey, {
+          name: coObj.name || "Contributor",
+          email: coObj.email || "Collaborator",
+          avatar: coObj.avatar || ""
+        });
+      }
+    }
+  });
+}
+const unifiedAuthors = Array.from(authorMap.values());
+const primaryAuthor = unifiedAuthors[0] || { name: "Researcher", email: "", avatar: "" };
 
 const formattedDate = blog.createdAt
   ? new Date(blog.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -102,7 +138,7 @@ const formattedViews = formatViewCount(Number(blog.views) || 0);
 const pageTitle = `${blog.title} | The Evidence`;
 const pageDescription = blog.excerpt || "Explore professional research papers and academic publications.";
 const pageImage = blog.coverImage?.url || "https://pub-d65f9d792dba44cfb4b36fdd1925ed72.r2.dev/theevidence.png";
-const authorName = blog.author?.name || "The Evidence Scholar";
+const authorName = primaryAuthor.name;
 ---
 
 <!doctype html>
@@ -112,7 +148,6 @@ const authorName = blog.author?.name || "The Evidence Scholar";
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <ClientRouter />
 
-    <!-- Dynamic SEO Head Component -->
     <SEOHead 
       title={pageTitle}
       description={pageDescription}
@@ -122,7 +157,14 @@ const authorName = blog.author?.name || "The Evidence Scholar";
       author={authorName}
     />
 
-    <!-- Google Structured Data (Scholarly Article / Blog Schema) -->
+    <!-- 🛠️ Sir's SEO Requirement: Injects dynamic keyword meta tags from database -->
+    {blog.seoKeywords && blog.seoKeywords.length > 0 && (
+      <>
+        <meta name="keywords" content={Array.isArray(blog.seoKeywords) ? blog.seoKeywords.join(", ") : blog.seoKeywords} />
+        <meta property="article:tag" content={Array.isArray(blog.seoKeywords) ? blog.seoKeywords.join(", ") : blog.seoKeywords} />
+      </>
+    )}
+
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "ScholarlyArticle",
@@ -227,6 +269,50 @@ const authorName = blog.author?.name || "The Evidence Scholar";
         border-radius: 6px;
         font-size: 0.85em;
       }
+
+      /* Professional Tooltip & Stacked Avatar Styling with Unobstructed Tooltip Box Placement */
+      .article-container {
+        overflow: visible !important;
+      }
+      .author-avatar-group {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .author-avatar-group .author-tooltip-box {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%) translateY(-4px);
+        background-color: #0f172a;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        z-index: 999;
+        pointer-events: none;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .author-avatar-group:hover .author-tooltip-box {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .author-tooltip-box::after {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 4px;
+        border-style: solid;
+        border-color: transparent transparent #0f172a transparent;
+      }
     </style>
   </head>
   <body class="text-[#111] antialiased min-h-screen flex flex-col m-0 p-0 font-sans select-none relative">
@@ -271,8 +357,8 @@ const authorName = blog.author?.name || "The Evidence Scholar";
     <!-- Main Reader Canvas Optimized for Mobile & Desktop -->
     <main class="flex-1 w-full max-w-[940px] mx-auto px-3 sm:px-6 py-5 sm:py-14 flex flex-col gap-6 sm:gap-8 safe-bottom">
       
-      <!-- Immersive Header Card with Soft Gradient Glow & Mobile Responsive Padding -->
-      <div class="bg-white/95 backdrop-blur-3xl rounded-[28px] sm:rounded-[44px] shadow-[0_20px_50px_rgba(27,98,242,0.12)] border border-white p-5 sm:p-14 flex flex-col gap-5 sm:gap-9 relative overflow-hidden">
+      <!-- Single Seamless Immersive Background Container with Blue Shadow Gradient -->
+      <div class="article-container bg-white/95 backdrop-blur-3xl rounded-[28px] sm:rounded-[44px] shadow-[0_20px_50px_rgba(27,98,242,0.15)] border border-white p-5 sm:p-14 flex flex-col gap-6 sm:gap-10 relative overflow-visible">
         
         <!-- Ambient Decorative Lighting Effect -->
         <div class="absolute -top-32 -right-32 w-72 h-72 sm:w-96 sm:h-96 bg-gradient-to-br from-blue-400/25 to-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -285,6 +371,8 @@ const authorName = blog.author?.name || "The Evidence Scholar";
             <span class="font-bold text-neutral-700">{readTimeMinutes} min read</span>
             <span>•</span>
             <span class="font-bold text-neutral-700">{formattedDate}</span>
+            <span>•</span>
+            <span class="font-bold text-blue-600">{formattedViews}</span>
           </div>
 
           <h1 class="text-2xl sm:text-5xl font-extrabold text-[#0f172a] leading-[1.2] tracking-tight">
@@ -292,28 +380,40 @@ const authorName = blog.author?.name || "The Evidence Scholar";
           </h1>
 
           <div class="flex items-center justify-between gap-3 pt-4 sm:pt-6 border-t border-neutral-100 pb-1 flex-wrap">
-            <div class="flex items-center gap-3 sm:gap-4.5 min-w-0">
-              <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-[#1b62f2] via-indigo-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-base sm:text-lg shrink-0 shadow-[0_6px_20px_rgba(27,98,242,0.3)]">
-                {blog.author?.name ? blog.author.name.charAt(0) : "R"}
-              </div>
-              <div class="flex flex-col min-w-0">
-                <span class="text-sm sm:text-base font-extrabold text-neutral-950 truncate">{blog.author?.name || "Researcher"}</span>
-                <span class="text-[11px] sm:text-xs text-neutral-500 font-semibold truncate mt-0.5">{blog.author?.email || "Verified Academic Publisher"}</span>
-              </div>
-            </div>
-
-            <!-- Glowing Pro View Counter Badge in Lakhs format optimized for mobile width -->
-            <div class="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50/95 to-indigo-50/95 backdrop-blur-md px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-2xl border border-blue-200/80 shadow-[0_4px_15px_rgba(27,98,242,0.08)]">
-              <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[9px] sm:text-[10px] uppercase tracking-wider text-blue-600 font-extrabold leading-none">Views</span>
-                <span class="text-xs sm:text-sm font-black text-blue-950 mt-0.5">{formattedViews}</span>
-              </div>
+            <!-- Professional Unified Authors List Display: 1-2 authors full view, 3+ authors clean stacked avatars with tooltips -->
+            <div class="flex items-center gap-2 sm:gap-3 max-w-full overflow-visible py-2">
+              {unifiedAuthors.length > 2 ? (
+                <div class="flex items-center -space-x-3 overflow-visible py-1 px-1.5">
+                  {unifiedAuthors.map((auth: any) => (
+                    <div class="author-avatar-group shrink-0 cursor-pointer">
+                      {auth.avatar ? (
+                        <img onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';" src={auth.avatar} alt={auth.name} class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover shadow-md border-2 border-white hover:scale-110 hover:z-30 transition-transform" />
+                      ) : (
+                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#1b62f2] to-indigo-600 text-white flex items-center justify-center text-xs font-extrabold shadow-md border-2 border-white hover:scale-110 hover:z-30 transition-transform">
+                          {auth.name.charAt(0)}
+                        </div>
+                      )}
+                      <span class="author-tooltip-box">{auth.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                unifiedAuthors.map((auth: any) => (
+                  <div class="flex items-center gap-2.5">
+                    {auth.avatar ? (
+                      <img onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';" src={auth.avatar} alt={auth.name} class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl object-cover shadow-sm border border-white shrink-0" />
+                    ) : (
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#1b62f2] via-indigo-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-sm sm:text-base shrink-0 shadow-[0_4px_15px_rgba(27,98,242,0.3)]">
+                        {auth.name.charAt(0)}
+                      </div>
+                    )}
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-xs sm:text-sm font-extrabold text-neutral-950 truncate">{auth.name}</span>
+                      <span class="text-[10px] sm:text-[11px] text-neutral-500 font-semibold truncate mt-0.5">{auth.email}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -390,7 +490,7 @@ const authorName = blog.author?.name || "The Evidence Scholar";
                     <a
                       href={pdf.url}
                       target="_blank"
-                      download
+                      download={pdf.originalName || "document.pdf"}
                       class="flex-1 sm:flex-initial py-2 px-4 rounded-xl bg-[#1b62f2] hover:bg-[#1553d6] text-white text-xs font-extrabold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_4px_12px_rgba(27,98,242,0.3)]"
                     >
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -439,6 +539,8 @@ const authorName = blog.author?.name || "The Evidence Scholar";
 
     <!-- Client Scripts -->
     <script>
+      import { apiClient } from "../../api/api-client";
+
       function initPaperView() {
         const previewButtons = document.querySelectorAll(".btn-preview-pdf");
         const modal = document.getElementById("pdf-modal");
@@ -457,8 +559,8 @@ const authorName = blog.author?.name || "The Evidence Scholar";
               modalFrame.src = url;
               if (modalTitle) modalTitle.textContent = name;
               if (modalDownload) modalDownload.href = url;
-              modal.classList.remove("hidden");
               modal.classList.add("flex");
+              modal.classList.remove("hidden");
             }
           });
         });
@@ -487,7 +589,6 @@ const authorName = blog.author?.name || "The Evidence Scholar";
         });
       }
 
-      // Astro Page Transitions Hook: Ensures clean listener registration on every transition
       document.addEventListener("astro:page-load", initPaperView);
     </script>
   </body>
