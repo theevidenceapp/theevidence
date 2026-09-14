@@ -16,6 +16,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-dialog": "^1.1.23",
     "@tailwindcss/vite": "^4.3.3",
+    "aos": "^2.3.4",
     "axios": "^1.20.0",
     "bootstrap": "^5.3.8",
     "class-variance-authority": "^0.7.1",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@bokub/prettier-config": "^2.1.0",
     "@eslint/js": "^10.0.1",
+    "@types/aos": "^3.0.8",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",

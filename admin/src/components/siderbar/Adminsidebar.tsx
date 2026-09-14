@@ -6,11 +6,13 @@ import {
     FileText,
     Ban,
     Settings,
-    Network,
     LogOut,
     Paperclip,
     Menu,
     X,
+    ShieldCheck,
+    PanelLeftClose,
+    PanelLeftOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -63,7 +65,7 @@ interface AdminSidebarProps {
     /** Display name shown in the user card. Purely presentational. */
     userName?: string;
     /**
-     * Called when the user clicks "Log Out". The component performs no
+     * Called when the user clicks "Log out". The component performs no
      * API calls itself — pass in whatever logic your app needs (clear
      * local state, redirect, call an API, etc.). If omitted, logout is a
      * no-op click.
@@ -89,6 +91,15 @@ interface AdminSidebarProps {
      * if a parent topbar renders its own trigger wired via `isOpen`/`onOpenChange`.
      */
     hideTrigger?: boolean;
+    /**
+     * Allow collapsing to an icon-only rail on desktop (md+). Defaults to
+     * true. The preference persists to localStorage so it survives reloads.
+     */
+    collapsible?: boolean;
+    /** Initial collapsed state before any stored preference is read. Defaults to false. */
+    defaultCollapsed?: boolean;
+    /** Product name shown next to the brand mark. */
+    brandName?: string;
 }
 
 // =====================================================================
@@ -102,47 +113,48 @@ interface AdminSidebarProps {
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
     {
-        label: 'Dashboard Overview',
+        label: 'Dashboard overview',
         icon: LayoutGrid,
         navigateTo: '/admin/dashboard',
         allowedRoles: ['ADMIN'],
     },
     {
-        label: 'Editor Overview',
+        label: 'Editorial Overview',
         icon: FileText,
         badge: { label: '', tone: 'indigo' },
         navigateTo: '/editor/overview',
         allowedRoles: ['EDITOR', 'ADMIN'],
     },
     {
-        label: 'Review Queue',
+        label: 'Review queue',
         icon: Paperclip,
         badge: { label: '', tone: 'indigo' },
         navigateTo: '/editor/review/queue',
         allowedRoles: ['EDITOR', 'ADMIN'],
     },
     {
-        label: 'User Role Management',
+        label: 'User Management',
         icon: Users,
         badge: { label: '', tone: 'slate' },
         navigateTo: '/admin/users',
         allowedRoles: ['ADMIN'],
     },
     {
-        label: 'Blocked Users',
+        label: 'Access Control',
         icon: Ban,
         badge: { label: '', tone: 'rose' },
         navigateTo: '/admin/blocked-users',
         allowedRoles: ['ADMIN'],
     },
-    { label: 'Settings', icon: Settings },
 ];
 
 const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
-    indigo: 'bg-indigo-600 text-white',
-    rose: 'bg-rose-50 text-rose-500',
-    slate: 'bg-slate-100 text-slate-600',
+    indigo: 'bg-amber-400/15 text-amber-300 ring-1 ring-inset ring-amber-400/25',
+    rose: 'bg-rose-400/15 text-rose-300 ring-1 ring-inset ring-rose-400/25',
+    slate: 'bg-slate-400/10 text-slate-300 ring-1 ring-inset ring-slate-400/20',
 };
+
+const SIDEBAR_COLLAPSE_STORAGE_KEY = 'admin-sidebar:collapsed';
 
 // =====================================================================
 // Helpers
@@ -183,7 +195,15 @@ function isItemVisible(item: NavItem, role: UserRole): boolean {
  * "Editor" console, everyone else (admins) sees the default "Admin".
  */
 function getConsoleLabel(role: UserRole): string {
-    return role === 'EDITOR' ? 'Editor Console' : 'Admin Console';
+    return role === 'EDITOR' ? 'Editor console' : 'Admin console';
+}
+
+function getInitials(name?: string): string {
+    if (!name) return 'A';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'A';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 // =====================================================================
@@ -206,14 +226,14 @@ function HamburgerButton({
             aria-expanded={open}
             aria-controls="admin-sidebar"
             className={cn(
-                'fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-700 shadow-md ring-1 ring-slate-200 transition-all duration-200 active:scale-90 md:hidden',
-                open && 'bg-slate-900 text-white ring-slate-900',
+                'fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-xl bg-[#121826] text-slate-200 shadow-lg ring-1 ring-white/10 transition-all duration-200 ease-out active:scale-90 motion-reduce:transition-none md:hidden',
+                open && 'bg-amber-400 text-slate-900 ring-amber-400',
             )}
         >
             <span className="relative flex h-5 w-5 items-center justify-center">
                 <Menu
                     className={cn(
-                        'absolute h-5 w-5 transition-all duration-200 ease-out',
+                        'absolute h-5 w-5 transition-all duration-200 ease-out motion-reduce:transition-none',
                         open
                             ? 'rotate-90 scale-0 opacity-0'
                             : 'rotate-0 scale-100 opacity-100',
@@ -221,7 +241,7 @@ function HamburgerButton({
                 />
                 <X
                     className={cn(
-                        'absolute h-5 w-5 transition-all duration-200 ease-out',
+                        'absolute h-5 w-5 transition-all duration-200 ease-out motion-reduce:transition-none',
                         open
                             ? 'rotate-0 scale-100 opacity-100'
                             : '-rotate-90 scale-0 opacity-0',
@@ -245,9 +265,13 @@ export default function AdminSidebar({
     onClose,
     navItems = DEFAULT_NAV_ITEMS,
     hideTrigger = false,
+    collapsible = true,
+    defaultCollapsed = false,
+    brandName = 'The Evidence',
 }: AdminSidebarProps) {
     const location = useLocation();
 
+    // ---- Drawer open/close state (mobile) ---------------------------
     // State is always self-managed internally so the built-in hamburger
     // works immediately on click, regardless of what a parent does or
     // doesn't wire up. If a parent passes `isOpen`, we treat it as a
@@ -262,8 +286,6 @@ export default function AdminSidebar({
     );
     const open = internalOpen;
 
-    // If a parent explicitly changes `isOpen`, reflect that — but this
-    // is a one-way sync, not a requirement for the toggle to function.
     React.useEffect(() => {
         if (controlledOpen !== undefined) setInternalOpen(controlledOpen);
     }, [controlledOpen]);
@@ -308,6 +330,41 @@ export default function AdminSidebar({
         };
     }, [open]);
 
+    // ---- Collapsed rail state (desktop only) -------------------------
+    const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
+
+    // Restore the persisted preference once, on mount.
+    React.useEffect(() => {
+        if (!collapsible || typeof window === 'undefined') return;
+        const stored = window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY);
+        if (stored !== null) setCollapsed(stored === '1');
+    }, [collapsible]);
+
+    // Persist on change.
+    React.useEffect(() => {
+        if (!collapsible || typeof window === 'undefined') return;
+        window.localStorage.setItem(
+            SIDEBAR_COLLAPSE_STORAGE_KEY,
+            collapsed ? '1' : '0',
+        );
+    }, [collapsed, collapsible]);
+
+    // The rail can only collapse on md+ layouts — if the viewport drops
+    // below that (or the drawer is opened on mobile), force it back open
+    // so mobile users never lose their labels.
+    React.useEffect(() => {
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+        const query = window.matchMedia('(min-width: 768px)');
+        const handleChange = () => {
+            if (!query.matches) setCollapsed(false);
+        };
+        handleChange();
+        query.addEventListener('change', handleChange);
+        return () => query.removeEventListener('change', handleChange);
+    }, []);
+
+    const isRailCollapsed = collapsible && collapsed;
+
     const visibleNavItems = navItems.filter((item) => isItemVisible(item, role));
     const consoleLabel = getConsoleLabel(role);
 
@@ -320,7 +377,7 @@ export default function AdminSidebar({
                 aria-hidden="true"
                 onClick={close}
                 className={cn(
-                    'fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-[1px] transition-opacity duration-300 ease-out md:hidden',
+                    'fixed inset-0 z-30 bg-slate-950/60 backdrop-blur-[2px] transition-opacity duration-300 ease-out motion-reduce:transition-none md:hidden',
                     open
                         ? 'pointer-events-auto opacity-100'
                         : 'pointer-events-none opacity-0',
@@ -330,42 +387,86 @@ export default function AdminSidebar({
             {/* Sidebar / drawer */}
             <aside
                 id="admin-sidebar"
+                aria-label="Admin navigation"
                 className={cn(
-                    'fixed inset-y-0 left-0 z-40 flex h-dvh w-[85vw] max-w-72 shrink-0 flex-col overflow-hidden bg-white transition-transform duration-300 ease-in-out will-change-transform',
-                    'md:sticky md:top-0 md:z-auto md:h-screen md:w-72 md:max-w-none md:translate-x-0 md:border-r md:border-slate-200 lg:w-80',
+                    'fixed inset-y-0 left-0 z-40 flex h-dvh w-[85vw] max-w-72 shrink-0 flex-col overflow-hidden bg-[#121826] text-slate-200 transition-transform duration-300 ease-in-out will-change-transform motion-reduce:transition-none',
+                    'md:sticky md:top-0 md:z-auto md:h-screen md:translate-x-0 md:border-r md:border-white/[0.06]',
+                    isRailCollapsed ? 'md:w-[76px]' : 'md:w-72 md:max-w-none lg:w-[280px]',
                     open ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
                 )}
             >
+                {/* Brand row */}
+                <div
+                    className={cn(
+                        'flex h-16 shrink-0 items-center gap-2.5 border-b border-white/[0.06] px-4',
+                        isRailCollapsed && 'md:justify-center md:px-0',
+                    )}
+                >
+                    <span
+                        className={cn(
+                            'truncate text-[15px] font-semibold tracking-tight text-white',
+                            isRailCollapsed && 'md:hidden',
+                        )}
+                    >
+                        {brandName}
+                    </span>
+                    {collapsible && (
+                        <button
+                            type="button"
+                            onClick={() => setCollapsed((prev) => !prev)}
+                            aria-label={
+                                isRailCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+                            }
+                            className="ml-auto hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 md:flex"
+                        >
+                            {isRailCollapsed ? (
+                                <PanelLeftOpen className="h-4 w-4" />
+                            ) : (
+                                <PanelLeftClose className="h-4 w-4" />
+                            )}
+                        </button>
+                    )}
+                </div>
+
                 {/* Body (scrollable) */}
-                <div className="flex-1 overflow-y-auto px-4 py-4">
-                    {/* Admin user card */}
-                    <div className="flex items-center gap-3 rounded-xl bg-indigo-50/70 p-3 pl-14 md:pl-3">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+                    {/* User card */}
+                    <div
+                        className={cn(
+                            'flex items-center gap-3 rounded-xl bg-white/[0.04] p-2.5',
+                            isRailCollapsed && 'md:justify-center md:p-2',
+                        )}
+                    >
                         <div className="relative shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900">
-                                <Users className="h-4 w-4 text-white" />
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-400 text-[13px] font-semibold text-slate-900">
+                                {getInitials(userName)}
                             </div>
-                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#121826]" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-bold text-slate-900">
+                        <div
+                            className={cn(
+                                'min-w-0 flex-1',
+                                isRailCollapsed && 'md:hidden',
+                            )}
+                        >
+                            <p className="truncate text-sm font-semibold text-white">
                                 {userName || consoleLabel}
                             </p>
                             {userName && (
-                                <p className="truncate text-xs font-medium text-slate-400">
+                                <p className="truncate text-xs text-slate-400">
                                     {consoleLabel}
                                 </p>
                             )}
                         </div>
-                        <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-indigo-600">
-                            Super
-                        </span>
                     </div>
 
                     {/* Navigation */}
-                    <p className="mb-2 mt-6 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                        Navigation
-                    </p>
-                    <nav className="space-y-1">
+                    <nav
+                        className={cn(
+                            'mt-5 space-y-0.5 border-t border-white/[0.06] pt-4',
+                        )}
+                        aria-label="Primary"
+                    >
                         {visibleNavItems.map(
                             ({
                                 label,
@@ -382,44 +483,64 @@ export default function AdminSidebar({
                                     <Link
                                         to={navigateTo ?? '#'}
                                         key={label}
-                                        aria-current={
-                                            active ? 'page' : undefined
-                                        }
+                                        aria-current={active ? 'page' : undefined}
                                         onClick={(event) => {
                                             // Items without a real destination (e.g. "Settings" until
                                             // it's wired up) shouldn't navigate to a broken route.
-                                            if (!navigateTo)
-                                                event.preventDefault();
+                                            if (!navigateTo) event.preventDefault();
                                             close();
                                         }}
                                         className={cn(
-                                            'flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm font-medium transition-colors',
+                                            'group relative flex items-center gap-3 rounded-lg border-l-2 py-2 pl-2.5 pr-2.5 text-[13.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60',
                                             active
-                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                                                : 'border-transparent text-slate-600 hover:bg-slate-50',
+                                                ? 'border-amber-400 bg-amber-400/10 text-white'
+                                                : 'border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100',
+                                            isRailCollapsed && 'md:justify-center md:border-l-0 md:px-0',
                                         )}
                                     >
-                                        <Icon
+                                        <span
                                             className={cn(
-                                                'h-[18px] w-[18px] shrink-0',
-                                                active
-                                                    ? 'text-indigo-600'
-                                                    : 'text-slate-400',
+                                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
+                                                active && 'bg-amber-400/15',
                                             )}
-                                        />
-                                        <span className="min-w-0 flex-1 truncate">
+                                        >
+                                            <Icon
+                                                className={cn(
+                                                    'h-[17px] w-[17px]',
+                                                    active ? 'text-amber-300' : 'text-slate-500 group-hover:text-slate-300',
+                                                )}
+                                            />
+                                        </span>
+                                        <span
+                                            className={cn(
+                                                'min-w-0 flex-1 truncate',
+                                                isRailCollapsed && 'md:hidden',
+                                            )}
+                                        >
                                             {label}
                                         </span>
-                                        {active ? (
-                                            <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
-                                                Active
+                                        {badge?.label && (
+                                            <span
+                                                className={cn(
+                                                    'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums',
+                                                    BADGE_TONE_CLASSES[badge.tone],
+                                                    isRailCollapsed && 'md:hidden',
+                                                )}
+                                            >
+                                                {badge.label}
                                             </span>
-                                        ) : (
-                                            badge && (
-                                                <>
-                                                    {/* Render no UI */}
-                                                </>
-                                            )
+                                        )}
+
+                                        {/* Collapsed-rail tooltip */}
+                                        {isRailCollapsed && (
+                                            <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none md:block">
+                                                {label}
+                                                {badge?.label && (
+                                                    <span className="ml-1.5 text-slate-400">
+                                                        · {badge.label}
+                                                    </span>
+                                                )}
+                                            </span>
                                         )}
                                     </Link>
                                 );
@@ -429,24 +550,30 @@ export default function AdminSidebar({
                 </div>
 
                 {/* Footer */}
-                <div className="shrink-0 border-t border-slate-100 px-4 py-3">
-                    <div className="mb-3 flex items-center justify-between rounded-lg bg-indigo-50/70 px-3 py-2.5">
-                        <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                            <Network className="h-4 w-4 text-indigo-500" />
-                            System Status
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600">
-                            <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
-                            Operational
+                <div className="shrink-0 border-t border-white/[0.06] px-3 py-3">
+                    <div
+                        className={cn(
+                            'mb-2 flex items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-400',
+                            isRailCollapsed && 'md:justify-center md:px-0',
+                        )}
+                    >
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                        <span className={cn(isRailCollapsed && 'md:hidden')}>
+                            All systems operational
                         </span>
                     </div>
                     <button
                         type="button"
                         onClick={onLogout}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold text-red-500 hover:bg-red-50"
+                        className={cn(
+                            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-rose-400/10 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50',
+                            isRailCollapsed && 'md:justify-center md:px-0',
+                        )}
                     >
-                        <LogOut className="h-4 w-4" />
-                        Log Out
+                        <LogOut className="h-4 w-4 shrink-0" />
+                        <span className={cn(isRailCollapsed && 'md:hidden')}>
+                            Log out
+                        </span>
                     </button>
                 </div>
             </aside>

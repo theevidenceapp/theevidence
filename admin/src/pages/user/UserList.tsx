@@ -87,6 +87,7 @@ import {
 // NOTE: adjust this import to match your project's folder structure.
 import { apiClient } from '@/api/api-client';
 import useTitle from '@/hooks/useTitle';
+import { toast } from '@/components/ui/toast';
 
 /* =============================================================================
  * Types
@@ -423,9 +424,20 @@ function useAdminUsers() {
                 );
 
                 if (!response.data?.success) {
+                    toast.add({
+                        type: 'error',
+                        description: response.data?.message
+                    })
                     throw new Error(
                         response.data?.message || 'Failed to update user role.',
                     );
+                }
+
+                if (response.status === 200) {
+                    toast.add({
+                        type: 'success',
+                        description: 'User role updated successfully.'
+                    })
                 }
 
                 const returnedUser = response.data.user;
@@ -488,8 +500,8 @@ function Avatar({
         size === 'lg'
             ? 'h-16 w-16 text-lg'
             : size === 'sm'
-              ? 'h-9 w-9 text-xs'
-              : 'h-11 w-11 text-sm';
+                ? 'h-9 w-9 text-xs'
+                : 'h-11 w-11 text-sm';
 
     if (avatar && !imageFailed) {
         return (
@@ -1065,26 +1077,6 @@ function RoleManagementControl({
         setErrorText(null);
     }, [user._id, currentRole]);
 
-    if (isProtectedAdmin) {
-        return (
-            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-                    <Lock className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <div>
-                    <p className="text-sm font-semibold text-slate-700">
-                        Administrator role is protected
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                        This account's role can't be changed from the user
-                        directory. Administrator access must be managed
-                        separately.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
     const hasChanged = draftRole !== (currentRole ?? 'READER');
     const isPromotingToAdmin = draftRole === 'ADMIN';
     const isSaving = saveState === 'saving';
@@ -1241,8 +1233,8 @@ function UserDetailModal({
     const authProvider = user?.googleId
         ? 'Google'
         : user?.authProviderId
-          ? 'Direct sign-up'
-          : 'Unknown';
+            ? 'Direct sign-up'
+            : 'Unknown';
 
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
@@ -1354,7 +1346,7 @@ function UserDetailModal({
                                         label="Phone number"
                                         value={
                                             user.phone_number &&
-                                            user.phone_number.length > 0
+                                                user.phone_number.length > 0
                                                 ? user.phone_number
                                                 : 'Not provided'
                                         }
@@ -1639,26 +1631,26 @@ export default function UsersList() {
         icon?: typeof CheckCircle2;
         className?: string;
     }> = [
-        { key: 'all', label: 'All Accounts', count: stats.total },
-        { key: 'admin', label: 'Admins', count: stats.admins },
-        { key: 'publisher', label: 'Publishers', count: stats.publishers },
-        { key: 'editor', label: 'Editors', count: stats.editors },
-        { key: 'reader', label: 'Readers', count: stats.readers },
-        {
-            key: 'verified',
-            label: 'Verified',
-            count: stats.verified,
-            icon: CheckCircle2,
-            className: 'hidden md:inline-flex',
-        },
-        {
-            key: 'suspended',
-            label: 'Suspended',
-            count: stats.suspended,
-            icon: PauseCircle,
-            className: 'hidden md:inline-flex',
-        },
-    ];
+            { key: 'all', label: 'All Accounts', count: stats.total },
+            { key: 'admin', label: 'Admins', count: stats.admins },
+            { key: 'publisher', label: 'Publishers', count: stats.publishers },
+            { key: 'editor', label: 'Editors', count: stats.editors },
+            { key: 'reader', label: 'Readers', count: stats.readers },
+            {
+                key: 'verified',
+                label: 'Verified',
+                count: stats.verified,
+                icon: CheckCircle2,
+                className: 'hidden md:inline-flex',
+            },
+            {
+                key: 'suspended',
+                label: 'Suspended',
+                count: stats.suspended,
+                icon: PauseCircle,
+                className: 'hidden md:inline-flex',
+            },
+        ];
 
     const isLoading = status === 'loading';
     const isError = status === 'error';
