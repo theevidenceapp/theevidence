@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import config from "../config/config.js";
+import config from "../controllers/config/config.js";
 import User, { IUser } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 

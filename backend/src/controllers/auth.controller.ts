@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/user.model.js";
-import passport from "../config/passport-config.js";
-import config from "../config/config.js";
+import passport from "./config/passport-config.js";
+import config from "./config/config.js";
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import emailService from "../services/email.service.js";
@@ -75,6 +75,30 @@ export const getMe = async (req: Request, res: Response) => {
       .json({ success: false, message: "Failed to get user profile" });
   }
 };
+
+export const searchUsers = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q ? String(req.query.q).trim() : "";
+    if (!query) {
+      return res.status(200).json({ success: true, users: [] });
+    }
+
+    const users = await User.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } }
+      ]
+    })
+      .select("name email")
+      .limit(6);
+
+    return res.status(200).json({ success: true, users });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to search users" });
+  }
+};
+
+
 
 export const updateUser = async (req: Request, res: Response) => {
   try {

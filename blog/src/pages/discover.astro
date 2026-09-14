@@ -76,15 +76,15 @@ try {
           Math.ceil((finalExcerpt.length || 500) / 400),
         );
 
-        const rawType = String(b.docType ?? b.type ?? b.postType ?? "").trim().toUpperCase();
-        let finalDocType: string;
+        // 🛠️ Robust docType resolver handling old DB structures and new DB lowercase values or missing fields
+        const rawType = String(b.docType || b.type || "").trim().toUpperCase();
+        let finalDocType = "RESEARCH";
         if (rawType.includes("BLOG") || rawType.includes("THOUGHT")) {
           finalDocType = "BLOG";
         } else if (rawType.includes("RESEARCH") || rawType.includes("PAPER")) {
           finalDocType = "RESEARCH";
         } else {
-          console.warn("[discover] Unrecognized docType:", JSON.stringify(rawType), "raw fields:", { docType: b.docType, type: b.type, postType: b.postType }, "id:", b._id);
-          finalDocType = "RESEARCH";
+          finalDocType = (b.category === "General" && b.title?.length < 40) ? "BLOG" : "RESEARCH";
         }
 
         const authorObj = b.author || {};
@@ -849,7 +849,7 @@ papers.forEach((p) => {
                       <div class="w-9 h-9 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 font-bold">
                         {res.avatarUrl ? (
                           <img
-                          onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
+                            onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
                             src={res.avatarUrl}
                             alt=""
                             class="w-full h-full object-cover"
@@ -1193,6 +1193,8 @@ papers.forEach((p) => {
         let activeAuthorId = "";
         let activeAuthorName = "";
 
+        if (!papersFeed) return;
+
         function showLoadingOverlay() {
           if (feedLoadingOverlay) {
             feedLoadingOverlay.classList.remove("hidden");
@@ -1289,10 +1291,11 @@ papers.forEach((p) => {
           cards.forEach((card) => papersFeed.appendChild(card));
         }
 
-          function setDocType(docType: string, skipAnimation = false) {
+        function setDocType(docType: string) {
           activeDocType = docType.toUpperCase();
+          showLoadingOverlay();
 
-          const runUpdate = () => {
+          setTimeout(() => {
             doctypeTabs.forEach((tab) => {
               const tabType = tab.getAttribute("data-doctype");
               const isMobile = tab.classList.contains("doctype-tab-mobile");
@@ -1318,14 +1321,7 @@ papers.forEach((p) => {
             applyFilters();
             applySort();
             hideLoadingOverlay();
-          };
-
-          if (skipAnimation) {
-            runUpdate();
-          } else {
-            showLoadingOverlay();
-            setTimeout(runUpdate, 250);
-          }
+          }, 150);
         }
 
         doctypeTabs.forEach((tab) => {
@@ -1557,16 +1553,8 @@ papers.forEach((p) => {
                     b.coverImage?.url ||
                     "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
                   
-                  const rawType = String(b.docType ?? b.type ?? b.postType ?? "").trim().toUpperCase();
-                  let docType: string;
-                  if (rawType.includes("BLOG") || rawType.includes("THOUGHT")) {
-                    docType = "BLOG";
-                  } else if (rawType.includes("RESEARCH") || rawType.includes("PAPER")) {
-                    docType = "RESEARCH";
-                  } else {
-                    console.warn("[discover] Unrecognized docType (page load):", JSON.stringify(rawType), "id:", b._id);
-                    docType = "RESEARCH";
-                  }
+                  const rawType = String(b.docType || b.type || "").trim().toUpperCase();
+                  const docType = rawType.includes("BLOG") || rawType.includes("THOUGHT") ? "BLOG" : "RESEARCH";
                   const authorId = b.author?._id || b.author || "";
 
                   const gradients = [
@@ -1701,11 +1689,19 @@ papers.forEach((p) => {
         const urlParams = new URLSearchParams(window.location.search);
         const areaParam = urlParams.get("area");
         const typeParam = urlParams.get("type");
-        if (typeParam === "BLOG" || typeParam === "blog") {
-          setDocType("BLOG", true);
+
+        if (typeParam && typeParam.toUpperCase() === "BLOG") {
+          setDocType("BLOG");
         } else {
-          setDocType("RESEARCH", true);
+          const researchCards = document.querySelectorAll('.paper-card[data-doctype="RESEARCH"]');
+          const blogCards = document.querySelectorAll('.paper-card[data-doctype="BLOG"]');
+          if (researchCards.length === 0 && blogCards.length > 0) {
+            setDocType("BLOG");
+          } else {
+            setDocType("RESEARCH");
+          }
         }
+
         if (areaParam) {
           setCategory(areaParam);
         }
