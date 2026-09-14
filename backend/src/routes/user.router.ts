@@ -9,10 +9,11 @@ import {
   logout,
   updateUser,
   getMe,
+  searchUsers,
   refreshAccessToken,
 } from "../controllers/auth.controller.js";
-import config from "../config/config.js";
-import passport from "../config/passport-config.js";
+import config from "../controllers/config/config.js";
+import passport from "../controllers/config/passport-config.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
@@ -35,7 +36,7 @@ userRouter.get(
   googleCallback,
 );
 
-
+userRouter.get("/search",authenticate, searchUsers);
 userRouter.post("/logout", (req, res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,

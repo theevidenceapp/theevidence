@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
-import User from "../models/user.model.js";
-import { OAuthError } from "../utils/OAuthError.js";
-import config from "../config/config.js";
+import User from "../../models/user.model.js";
+import { OAuthError } from "../../utils/OAuthError.js";
+import config from "./config.js";
 
 passport.deserializeUser((id: string, done) => {
   User.findById(id)

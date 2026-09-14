@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./src/db/db.js";
-import passport from "./src/config/passport-config.js";
-import { sessionConfig } from "./src/config/session.js";
+import passport from "./src/controllers/config/passport-config.js";
+import { sessionConfig } from "./src/controllers/config/session.js";
 import compression from "compression";
 
 // routers

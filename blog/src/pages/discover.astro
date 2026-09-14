@@ -76,8 +76,16 @@ try {
           Math.ceil((finalExcerpt.length || 500) / 400),
         );
 
+        // 🛠️ Robust docType resolver handling old DB structures and new DB lowercase values or missing fields
         const rawType = String(b.docType || b.type || "").trim().toUpperCase();
-        const finalDocType = rawType.includes("BLOG") || rawType.includes("THOUGHT") ? "BLOG" : "RESEARCH";
+        let finalDocType = "RESEARCH";
+        if (rawType.includes("BLOG") || rawType.includes("THOUGHT")) {
+          finalDocType = "BLOG";
+        } else if (rawType.includes("RESEARCH") || rawType.includes("PAPER")) {
+          finalDocType = "RESEARCH";
+        } else {
+          finalDocType = (b.category === "General" && b.title?.length < 40) ? "BLOG" : "RESEARCH";
+        }
 
         const authorObj = b.author || {};
         const authorName = authorObj.name || "Researcher";
@@ -841,7 +849,7 @@ papers.forEach((p) => {
                       <div class="w-9 h-9 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center text-xs text-neutral-600 font-bold">
                         {res.avatarUrl ? (
                           <img
-                          onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
+                            onerror="this.onerror=null; this.src='https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=';"
                             src={res.avatarUrl}
                             alt=""
                             class="w-full h-full object-cover"
@@ -1185,6 +1193,8 @@ papers.forEach((p) => {
         let activeAuthorId = "";
         let activeAuthorName = "";
 
+        if (!papersFeed) return;
+
         function showLoadingOverlay() {
           if (feedLoadingOverlay) {
             feedLoadingOverlay.classList.remove("hidden");
@@ -1311,7 +1321,7 @@ papers.forEach((p) => {
             applyFilters();
             applySort();
             hideLoadingOverlay();
-          }, 250);
+          }, 150);
         }
 
         doctypeTabs.forEach((tab) => {
@@ -1679,11 +1689,19 @@ papers.forEach((p) => {
         const urlParams = new URLSearchParams(window.location.search);
         const areaParam = urlParams.get("area");
         const typeParam = urlParams.get("type");
-        if (typeParam === "BLOG" || typeParam === "blog") {
+
+        if (typeParam && typeParam.toUpperCase() === "BLOG") {
           setDocType("BLOG");
         } else {
-          setDocType("RESEARCH");
+          const researchCards = document.querySelectorAll('.paper-card[data-doctype="RESEARCH"]');
+          const blogCards = document.querySelectorAll('.paper-card[data-doctype="BLOG"]');
+          if (researchCards.length === 0 && blogCards.length > 0) {
+            setDocType("BLOG");
+          } else {
+            setDocType("RESEARCH");
+          }
         }
+
         if (areaParam) {
           setCategory(areaParam);
         }

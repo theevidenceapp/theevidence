@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import jwt from "jsonwebtoken";
-import config from "../config/config.js";
+import config from "../controllers/config/config.js";
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
