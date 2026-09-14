@@ -143,6 +143,14 @@ function isItemVisible(item: NavItem, role: UserRole): boolean {
     return item.allowedRoles.includes(role);
 }
 
+/**
+ * Console title shown in the sidebar user card. Editors see an
+ * "Editor" console, everyone else (admins) sees the default "Admin".
+ */
+function getConsoleLabel(role: UserRole): string {
+    return role === 'EDITOR' ? 'Editor Console' : 'Admin Console';
+}
+
 // =====================================================================
 // Component
 // =====================================================================
@@ -158,6 +166,7 @@ export default function AdminSidebar({
     const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
 
     const visibleNavItems = navItems.filter((item) => isItemVisible(item, role));
+    const consoleLabel = getConsoleLabel(role);
 
     const handleLogout = async () => {
         try {
@@ -205,10 +214,7 @@ export default function AdminSidebar({
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-bold text-slate-900">
-                                Admin User
-                            </p>
-                            <p className="truncate text-xs text-slate-500">
-                                admin@system.internal
+                                {consoleLabel}
                             </p>
                         </div>
                         <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-indigo-600">
