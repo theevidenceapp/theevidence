@@ -19,17 +19,22 @@ const safeUnlink = (filePath?: string) => {
 
 export const createBlog = async (req: Request, res: Response) => {
   try {
-    const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
+    const docType = req.body.docType
+      ? req.body.docType.toUpperCase()
+      : "RESEARCH";
     const authorId = (req as any).user?._id;
     const { title, slug, content, excerpt, category, tags, status } = req.body;
 
     // Typecast files from multer
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
 
     // Helper for safe cleanup if files exist
     const cleanupUploadedFiles = () => {
       if (files) {
-        if (files.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+        if (files.coverImage)
+          files.coverImage.forEach((f) => safeUnlink(f.path));
         if (files.csv) files.csv.forEach((f) => safeUnlink(f.path));
         if (files.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
       }
@@ -38,13 +43,20 @@ export const createBlog = async (req: Request, res: Response) => {
     // 1. Validate Authentication
     if (!authorId) {
       cleanupUploadedFiles();
-      return res.status(401).json({ success: false, message: "No user found in token" });
+      return res
+        .status(401)
+        .json({ success: false, message: "No user found in token" });
     }
 
     // 2. Validate Required Fields
     if (!title || !slug || !content) {
       cleanupUploadedFiles();
-      return res.status(400).json({ success: false, message: "Title, slug, and content are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Title, slug, and content are required",
+        });
     }
 
     // 3. PROCESS CLOUDINARY UPLOADS FOR FILES
@@ -53,7 +65,8 @@ export const createBlog = async (req: Request, res: Response) => {
       publicId: "default",
     };
     let csv = { url: "" };
-    let pdfs: Array<{ url: string; publicId: string; originalName: string }> = [];
+    let pdfs: Array<{ url: string; publicId: string; originalName: string }> =
+      [];
 
     if (files) {
       // Upload coverImage if provided
@@ -106,8 +119,8 @@ export const createBlog = async (req: Request, res: Response) => {
             .filter(Boolean)
         : [];
 
-    const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
-    const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+    // const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
+    // const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
 
     // 5. CREATE & SAVE BLOG
     const blog = await Blog.create({
@@ -117,9 +130,9 @@ export const createBlog = async (req: Request, res: Response) => {
       excerpt,
       docType,
       category: category || "General",
-      status: finalStatus,
+      status: "DRAFT",
       tags: parsedTags,
-      publishedAt,
+      publishedAt: new Date(),
       author: authorId,
       coverImage,
       csv,
@@ -180,7 +193,6 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
         message: "A valid slug is required",
       });
     }
-
 
     // Find by slug, populate author info
     const blog = await Blog.findOne({ slug: slug.trim() })
@@ -256,7 +268,9 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
 
     const [blogs, totalBlogs] = await Promise.all([
       Blog.find(filter)
-        .select("title slug excerpt coverImage category tags publishedAt author views createdAt docType") // <-- Added docType here!
+        .select(
+          "title slug excerpt coverImage category tags publishedAt author views createdAt docType",
+        ) // <-- Added docType here!
         .populate("author", "name email avatar")
         .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
@@ -269,7 +283,10 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalBlogs / perPage);
     const hasMore = currentPage < totalPages;
 
-    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=60, stale-while-revalidate=120",
+    );
 
     return res.status(200).json({
       success: true,
@@ -292,7 +309,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getDeskOverview = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?._id;
@@ -302,7 +318,9 @@ export const getDeskOverview = async (req: Request, res: Response) => {
     }
 
     // Query blogs belonging to this researcher
-    const userBlogs = await Blog.find({ author: userId }).sort({ createdAt: -1 });
+    const userBlogs = await Blog.find({ author: userId }).sort({
+      createdAt: -1,
+    });
 
     const drafts = userBlogs.filter((b) => b.status === "DRAFT");
     const published = userBlogs.filter((b) => b.status === "PUBLISHED");

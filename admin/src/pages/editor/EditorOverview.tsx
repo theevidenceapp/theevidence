@@ -68,8 +68,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAuthStore } from '@/store/authStore';
-import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/adminAuthStore';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import useTitle from '@/hooks/useTitle';
 
 // =====================================================================
 // Types — mirrored 1:1 from the Blog document / controller responses.
@@ -928,6 +929,7 @@ function SectionHeader({
     docType: ContentDocType;
     pendingCount: number;
 }) {
+    const navigate = useNavigate();
     return (
         <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
@@ -943,7 +945,7 @@ function SectionHeader({
                     </p>
                 </div>
             </div>
-            <span className="shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">
+            <span onClick={() => navigate('/editor/review/queue')} className="shrink-0 cursor-pointer rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">
                 {pendingCount} Pending
             </span>
         </div>
@@ -971,6 +973,7 @@ export default function EditorOverview({
     onReviewResearch,
     onReviewBlog,
 }: EditorOverviewProps) {
+    useTitle('Editor Dashboard')
     const { data, isLoading, error, refetch } = useOverviewData();
 
     const stats = data?.stats;
@@ -1011,7 +1014,7 @@ export default function EditorOverview({
                         />
                     </div>
                     <h1 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">
-                        Editorial Repository Triage
+                        Recent Editorial Submissions
                     </h1>
                     <p className="mt-1 max-w-xl text-sm text-slate-500">
                         Evaluate submitted manuscripts and articles strictly

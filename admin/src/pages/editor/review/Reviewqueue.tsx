@@ -19,9 +19,11 @@ import {
     AlertCircle,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
 } from 'lucide-react';
 import { apiClient } from '@/api/api-client';
 import { cn } from '@/lib/utils';
+import useTitle from '@/hooks/useTitle';
 
 // =====================================================================
 // Interfaces & Types
@@ -104,6 +106,7 @@ const resolveDocType = (item: BlogItem): DocType => {
 // =====================================================================
 
 export default function ReviewQueue() {
+    useTitle('Review Queue')
     const navigate = useNavigate();
 
     // Data & Lifecycle State
@@ -140,7 +143,7 @@ export default function ReviewQueue() {
         } catch (err: any) {
             setError(
                 err?.response?.data?.message ||
-                    'Internal server error fetching queue.',
+                'Internal server error fetching queue.',
             );
         } finally {
             setIsLoading(false);
@@ -199,7 +202,7 @@ export default function ReviewQueue() {
                 const matchesCategory =
                     selectedCategory === 'ALL' ||
                     item.category.toLowerCase() ===
-                        selectedCategory.toLowerCase();
+                    selectedCategory.toLowerCase();
 
                 return matchesSearch && matchesCategory;
             })
@@ -239,8 +242,8 @@ export default function ReviewQueue() {
         activeTab === 'ALL'
             ? filteredBlogs
             : activeTab === 'RESEARCH'
-              ? researchQueue
-              : blogQueue;
+                ? researchQueue
+                : blogQueue;
     const totalPages = Math.max(
         1,
         Math.ceil(activeDataset.length / itemsPerPage),
@@ -256,22 +259,31 @@ export default function ReviewQueue() {
         activeTab === 'ALL'
             ? paginatedDataset.filter((b) => resolveDocType(b) === 'RESEARCH')
             : activeTab === 'RESEARCH'
-              ? paginatedDataset
-              : [];
+                ? paginatedDataset
+                : [];
 
     const paginatedBlog =
         activeTab === 'ALL'
             ? paginatedDataset.filter((b) => resolveDocType(b) === 'BLOG')
             : activeTab === 'BLOG'
-              ? paginatedDataset
-              : [];
+                ? paginatedDataset
+                : [];
 
     return (
-        <div className="min-h-screen w-full bg-[#f4f6fa] text-slate-900 font-sans pb-16">
+        <div className="-mx-4 -mt-4 min-h-screen bg-[#f4f6fa] text-slate-900 font-sans pb-16 sm:-mx-6 sm:-mt-6">
+            {/*
+                top-0 (previously top-16): this bar used to sit below
+                AdminPanelLayout's own sticky top-0 h-16 header. That header
+                has since been removed from AdminPanelLayout entirely, so
+                there is nothing left for this bar to clear — it now sticks
+                directly to the top of the scroll container, flush against
+                the (still present) sidebar, matching the flush-top
+                treatment used on the Access Control / Blocked Users screen.
+            */}
             <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 py-4 md:px-8 shadow-xs">
                 <div className="mx-auto max-w-7xl space-y-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div className="relative flex-1 max-w-xl">
+                        <div className="relative min-w-0 flex-1 md:max-w-xl">
                             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
@@ -284,13 +296,13 @@ export default function ReviewQueue() {
 
                         <div className="flex flex-wrap items-center gap-2.5">
                             <div className="relative flex items-center">
-                                <Filter className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                <Filter className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
                                 <select
                                     value={selectedCategory}
                                     onChange={(e) =>
                                         setSelectedCategory(e.target.value)
                                     }
-                                    className="appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                                    className="max-w-[180px] sm:max-w-none appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer truncate"
                                 >
                                     <option value="ALL">
                                         Category: All Categories
@@ -301,16 +313,17 @@ export default function ReviewQueue() {
                                         </option>
                                     ))}
                                 </select>
+                                <ChevronDown className="absolute right-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                             </div>
 
                             <div className="relative flex items-center">
-                                <ArrowUpDown className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                <ArrowUpDown className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
                                 <select
                                     value={sortBy}
                                     onChange={(e) =>
                                         setSortBy(e.target.value as SortOption)
                                     }
-                                    className="appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                                    className="max-w-[180px] sm:max-w-none appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer truncate"
                                 >
                                     <option value="newest">
                                         Sort: Newest Published
@@ -322,13 +335,14 @@ export default function ReviewQueue() {
                                         Sort: Most Viewed
                                     </option>
                                 </select>
+                                <ChevronDown className="absolute right-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                             </div>
 
                             <button
                                 onClick={fetchQueueData}
                                 disabled={isLoading}
                                 title="Refresh Records"
-                                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-xs hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                                className="shrink-0 rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-xs hover:bg-slate-50 active:bg-slate-100 transition-colors"
                             >
                                 <RefreshCw
                                     className={cn(
@@ -344,7 +358,7 @@ export default function ReviewQueue() {
                         <button
                             onClick={() => setActiveTab('ALL')}
                             className={cn(
-                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap',
+                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap shrink-0',
                                 activeTab === 'ALL'
                                     ? 'bg-indigo-600 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -356,7 +370,7 @@ export default function ReviewQueue() {
                         <button
                             onClick={() => setActiveTab('RESEARCH')}
                             className={cn(
-                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap',
+                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap shrink-0',
                                 activeTab === 'RESEARCH'
                                     ? 'bg-indigo-600 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -368,7 +382,7 @@ export default function ReviewQueue() {
                         <button
                             onClick={() => setActiveTab('BLOG')}
                             className={cn(
-                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap',
+                                'flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap shrink-0',
                                 activeTab === 'BLOG'
                                     ? 'bg-indigo-600 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -381,7 +395,7 @@ export default function ReviewQueue() {
                 </div>
             </div>
 
-            <main className="mx-auto max-w-7xl px-4 pt-6 md:px-8 space-y-10">
+            <div className="mx-auto max-w-7xl px-4 pt-6 md:px-8 space-y-10">
                 {isLoading && (
                     <div className="space-y-6">
                         <SkeletonCard />
@@ -391,9 +405,9 @@ export default function ReviewQueue() {
                 )}
 
                 {error && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+                    <div className="flex items-start sm:items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
                         <AlertCircle className="h-5 w-5 shrink-0" />
-                        <p className="text-sm font-medium">{error}</p>
+                        <p className="text-sm font-medium break-words">{error}</p>
                     </div>
                 )}
 
@@ -404,14 +418,14 @@ export default function ReviewQueue() {
                         ------------------------------------------------------------------ */}
                         {(activeTab === 'ALL' || activeTab === 'RESEARCH') && (
                             <section className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
                                     <div className="flex items-center gap-2.5">
-                                        <FlaskConical className="h-5 w-5 text-indigo-600" />
+                                        <FlaskConical className="h-5 w-5 text-indigo-600 shrink-0" />
                                         <h2 className="text-lg font-extrabold text-slate-900">
                                             Published Research
                                         </h2>
                                     </div>
-                                    <span className="rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200">
+                                    <span className="rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200 whitespace-nowrap">
                                         {pendingResearchCount} Pending
                                         System-Wide
                                     </span>
@@ -419,7 +433,7 @@ export default function ReviewQueue() {
 
                                 {paginatedResearch.length === 0 ? (
                                     activeTab === 'ALL' &&
-                                    paginatedBlog.length > 0 ? null : (
+                                        paginatedBlog.length > 0 ? null : (
                                         <EmptyQueueState message="No published research manuscripts match current criteria." />
                                     )
                                 ) : (
@@ -445,21 +459,21 @@ export default function ReviewQueue() {
                         ------------------------------------------------------------------ */}
                         {(activeTab === 'ALL' || activeTab === 'BLOG') && (
                             <section className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
                                     <div className="flex items-center gap-2.5">
-                                        <BookOpen className="h-5 w-5 text-indigo-600" />
+                                        <BookOpen className="h-5 w-5 text-indigo-600 shrink-0" />
                                         <h2 className="text-lg font-extrabold text-slate-900">
                                             Published Blogs
                                         </h2>
                                     </div>
-                                    <span className="rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200">
+                                    <span className="rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200 whitespace-nowrap">
                                         {pendingBlogCount} Pending System-Wide
                                     </span>
                                 </div>
 
                                 {paginatedBlog.length === 0 ? (
                                     activeTab === 'ALL' &&
-                                    paginatedResearch.length > 0 ? null : (
+                                        paginatedResearch.length > 0 ? null : (
                                         <EmptyQueueState message="No published blog articles match current criteria." />
                                     )
                                 ) : (
@@ -484,8 +498,8 @@ export default function ReviewQueue() {
                             PAGINATION CONTROLS
                         ------------------------------------------------------------------ */}
                         {activeDataset.length > 0 && (
-                            <div className="mt-8 flex items-center justify-between rounded-xl bg-white p-4 shadow-sm border border-slate-200">
-                                <p className="text-xs text-slate-500 font-medium">
+                            <div className="mt-8 flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm border border-slate-200 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-xs text-slate-500 font-medium text-center sm:text-left">
                                     Showing{' '}
                                     <span className="font-bold text-slate-800">
                                         {(currentPage - 1) * itemsPerPage + 1}
@@ -503,7 +517,7 @@ export default function ReviewQueue() {
                                     </span>{' '}
                                     published entries
                                 </p>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center gap-2 sm:justify-end">
                                     <button
                                         onClick={() =>
                                             setCurrentPage((prev) =>
@@ -515,7 +529,7 @@ export default function ReviewQueue() {
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </button>
-                                    <div className="text-xs font-bold text-slate-700 px-2">
+                                    <div className="text-xs font-bold text-slate-700 px-2 whitespace-nowrap">
                                         Page {currentPage} of {totalPages}
                                     </div>
                                     <button
@@ -534,12 +548,12 @@ export default function ReviewQueue() {
                         )}
                     </>
                 )}
-            </main>
+            </div>
 
             <footer className="mt-12 border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
-                <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <div className="flex items-center justify-center gap-2 sm:justify-start">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>
                             System Metrics Evaluated: Research Drafts/Pending (
                             {pendingResearchCount}) • Blog Drafts/Pending (
@@ -573,18 +587,18 @@ function ResearchQueueCard({
 
     return (
         <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-md">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
-                <div className="space-y-2.5 lg:col-span-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-center">
+                <div className="min-w-0 space-y-2.5 md:col-span-6">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                        <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 shrink-0">
                             {item.category || 'Research'}
                         </span>
-                        <span className="font-mono text-[11px] text-slate-400 truncate max-w-[240px]">
+                        <span className="font-mono text-[11px] text-slate-400 truncate max-w-[140px] sm:max-w-[240px]">
                             research/{item.slug}
                         </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
+                    <h3 className="text-base font-bold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors break-words">
                         {item.title}
                     </h3>
 
@@ -603,27 +617,27 @@ function ResearchQueueCard({
                                 #{t}
                             </span>
                         ))}
-                        <span className="flex items-center gap-1 text-[11px]">
-                            <Clock className="h-3 w-3 text-slate-400" />
+                        <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                            <Clock className="h-3 w-3 text-slate-400 shrink-0" />
                             {readTime} min read
                         </span>
-                        <span className="flex items-center gap-1 text-[11px]">
-                            <Eye className="h-3 w-3 text-slate-400" />
+                        <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                            <Eye className="h-3 w-3 text-slate-400 shrink-0" />
                             {item.views || 0} views
                         </span>
                     </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-100 lg:col-span-3">
+                <div className="min-w-0 rounded-xl bg-slate-50/80 p-3.5 border border-slate-100 md:col-span-3">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 font-bold text-white text-xs">
                             {item.author?.name
                                 ? item.author.name
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .substring(0, 2)
-                                      .toUpperCase()
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')
+                                    .substring(0, 2)
+                                    .toUpperCase()
                                 : 'AU'}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -636,11 +650,11 @@ function ResearchQueueCard({
                             <p className="truncate text-[11px] text-slate-500">
                                 {item.author?.email || 'author@domain.com'}
                             </p>
-                            <div className="mt-1 flex items-center gap-2">
-                                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">
                                     Role: {item.author?.role || 'PUBLISHER'}
                                 </span>
-                                <span className="text-[10px] font-bold text-emerald-600">
+                                <span className="text-[10px] font-bold text-emerald-600 whitespace-nowrap">
                                     Verified
                                 </span>
                             </div>
@@ -648,9 +662,9 @@ function ResearchQueueCard({
                     </div>
                 </div>
 
-                <div className="flex flex-col justify-between space-y-3 lg:col-span-3 lg:border-l lg:border-slate-100 lg:pl-6">
-                    <div className="flex items-center justify-between">
-                        <div className="text-[11px] font-semibold text-slate-500">
+                <div className="min-w-0 flex flex-col justify-between space-y-3 md:col-span-3 md:border-l md:border-slate-100 md:pl-6">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="text-[11px] font-semibold text-slate-500 truncate">
                             Attachments ({pdfCount} PDFs
                             {hasCsv ? ', 1 CSV' : ''})
                         </div>
@@ -663,7 +677,7 @@ function ResearchQueueCard({
                                 key={idx}
                                 className="flex items-center justify-between rounded bg-slate-50 px-2 py-1 text-[11px] text-slate-600"
                             >
-                                <span className="flex items-center gap-1.5 truncate">
+                                <span className="flex items-center gap-1.5 min-w-0 truncate">
                                     <FileText className="h-3 w-3 text-red-500 shrink-0" />
                                     <span className="truncate">
                                         {pdf.originalName ||
@@ -673,12 +687,12 @@ function ResearchQueueCard({
                             </div>
                         ))}
                         {hasCsv && (
-                            <div className="flex items-center justify-between rounded bg-emerald-50/60 px-2 py-1 text-[11px] text-emerald-800">
+                            <div className="flex items-center justify-between gap-2 rounded bg-emerald-50/60 px-2 py-1 text-[11px] text-emerald-800">
                                 <span className="flex items-center gap-1.5 truncate">
                                     <FileSpreadsheet className="h-3 w-3 text-emerald-600 shrink-0" />
                                     <span>data_telemetry.csv</span>
                                 </span>
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 whitespace-nowrap">
                                     CSV Attached
                                 </span>
                             </div>
@@ -695,7 +709,7 @@ function ResearchQueueCard({
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 active:scale-[0.99] transition-all"
                     >
                         <span>Open Document</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </button>
                 </div>
             </div>
@@ -719,9 +733,9 @@ function BlogQueueCard({
 
     return (
         <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-md">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
-                <div className="flex flex-col sm:flex-row gap-4 lg:col-span-6">
-                    <div className="h-28 w-full sm:w-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 relative">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-center">
+                <div className="flex flex-col sm:flex-row gap-4 md:col-span-6 min-w-0">
+                    <div className="h-40 sm:h-28 w-full sm:w-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 relative">
                         {item.coverImage?.url ? (
                             <img
                                 src={item.coverImage.url}
@@ -740,10 +754,10 @@ function BlogQueueCard({
 
                     <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                            <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 shrink-0">
                                 {item.category || 'Blog'}
                             </span>
-                            <span className="font-mono text-[11px] text-slate-400 truncate max-w-[200px]">
+                            <span className="font-mono text-[11px] text-slate-400 truncate max-w-[120px] sm:max-w-[200px]">
                                 blog/{item.slug}
                             </span>
                         </div>
@@ -758,29 +772,29 @@ function BlogQueueCard({
                             </p>
                         )}
 
-                        <div className="flex items-center gap-3 pt-1 text-xs text-slate-500">
-                            <span className="flex items-center gap-1 text-[11px]">
-                                <Clock className="h-3 w-3 text-slate-400" />
+                        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-500">
+                            <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                                <Clock className="h-3 w-3 text-slate-400 shrink-0" />
                                 {readTime} min read
                             </span>
-                            <span className="flex items-center gap-1 text-[11px]">
-                                <Eye className="h-3 w-3 text-slate-400" />
+                            <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                                <Eye className="h-3 w-3 text-slate-400 shrink-0" />
                                 {item.views || 0} views
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-100 lg:col-span-3">
+                <div className="min-w-0 rounded-xl bg-slate-50/80 p-3.5 border border-slate-100 md:col-span-3">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 font-bold text-white text-xs">
                             {item.author?.name
                                 ? item.author.name
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .substring(0, 2)
-                                      .toUpperCase()
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')
+                                    .substring(0, 2)
+                                    .toUpperCase()
                                 : 'AU'}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -791,7 +805,7 @@ function BlogQueueCard({
                                 {item.author?.email || 'author@domain.com'}
                             </p>
                             <div className="mt-1 flex items-center gap-2">
-                                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 truncate">
                                     Role: {item.author?.role || 'PUBLISHER'}
                                 </span>
                             </div>
@@ -799,28 +813,28 @@ function BlogQueueCard({
                     </div>
                 </div>
 
-                <div className="flex flex-col justify-between space-y-3 lg:col-span-3 lg:border-l lg:border-slate-100 lg:pl-6">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-slate-500">
+                <div className="min-w-0 flex flex-col justify-between space-y-3 md:col-span-3 md:border-l md:border-slate-100 md:pl-6">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold text-slate-500 truncate">
                             Media & Artifacts
                         </span>
                         <StatusBadge status={item.status} />
                     </div>
 
                     <div className="space-y-1 text-[11px] text-slate-600">
-                        <div className="flex justify-between items-center rounded bg-slate-50 px-2 py-1">
+                        <div className="flex justify-between items-center gap-2 rounded bg-slate-50 px-2 py-1">
                             <span className="truncate">
                                 {item.coverImage?.url
                                     ? 'cover_image.webp'
                                     : 'No Cover'}
                             </span>
-                            <span className="font-bold text-emerald-600">
+                            <span className="font-bold text-emerald-600 whitespace-nowrap">
                                 Verified
                             </span>
                         </div>
-                        <div className="flex justify-between items-center rounded bg-slate-50 px-2 py-1">
+                        <div className="flex justify-between items-center gap-2 rounded bg-slate-50 px-2 py-1">
                             <span>PDF / CSV</span>
-                            <span className="text-slate-400">
+                            <span className="text-slate-400 whitespace-nowrap">
                                 {item.pdfs?.length || item.csv?.url
                                     ? 'Attached'
                                     : 'None'}
@@ -833,7 +847,7 @@ function BlogQueueCard({
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-600 active:scale-[0.99] transition-all"
                     >
                         <span>Open Document</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </button>
                 </div>
             </div>
@@ -859,7 +873,7 @@ function StatusBadge({ status }: { status: BlogStatus }) {
     return (
         <span
             className={cn(
-                'rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider',
+                'rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap shrink-0',
                 styles[normalizedStatus] || styles.PENDING,
             )}
         >

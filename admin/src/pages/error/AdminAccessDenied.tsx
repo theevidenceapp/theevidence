@@ -1,11 +1,13 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ShieldX, ArrowLeft, LogIn } from 'lucide-react';
+import useTitle from '@/hooks/useTitle';
 
 const AdminAccessDenied = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const error = searchParams.get('error');
+    useTitle('Access Restricted')
 
     if (error !== 'admin_access_denied') {
         return (
