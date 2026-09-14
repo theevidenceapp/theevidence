@@ -103,7 +103,7 @@ export const createBlog = async (req: Request, res: Response) => {
         .map((id) => new mongoose.Types.ObjectId(id));
     }
 
-    const finalStatus = status === "DRAFT" ? "DRAFT" : "PUBLISHED";
+    const finalStatus = status === "DRAFT" ? "DRAFT" : "DRAFT";
     const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
 
     const blog = await Blog.create({

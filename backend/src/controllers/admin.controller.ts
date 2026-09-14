@@ -327,9 +327,9 @@ export const updateUserRole = async (req: Request, res: Response) => {
 export const getTop2Content = async (req: Request, res: Response) => {
   try {
     const [research, blogs] = await Promise.all([
-      Blog.find({ docType: "RESEARCH" }).sort({ score: -1 }).limit(2),
+      Blog.find({ docType: "RESEARCH" }).sort({ createdAt: -1 }).limit(2),
 
-      Blog.find({ docType: "BLOG" }).sort({ score: -1 }).limit(2),
+      Blog.find({ docType: "BLOG" }).sort({ createdAt: -1 }).limit(2),
     ]);
 
     const allContent = [...research, ...blogs];

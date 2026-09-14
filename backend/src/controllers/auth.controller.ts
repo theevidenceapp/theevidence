@@ -63,12 +63,16 @@ export const getMe = async (req: Request, res: Response) => {
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     return res.status(200).json({ success: true, user });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Failed to get user profile" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to get user profile" });
   }
 };
 
@@ -101,7 +105,9 @@ export const updateUser = async (req: Request, res: Response) => {
     const userId = req.params.id || (req as any).user?._id;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID required" });
     }
 
     const { name, phone_number, dob, avatar } = req.body;
@@ -113,9 +119,13 @@ export const updateUser = async (req: Request, res: Response) => {
       if (cloudinaryResponse && cloudinaryResponse.secure_url) {
         avatarUrl = cloudinaryResponse.secure_url;
       }
-    } 
+    }
     // Handle Base64 string sent from frontend preview
-    else if (avatar && typeof avatar === "string" && avatar.startsWith("data:image")) {
+    else if (
+      avatar &&
+      typeof avatar === "string" &&
+      avatar.startsWith("data:image")
+    ) {
       try {
         const matches = avatar.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
         if (matches && matches.length === 3) {
@@ -134,7 +144,11 @@ export const updateUser = async (req: Request, res: Response) => {
       } catch (uploadErr) {
         console.error("Base64 Cloudinary processing error:", uploadErr);
       }
-    } else if (avatar && typeof avatar === "string" && avatar.startsWith("http")) {
+    } else if (
+      avatar &&
+      typeof avatar === "string" &&
+      avatar.startsWith("http")
+    ) {
       avatarUrl = avatar;
     }
 
@@ -148,11 +162,13 @@ export const updateUser = async (req: Request, res: Response) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updateData },
-      { returnDocument: "after", runValidators: true }
+      { returnDocument: "after", runValidators: true },
     ).select("-password");
 
     if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     return res.status(200).json({
@@ -215,11 +231,12 @@ export const googleCallback = async (
       return next(new ApiError(401, "Authentication failed"));
     }
 
-    if (site === "admin" && user.role !== "ADMIN") {
-      return res.redirect(
-        `${config.ADMIN_CLIENT_URL}/auth/login?error=admin_access_denied`,
-      );
-    }
+    // May require in future for use.
+    // if (site === "admin" && user.role !== "ADMIN") {
+    //   return res.redirect(
+    //     `${config.ADMIN_CLIENT_URL}/auth/login?error=admin_access_denied`,
+    //   );
+    // }
 
     const accessToken = user.generateAuthToken();
     const refreshToken = user.generateRefreshToken();
@@ -246,11 +263,11 @@ export const googleCallback = async (
       "Unknown";
     const userAgent = req.headers["user-agent"] || "Unknown device";
 
-    if (site === "admin") {
+    if (site === "admin" || site === "editor") {
       emailService
         .sendEmail(
           userExists.email,
-          "New Login to Your Account",
+          "New Sign In to Your Account",
           loginNotificationTemplate({ loginTime, ipAddress, userAgent }),
         )
         .catch((err) => console.error("Failed to send login email:", err));
@@ -263,8 +280,10 @@ export const googleCallback = async (
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    const isAdminPortalUser = site === "admin" || site === "editor";
+
     res.redirect(
-      `${site === "admin" ? config.ADMIN_CLIENT_URL : config.CLIENT_URL}/verify-token?token=${accessToken}`,
+      `${isAdminPortalUser ? config.ADMIN_CLIENT_URL : config.CLIENT_URL}/verify-token?token=${accessToken}&role=${userExists.role}`,
     );
   } catch (error) {
     console.error(error);
@@ -330,6 +349,7 @@ export const getAccessToken = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       accessToken,
+      role: userExists.role,
     });
   } catch (error: any) {
     return res

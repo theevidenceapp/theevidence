@@ -63,7 +63,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/adminAuthStore';
+import useTitle from '@/hooks/useTitle';
 
 // =====================================================================
 // Types — mirrored 1:1 from backend controllers, do not widen loosely
@@ -673,7 +674,7 @@ function exportBlogsToCsv(blogs: BlogAnalyticsItem[]) {
 
 export default function Dashboard() {
     const { data, isLoading, error, refetch } = useDashboardData();
-    console.log(data);
+    useTitle('Dashboard')
     const [range, setRange] = React.useState<RangeOption>('7 Days');
 
     const avgViewsPerBlog =
@@ -773,10 +774,6 @@ export default function Dashboard() {
                             Real per-blog view counts, highest first
                         </p>
                     </div>
-                    <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
-                        Live
-                    </span>
                 </div>
                 <div className="mt-4">
                     {isLoading || !data ? (

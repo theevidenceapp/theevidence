@@ -36,7 +36,7 @@ class EmailService {
   async sendEmail(to: string, subject: string, htmlContent: string) {
     try {
       const mail = new MailComposer({
-        from: `Evidence - Admin Login detected <${process.env.GOOGLE_EMAIL}>`,
+        from: `Evidence - Sign In detected <${process.env.GOOGLE_EMAIL}>`,
         to,
         subject,
         html: htmlContent,

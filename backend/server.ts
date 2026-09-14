@@ -65,7 +65,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
-app.use("/admin", authenticate, authorize("ADMIN"), adminRouter);
+app.use("/admin", authenticate, authorize("ADMIN", "EDITOR"), adminRouter);
 
 app.use("/blog", authenticate, blogRouter);
 

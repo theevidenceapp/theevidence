@@ -1,39 +1,55 @@
 /**
- * UsersList.tsx
+ * BlockedUsers.tsx
  * -----------------------------------------------------------------------------
- * Admin Console — User Directory
+ * Admin Console — Access Control (Block / Unblock Users)
  *
- * Renders the "Users" view of the admin console exactly as specified by design:
- *   - Desktop: 4 KPI cards, filter pills, and a paginated data table.
- *   - Mobile:  3 KPI cards, filter pills, and a paginated stacked card list.
- * Selecting any user (row or card) opens an accessible modal with the user's
- * full profile as returned by the API, plus — for non-administrator accounts —
- * an inline role-management control backed by the role-update endpoint.
+ * Companion screen to the existing User Directory (`UsersList.tsx`). It is
+ * intentionally built on the same visual language, layout grid, sidebar
+ * width assumptions, and interaction patterns as that screen, so the two
+ * feel like one product rather than two separately designed pages:
+ *   - Desktop: KPI cards, a segmented "All Users / Blocked Users" tab
+ *     control, filter pills, and a paginated data table with an inline
+ *     Block/Unblock action per row.
+ *   - Mobile:  the same information re-flowed into a stacked card list.
+ * Selecting any user (row or card) opens an accessible, read-only profile
+ * modal. Blocking or unblocking an account always goes through a dedicated,
+ * two-step confirmation dialog, whether it was triggered from the table,
+ * the card list, or the profile modal — there is exactly one code path for
+ * the action, so behavior can never drift between entry points.
  *
  * Data sources
  * -----------------------------------------------------------------------------
- * GET  /admin/get-all-users        (via the shared, token-refreshing `apiClient`)
- * POST /admin/user/role/:userId    (role update; body: { role })
+ * GET  /admin/get-all-users   (via the shared, token-refreshing `apiClient`)
+ * GET  /get-blocked-users     (dedicated feed backing the "Blocked Users" tab)
+ * POST /block/:email          (block; no request body)
+ * POST /unblock/:email        (unblock; no request body)
  *
- * The directory listing is a single, static, view-only fetch — the entire
- * directory is loaded once. Search, role/verification/status filtering, and
- * pagination (10 / 25 rows per page) are all performed client-side against
- * that single payload, which is appropriate for an admin directory of this
- * scale. If the directory grows into the tens of thousands of rows, switch to
- * server-side pagination by passing `page`/`pageSize` query params to the
- * endpoint instead.
+ * INTEGRATION NOTE ON THE LAST TWO ENDPOINTS: the controllers provided for
+ * this feature (`BlockUser`, `unblockUser`) don't pin down an HTTP verb or a
+ * mount path in the router itself. This file assumes they are mounted at
+ * the paths above and issued as POST, matching the convention already used
+ * by the sibling role-update endpoint in this codebase
+ * (`POST /admin/user/role/:userId`). If your router instead mounts these
+ * under `/admin`, or expects `PATCH`, update `BLOCK_USER_ENDPOINT` /
+ * `UNBLOCK_USER_ENDPOINT` and the two `apiClient.post(...)` calls below —
+ * everything else is agnostic to that choice.
  *
- * Role management
+ * SECURITY NOTE FOR THE BACKEND TEAM: `getAllUsers` excludes `accessToken`
+ * via `.select("-accessToken")`, but `getBlockedUsers` does not. This file
+ * never reads or renders that field, so it poses no risk to this UI, but
+ * the same projection should probably be applied to `getBlockedUsers` for
+ * defense in depth.
+ *
+ * Access-control safeguard
  * -----------------------------------------------------------------------------
- * The console supports four roles: READER, PUBLISHER, EDITOR, and ADMIN.
- * Administrators can change the role of any non-administrator account to any
- * of the four roles directly from the user detail modal. Accounts that are
- * currently ADMIN are protected from in-console role changes entirely (the
- * role control is replaced with a read-only notice) — this prevents both
- * accidental de-escalation of another administrator and unauthorized
- * self-service privilege changes from this view. Promoting an account to
- * ADMIN requires an explicit two-step confirmation in the UI before the
- * request is sent.
+ * Accounts whose role is ADMIN cannot be blocked from this screen — the
+ * action control renders a disabled "Protected" pill instead of a Block
+ * button. This mirrors the equivalent ADMIN safeguard in the User Directory
+ * (where ADMIN accounts can't have their role changed in-console) and
+ * exists for the same reason: prevent an admin from being locked out, or
+ * another admin's access from being revoked, by a casual click in a list.
+ * This is a client-side UX guard, not a substitute for server-side
+ * authorization — the server remains the source of truth.
  *
  * Integration notes
  * -----------------------------------------------------------------------------
@@ -42,14 +58,12 @@
  * 2. Requires `lucide-react` and `@radix-ui/react-dialog` as dependencies:
  *      npm install lucide-react @radix-ui/react-dialog
  * 3. Written against Tailwind CSS utility classes; no custom CSS required.
- *
- * -----------------------------------------------------------------------------
- * Change log lives at the bottom of this file.
  * -----------------------------------------------------------------------------
  */
 
-import { useCallback, useEffect, useMemo, useState, memo } from 'react';
-import type { ReactNode, KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo } from 'react';
+import type { ReactNode } from 'react';
 import axios from 'axios';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
@@ -79,9 +93,11 @@ import {
     ChevronLeft,
     ChevronRight,
     Loader2,
-    UserCog,
     Lock,
-    PauseCircle,
+    Ban,
+    Unlock,
+    BadgeCheck,
+    ShieldOff,
 } from 'lucide-react';
 
 // NOTE: adjust this import to match your project's folder structure.
@@ -95,17 +111,10 @@ import useTitle from '@/hooks/useTitle';
 type UserRole = 'ADMIN' | 'PUBLISHER' | 'READER' | 'EDITOR';
 
 /**
- * Shape of a single user record as returned by GET /admin/get-all-users and
- * POST /admin/user/role/:userId.
- * The endpoint serves two "families" of accounts (local auth vs. Google
- * OAuth), so several fields are optional depending on how the account was
- * provisioned. Every field is treated defensively in the UI.
- *
- * NOTE: `role` is typed as `string` rather than the strict `UserRole` union.
- * The TypeScript union was a lie the API didn't honor at runtime (different
- * casing, or values outside the known roles) — widening the type here forces
- * every call site to go through `normalizeRole()` instead of trusting a
- * compile-time guarantee the server doesn't actually provide.
+ * Shape of a single user record as returned by GET /admin/get-all-users,
+ * GET /get-blocked-users, POST /block/:email, and POST /unblock/:email.
+ * Kept intentionally identical to the User Directory's `ApiUser` so records
+ * can move between the two screens' state without any mapping step.
  */
 interface ApiUser {
     _id: string;
@@ -129,13 +138,21 @@ interface GetAllUsersResponse {
     users: ApiUser[];
 }
 
-/** Response contract for POST /admin/user/role/:userId. */
-interface UpdateUserRoleResponse {
+interface GetBlockedUsersResponse {
     success: boolean;
-    message?: string;
+    /** Server-reported total. Informational only — the UI treats `users.length` as authoritative. */
+    count?: number;
+    users: ApiUser[];
+}
+
+/** Shared response contract for both POST /block/:email and POST /unblock/:email. */
+interface BlockActionResponse {
+    success: boolean;
+    msg?: string;
     user?: ApiUser;
 }
 
+type TabKey = 'all' | 'blocked';
 type FilterKey =
     | 'all'
     | 'admin'
@@ -143,22 +160,27 @@ type FilterKey =
     | 'editor'
     | 'reader'
     | 'verified'
-    | 'suspended';
+    | 'blocked';
 type FetchStatus = 'loading' | 'success' | 'error';
 type PageToken = number | 'ellipsis';
-type RoleSaveState = 'idle' | 'confirming' | 'saving' | 'success' | 'error';
+type ConfirmStage = 'review' | 'confirming' | 'saving' | 'error';
+
+interface PendingAccessAction {
+    user: ApiUser;
+    type: 'block' | 'unblock';
+}
 
 /* =============================================================================
  * Constants & static configuration
  * ========================================================================== */
 
-const USERS_ENDPOINT = '/admin/get-all-users';
-const USER_ROLE_ENDPOINT = '/admin/user/role';
+const ALL_USERS_ENDPOINT = '/admin/get-all-users';
+const BLOCKED_USERS_ENDPOINT = '/admin/get-blocked-users';
+const BLOCK_USER_ENDPOINT = '/admin/block';
+const UNBLOCK_USER_ENDPOINT = '/admin/unblock';
+
 const PAGE_SIZE_OPTIONS = [10, 25] as const;
 const DEFAULT_PAGE_SIZE: (typeof PAGE_SIZE_OPTIONS)[number] = 10;
-
-/** Every role the console can assign, in the order they should be offered. */
-const ASSIGNABLE_ROLES: UserRole[] = ['READER', 'PUBLISHER', 'EDITOR', 'ADMIN'];
 
 const ROLE_CONFIG: Record<
     UserRole,
@@ -198,12 +220,7 @@ const ROLE_CONFIG: Record<
     },
 };
 
-/**
- * Fallback config for any role value that doesn't normalize to one of the
- * known roles. Rendering this instead of crashing means a bad/unrecognized
- * role from the API becomes a visible, debuggable badge in the UI rather
- * than a blank screen.
- */
+/** Fallback config for any role value that doesn't normalize to one of the known roles. */
 const UNKNOWN_ROLE_CONFIG = {
     label: 'Unknown role',
     icon: ShieldQuestion,
@@ -231,14 +248,7 @@ function cn(...classes: Array<string | false | null | undefined>): string {
 /**
  * Normalizes any raw `role` value coming off the wire into a known
  * `UserRole`, or `null` if it can't be recognized. Case-insensitive and
- * tolerant of surrounding whitespace, `null`/`undefined`, and non-string
- * values — this is the single source of truth every role comparison in the
- * component should go through, instead of comparing raw strings directly.
- *
- * Covers all four roles the API can return (READER, PUBLISHER, EDITOR,
- * ADMIN). Previously EDITOR was not recognized here, which meant every
- * editor account fell through to the "Unknown role" badge even though it was
- * a perfectly valid role — that gap is closed below.
+ * tolerant of surrounding whitespace and non-string values.
  */
 function normalizeRole(role: unknown): UserRole | null {
     if (typeof role !== 'string') return null;
@@ -251,7 +261,6 @@ function normalizeRole(role: unknown): UserRole | null {
         : null;
 }
 
-/** Looks up display config for a raw role value, falling back to the "unknown" config. */
 function getRoleConfig(role: unknown): {
     label: string;
     icon: typeof ShieldCheck;
@@ -261,7 +270,7 @@ function getRoleConfig(role: unknown): {
     const normalized = normalizeRole(role);
     return normalized ? ROLE_CONFIG[normalized] : UNKNOWN_ROLE_CONFIG;
 }
-// /** get Initials */
+
 function getInitials(name: string): string {
     const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '?';
@@ -279,7 +288,7 @@ function paletteFor(id: string): { bg: string; text: string } {
     return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
 }
 
-/** Formats an ISO timestamp into UTC date + time strings, matching the design. */
+/** Formats an ISO timestamp into UTC date + time strings. */
 function formatUtc(iso: string | null | undefined): {
     date: string;
     time: string;
@@ -318,8 +327,7 @@ function formatDobOnly(iso: string | null | undefined): string {
 
 /**
  * Builds a windowed page-number sequence for the pagination control, e.g.
- * for page 6 of 20 -> [1, "ellipsis", 5, 6, 7, "ellipsis", 20]. Falls back to
- * a plain sequential list when there are few enough pages to show them all.
+ * for page 6 of 20 -> [1, "ellipsis", 5, 6, 7, "ellipsis", 20].
  */
 function getPageWindow(current: number, total: number): PageToken[] {
     if (total <= 7) {
@@ -327,7 +335,6 @@ function getPageWindow(current: number, total: number): PageToken[] {
     }
 
     const pages: PageToken[] = [1];
-
     if (current > 3) pages.push('ellipsis');
 
     const start = Math.max(2, current - 1);
@@ -335,22 +342,23 @@ function getPageWindow(current: number, total: number): PageToken[] {
     for (let page = start; page <= end; page += 1) pages.push(page);
 
     if (current < total - 2) pages.push('ellipsis');
-
     pages.push(total);
 
     return pages;
 }
 
 /**
- * Extracts a human-readable error message from a failed axios request,
- * falling back to a generic message. Shared by the initial directory fetch
- * and the role-update mutation so both surfaces report errors consistently.
+ * Extracts a human-readable error message from a failed axios request.
+ * The block/unblock endpoints report errors under `msg`, while the
+ * directory endpoints use `message` — both are checked so error banners
+ * read correctly regardless of which call failed.
  */
 function extractErrorMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
-        const serverMessage = (
-            error.response?.data as { message?: string } | undefined
-        )?.message;
+        const data = error.response?.data as
+            | { message?: string; msg?: string }
+            | undefined;
+        const serverMessage = data?.message || data?.msg;
         if (serverMessage) return serverMessage;
     }
     if (error instanceof Error && error.message) return error.message;
@@ -361,22 +369,43 @@ function extractErrorMessage(error: unknown, fallback: string): string {
  * Data hook
  * ========================================================================== */
 
-function useAdminUsers() {
-    const [users, setUsers] = useState<ApiUser[]>([]);
-    const [status, setStatus] = useState<FetchStatus>('loading');
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [reloadToken, setReloadToken] = useState(0);
+/**
+ * Owns both data feeds this screen needs — the full directory (for the "All
+ * Users" tab and the always-visible KPI totals) and the dedicated blocked
+ * list (for the "Blocked Users" tab) — plus the two mutations that act on
+ * them.
+ *
+ * The two lists are fetched independently, but a successful block/unblock
+ * updates both in place from the single server response, so the KPI cards,
+ * both tabs, and the profile modal all reflect the change immediately
+ * without a full reload. If the mutation response ever omits the updated
+ * user (`response.data.user`), the blocked list is refetched as a fallback
+ * so it can't silently drift out of sync.
+ */
+function useAccessControlUsers() {
+    const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
+    const [allStatus, setAllStatus] = useState<FetchStatus>('loading');
+    const [allError, setAllError] = useState<string | null>(null);
+    const [allReloadToken, setAllReloadToken] = useState(0);
 
-    const reload = useCallback(() => setReloadToken((token) => token + 1), []);
+    const [blockedUsers, setBlockedUsers] = useState<ApiUser[]>([]);
+    const [blockedStatus, setBlockedStatus] = useState<FetchStatus>('loading');
+    const [blockedError, setBlockedError] = useState<string | null>(null);
+    const [blockedReloadToken, setBlockedReloadToken] = useState(0);
+
+    const reloadAll = useCallback(() => setAllReloadToken((t) => t + 1), []);
+    const reloadBlocked = useCallback(
+        () => setBlockedReloadToken((t) => t + 1),
+        [],
+    );
 
     useEffect(() => {
         const controller = new AbortController();
-
-        setStatus('loading');
-        setErrorMessage(null);
+        setAllStatus('loading');
+        setAllError(null);
 
         apiClient
-            .get<GetAllUsersResponse>(USERS_ENDPOINT, {
+            .get<GetAllUsersResponse>(ALL_USERS_ENDPOINT, {
                 signal: controller.signal,
             })
             .then((response) => {
@@ -388,13 +417,13 @@ function useAdminUsers() {
                         'The server responded without a valid user list.',
                     );
                 }
-                setUsers(response.data.users);
-                setStatus('success');
+                setAllUsers(response.data.users);
+                setAllStatus('success');
             })
             .catch((error: unknown) => {
                 if (axios.isCancel(error) || controller.signal.aborted) return;
-                setStatus('error');
-                setErrorMessage(
+                setAllStatus('error');
+                setAllError(
                     extractErrorMessage(
                         error,
                         'Unable to load the user directory. Please try again.',
@@ -403,67 +432,141 @@ function useAdminUsers() {
             });
 
         return () => controller.abort();
-    }, [reloadToken]);
+    }, [allReloadToken]);
 
-    /**
-     * Persists a role change for a single user via POST /admin/user/role/:userId
-     * and, on success, patches that user's record in local state so the table,
-     * cards, KPI counts, and filter pills all reflect the new role immediately
-     * without requiring a full reload of the directory.
-     *
-     * Throws (with a display-ready message) on failure so callers can surface
-     * the error inline next to the control that triggered the change.
-     */
-    const updateUserRole = useCallback(
-        async (userId: string, role: UserRole): Promise<ApiUser> => {
+    useEffect(() => {
+        const controller = new AbortController();
+        setBlockedStatus('loading');
+        setBlockedError(null);
+
+        apiClient
+            .get<GetBlockedUsersResponse>(BLOCKED_USERS_ENDPOINT, {
+                signal: controller.signal,
+            })
+            .then((response) => {
+                if (
+                    !response.data?.success ||
+                    !Array.isArray(response.data.users)
+                ) {
+                    throw new Error(
+                        'The server responded without a valid blocked-user list.',
+                    );
+                }
+                setBlockedUsers(response.data.users);
+                setBlockedStatus('success');
+            })
+            .catch((error: unknown) => {
+                if (axios.isCancel(error) || controller.signal.aborted) return;
+                setBlockedStatus('error');
+                setBlockedError(
+                    extractErrorMessage(
+                        error,
+                        'Unable to load blocked accounts. Please try again.',
+                    ),
+                );
+            });
+
+        return () => controller.abort();
+    }, [blockedReloadToken]);
+
+    /** POST /block/:email — see BLOCK_USER_ENDPOINT integration note at the top of this file. */
+    const blockUserByEmail = useCallback(
+        async (email: string): Promise<void> => {
             try {
-                const response = await apiClient.post<UpdateUserRoleResponse>(
-                    `${USER_ROLE_ENDPOINT}/${userId}`,
-                    { role },
+                const response = await apiClient.put<BlockActionResponse>(
+                    `${BLOCK_USER_ENDPOINT}/${email}`,
                 );
 
                 if (!response.data?.success) {
                     throw new Error(
-                        response.data?.message || 'Failed to update user role.',
+                        response.data?.msg || 'Failed to block this account.',
                     );
                 }
 
-                const returnedUser = response.data.user;
+                const serverUser = response.data.user;
 
-                setUsers((prev) =>
-                    prev.map((existing) =>
-                        existing._id === userId
-                            ? returnedUser
-                                ? { ...existing, ...returnedUser }
-                                : { ...existing, role }
-                            : existing,
+                setAllUsers((prev) =>
+                    prev.map((u) =>
+                        u.email === email
+                            ? { ...u, ...(serverUser ?? {}), isActive: false }
+                            : u,
                     ),
                 );
-
-                return (
-                    returnedUser ?? {
-                        ...(users.find((u) => u._id === userId) as ApiUser),
-                        role,
+                setBlockedUsers((prev) => {
+                    const alreadyListed = prev.some((u) => u.email === email);
+                    if (alreadyListed) {
+                        return prev.map((u) =>
+                            u.email === email
+                                ? { ...u, ...(serverUser ?? {}), isActive: false }
+                                : u,
+                        );
                     }
-                );
+                    return serverUser
+                        ? [{ ...serverUser, isActive: false }, ...prev]
+                        : prev;
+                });
+
+                if (!serverUser) reloadBlocked();
             } catch (error) {
                 throw new Error(
                     extractErrorMessage(
                         error,
-                        'Failed to update user role. Please try again.',
+                        'Failed to block this account. Please try again.',
                     ),
                 );
             }
-            // `users` is intentionally excluded from deps: it is only read inside the
-            // rare fallback branch above (server omitted the updated user in its
-            // response) and re-creating this callback on every users change would
-            // needlessly churn consumers such as the modal.
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [reloadBlocked],
+    );
+
+    /** POST /unblock/:email — see UNBLOCK_USER_ENDPOINT integration note at the top of this file. */
+    const unblockUserByEmail = useCallback(
+        async (email: string): Promise<void> => {
+            try {
+                const response = await apiClient.put<BlockActionResponse>(
+                    `${UNBLOCK_USER_ENDPOINT}/${email}`,
+                );
+
+                if (!response.data?.success) {
+                    throw new Error(
+                        response.data?.msg || 'Failed to unblock this account.',
+                    );
+                }
+
+                const serverUser = response.data.user;
+
+                setAllUsers((prev) =>
+                    prev.map((u) =>
+                        u.email === email
+                            ? { ...u, ...(serverUser ?? {}), isActive: true }
+                            : u,
+                    ),
+                );
+                setBlockedUsers((prev) => prev.filter((u) => u.email !== email));
+            } catch (error) {
+                throw new Error(
+                    extractErrorMessage(
+                        error,
+                        'Failed to unblock this account. Please try again.',
+                    ),
+                );
+            }
         },
         [],
     );
 
-    return { users, status, errorMessage, reload, updateUserRole };
+    return {
+        allUsers,
+        allStatus,
+        allError,
+        reloadAll,
+        blockedUsers,
+        blockedStatus,
+        blockedError,
+        reloadBlocked,
+        blockUserByEmail,
+        unblockUserByEmail,
+    };
 }
 
 /* =============================================================================
@@ -488,8 +591,8 @@ function Avatar({
         size === 'lg'
             ? 'h-16 w-16 text-lg'
             : size === 'sm'
-              ? 'h-9 w-9 text-xs'
-              : 'h-11 w-11 text-sm';
+                ? 'h-9 w-9 text-xs'
+                : 'h-11 w-11 text-sm';
 
     if (avatar && !imageFailed) {
         return (
@@ -521,13 +624,6 @@ function Avatar({
     );
 }
 
-/**
- * `role` is intentionally typed as `unknown` here (not `UserRole`) — it is
- * rendered directly from the API payload and must never assume the value
- * matches one of the known roles. `getRoleConfig` handles normalization and
- * always returns a renderable config, so this component can never throw on
- * an unexpected role.
- */
 function RoleBadge({ role }: { role: unknown }) {
     const config = getRoleConfig(role);
     const Icon = config.icon;
@@ -547,24 +643,25 @@ function RoleBadge({ role }: { role: unknown }) {
     );
 }
 
-function StatusBadge({ isActive }: { isActive: boolean }) {
+/** Renders account access status. Framed as Active / Blocked, matching this screen's purpose. */
+function AccessStatusBadge({ isActive }: { isActive: boolean }) {
     return (
         <span
             className={cn(
                 'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold',
                 isActive
                     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200'
-                    : 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
+                    : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200',
             )}
         >
             <span
                 className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    isActive ? 'bg-emerald-500' : 'bg-slate-400',
+                    isActive ? 'bg-emerald-500' : 'bg-red-500',
                 )}
                 aria-hidden="true"
             />
-            {isActive ? 'Active' : 'Inactive'}
+            {isActive ? 'Active' : 'Blocked'}
         </span>
     );
 }
@@ -586,6 +683,72 @@ function VerificationBadge({ isVerified }: { isVerified: boolean }) {
             )}
             {isVerified ? 'Verified' : 'Pending'}
         </span>
+    );
+}
+
+/**
+ * Inline Block / Unblock trigger. It never performs the mutation itself —
+ * clicking it only *requests* the action via `onRequestBlock` /
+ * `onRequestUnblock`, which the parent uses to open the shared
+ * `ConfirmAccessDialog`. This keeps the one and only code path that can
+ * actually call the API centralized in that dialog, regardless of whether
+ * the click came from the table, the mobile card, or the profile modal.
+ *
+ * ADMIN accounts render a disabled "Protected" pill instead of a Block
+ * button — see the "Access-control safeguard" note at the top of the file.
+ */
+function AccessActionButton({
+    user,
+    onRequestBlock,
+    onRequestUnblock,
+    fullWidth = false,
+}: {
+    user: ApiUser;
+    onRequestBlock: (user: ApiUser) => void;
+    onRequestUnblock: (user: ApiUser) => void;
+    fullWidth?: boolean;
+}) {
+    const isBlocked = !user.isActive;
+    const isProtectedAdmin = normalizeRole(user.role) === 'ADMIN';
+
+    if (isProtectedAdmin && !isBlocked) {
+        return (
+            <span
+                title="Administrator accounts are protected from being blocked here."
+                className={cn(
+                    'inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-400',
+                    fullWidth && 'w-full',
+                )}
+            >
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                Protected
+            </span>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={(event) => {
+                event.stopPropagation();
+                if (isBlocked) onRequestUnblock(user);
+                else onRequestBlock(user);
+            }}
+            className={cn(
+                'inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
+                isBlocked
+                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 focus-visible:ring-emerald-500'
+                    : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-100 focus-visible:ring-red-500',
+                fullWidth && 'w-full',
+            )}
+        >
+            {isBlocked ? (
+                <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+                <Ban className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            {isBlocked ? 'Unblock' : 'Block'}
+        </button>
     );
 }
 
@@ -616,9 +779,9 @@ function StatCard({
                         iconWrapperClass,
                     )}
                 >
-                    {/* h-4.5/w-4.5 is not a valid Tailwind spacing step (scale jumps 3.5 -> 4 -> 5),
-                        so it silently rendered at the browser default icon size. Using an arbitrary
-                        value keeps the intended 18px icon. */}
+                    {/* h-[18px]/w-[18px] is an intentional arbitrary value: the
+                        nearest Tailwind steps (h-4 / h-5) render visibly too
+                        small or too large next to this card's 36px icon well. */}
                     <Icon
                         className={cn('h-[18px] w-[18px]', iconClass)}
                         aria-hidden="true"
@@ -676,6 +839,58 @@ function FilterPill({
                 {count}
             </span>
         </button>
+    );
+}
+
+/** Segmented control switching between the full directory and the dedicated blocked-accounts feed. */
+function SectionTabs({
+    active,
+    counts,
+    onChange,
+}: {
+    active: TabKey;
+    counts: { all: number; blocked: number };
+    onChange: (key: TabKey) => void;
+}) {
+    const tabs: Array<{ key: TabKey; label: string; count: number }> = [
+        { key: 'all', label: 'All Users', count: counts.all },
+        { key: 'blocked', label: 'Blocked Users', count: counts.blocked },
+    ];
+
+    return (
+        <div
+            role="tablist"
+            aria-label="Account list"
+            className="inline-flex w-full items-center gap-1 rounded-xl bg-slate-100 p-1 sm:w-auto"
+        >
+            {tabs.map((tab) => (
+                <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={active === tab.key}
+                    onClick={() => onChange(tab.key)}
+                    className={cn(
+                        'inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors sm:flex-none',
+                        active === tab.key
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700',
+                    )}
+                >
+                    {tab.label}
+                    <span
+                        className={cn(
+                            'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold',
+                            active === tab.key
+                                ? 'bg-slate-900 text-white'
+                                : 'bg-white text-slate-500',
+                        )}
+                    >
+                        {tab.count}
+                    </span>
+                </button>
+            ))}
+        </div>
     );
 }
 
@@ -792,60 +1007,37 @@ function PaginationBar({
 
 /* =============================================================================
  * Table row (desktop) & Card (mobile)
+ * -----------------------------------------------------------------------------
+ * Unlike the User Directory, each row here carries its own interactive
+ * action button (Block/Unblock), not just a "view details" affordance. To
+ * avoid nesting a <button> inside a whole-row <button> (an accessibility
+ * anti-pattern, and one that would make the Block action also open the
+ * profile modal via event bubbling), the profile cell itself is the click
+ * target for "view details", and the action button lives in its own cell
+ * with its own click handler.
  * ========================================================================== */
-
-function InteractiveRow({
-    onOpen,
-    children,
-    className,
-    ariaLabel,
-}: {
-    onOpen: () => void;
-    children: ReactNode;
-    className?: string;
-    ariaLabel: string;
-}) {
-    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            onOpen();
-        }
-    };
-
-    return (
-        <div
-            role="button"
-            tabIndex={0}
-            aria-label={ariaLabel}
-            onClick={onOpen}
-            onKeyDown={handleKeyDown}
-            className={cn(
-                'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500',
-                className,
-            )}
-        >
-            {children}
-        </div>
-    );
-}
 
 const DesktopUserRow = memo(function DesktopUserRow({
     user,
     onSelect,
+    onRequestBlock,
+    onRequestUnblock,
 }: {
     user: ApiUser;
     onSelect: (user: ApiUser) => void;
+    onRequestBlock: (user: ApiUser) => void;
+    onRequestUnblock: (user: ApiUser) => void;
 }) {
     const memberSince = formatUtc(user.createdAt);
-    const lastActive = formatUtc(user.updatedAt);
 
     return (
-        <InteractiveRow
-            onOpen={() => onSelect(user)}
-            ariaLabel={`View details for ${user.name}`}
-            className="grid grid-cols-[2.2fr_0.9fr_1fr_1fr_1fr_1fr] items-center gap-4 border-b border-slate-100 px-6 py-4 last:border-b-0 hover:bg-slate-50"
-        >
-            <div className="flex min-w-0 items-center gap-3">
+        <div className="grid grid-cols-[2.2fr_0.9fr_1fr_1fr_1fr_0.9fr] items-center gap-4 border-b border-slate-100 px-6 py-4 last:border-b-0 hover:bg-slate-50">
+            <button
+                type="button"
+                onClick={() => onSelect(user)}
+                aria-label={`View details for ${user.name}`}
+                className="flex min-w-0 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
                 <Avatar name={user.name} avatar={user.avatar} seed={user._id} />
                 <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">
@@ -855,14 +1047,14 @@ const DesktopUserRow = memo(function DesktopUserRow({
                         {user.email}
                     </p>
                 </div>
-            </div>
+            </button>
 
             <div>
                 <RoleBadge role={user.role} />
             </div>
 
             <div>
-                <StatusBadge isActive={user.isActive} />
+                <AccessStatusBadge isActive={user.isActive} />
             </div>
 
             <div>
@@ -876,33 +1068,38 @@ const DesktopUserRow = memo(function DesktopUserRow({
                 <p className="text-xs text-slate-400">{memberSince.time}</p>
             </div>
 
-            <div className="text-right">
-                <p className="text-sm font-semibold text-slate-900">
-                    {lastActive.date}
-                </p>
-                <p className="text-xs text-slate-400">{lastActive.time}</p>
+            <div className="flex justify-end">
+                <AccessActionButton
+                    user={user}
+                    onRequestBlock={onRequestBlock}
+                    onRequestUnblock={onRequestUnblock}
+                />
             </div>
-        </InteractiveRow>
+        </div>
     );
 });
 
 const MobileUserCard = memo(function MobileUserCard({
     user,
     onSelect,
+    onRequestBlock,
+    onRequestUnblock,
 }: {
     user: ApiUser;
     onSelect: (user: ApiUser) => void;
+    onRequestBlock: (user: ApiUser) => void;
+    onRequestUnblock: (user: ApiUser) => void;
 }) {
     const memberSince = formatUtc(user.createdAt);
-    const lastActive = formatUtc(user.updatedAt);
 
     return (
-        <InteractiveRow
-            onOpen={() => onSelect(user)}
-            ariaLabel={`View details for ${user.name}`}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm active:bg-slate-50"
-        >
-            <div className="flex items-start justify-between gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <button
+                type="button"
+                onClick={() => onSelect(user)}
+                aria-label={`View details for ${user.name}`}
+                className="flex w-full min-w-0 items-start justify-between gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
                 <div className="flex min-w-0 items-center gap-3">
                     <Avatar
                         name={user.name}
@@ -920,39 +1117,36 @@ const MobileUserCard = memo(function MobileUserCard({
                     </div>
                 </div>
                 <RoleBadge role={user.role} />
-            </div>
+            </button>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-                <StatusBadge isActive={user.isActive} />
+                <AccessStatusBadge isActive={user.isActive} />
                 <VerificationBadge isVerified={Boolean(user.isVerified)} />
             </div>
 
-            <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
-                <div className="flex items-center justify-between text-slate-500">
-                    <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />{' '}
-                        Joined
-                    </span>
-                    <span className="font-medium text-slate-700">
-                        {memberSince.date}
-                    </span>
-                </div>
-                <div className="flex items-center justify-between text-slate-500">
-                    <span className="inline-flex items-center gap-1.5">
-                        <History className="h-3.5 w-3.5" aria-hidden="true" />{' '}
-                        Last updated
-                    </span>
-                    <span className="font-medium text-slate-700">
-                        {lastActive.date}
-                    </span>
-                </div>
+            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" aria-hidden="true" /> Joined
+                </span>
+                <span className="font-medium text-slate-700">
+                    {memberSince.date}
+                </span>
             </div>
-        </InteractiveRow>
+
+            <div className="mt-3 border-t border-slate-100 pt-3">
+                <AccessActionButton
+                    user={user}
+                    onRequestBlock={onRequestBlock}
+                    onRequestUnblock={onRequestUnblock}
+                    fullWidth
+                />
+            </div>
+        </div>
     );
 });
 
 /* =============================================================================
- * Detail row used inside the modal
+ * Detail row used inside the profile modal
  * ========================================================================== */
 
 function DetailRow({
@@ -1017,223 +1211,19 @@ function DetailRow({
 }
 
 /* =============================================================================
- * Role management control (inside the modal)
- * ========================================================================== */
-
-/**
- * Inline role-management widget rendered in the user detail modal.
- *
- * Behavior:
- * - Accounts whose *current* role is ADMIN are protected: the control renders
- *   a read-only notice instead of a selector, and no request can be issued
- *   for that account from this component. This is enforced client-side as a
- *   UX safeguard; the source of truth is still whatever the server enforces.
- * - All other accounts can be reassigned to READER, PUBLISHER, EDITOR, or
- *   ADMIN.
- * - Selecting ADMIN as the target role requires a second, explicit
- *   confirmation click before the request is sent, since it's the only
- *   change here that grants elevated privileges.
- * - Save is disabled until the selection actually differs from the user's
- *   current role, and while a request is in flight.
- * - On success, the parent's `onUpdateRole` updates the shared users list;
- *   this component resets its local draft/confirmation state whenever the
- *   underlying user record changes (new selection, or a role that was just
- *   saved).
- */
-function RoleManagementControl({
-    user,
-    onUpdateRole,
-}: {
-    user: ApiUser;
-    onUpdateRole: (userId: string, role: UserRole) => Promise<void>;
-}) {
-    const currentRole = normalizeRole(user.role);
-    const isProtectedAdmin = currentRole === 'ADMIN';
-
-    const [draftRole, setDraftRole] = useState<UserRole>(
-        currentRole ?? 'READER',
-    );
-    const [saveState, setSaveState] = useState<RoleSaveState>('idle');
-    const [errorText, setErrorText] = useState<string | null>(null);
-
-    // Whenever the selected user (or their confirmed role) changes, drop any
-    // stale draft/confirmation/error state from a previous session with this
-    // control so it never carries over between users or after a save.
-    useEffect(() => {
-        setDraftRole(currentRole ?? 'READER');
-        setSaveState('idle');
-        setErrorText(null);
-    }, [user._id, currentRole]);
-
-    if (isProtectedAdmin) {
-        return (
-            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-                    <Lock className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <div>
-                    <p className="text-sm font-semibold text-slate-700">
-                        Administrator role is protected
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                        This account's role can't be changed from the user
-                        directory. Administrator access must be managed
-                        separately.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    const hasChanged = draftRole !== (currentRole ?? 'READER');
-    const isPromotingToAdmin = draftRole === 'ADMIN';
-    const isSaving = saveState === 'saving';
-
-    const handleRoleSelect = (nextRole: UserRole) => {
-        setDraftRole(nextRole);
-        setErrorText(null);
-        if (saveState !== 'saving') setSaveState('idle');
-    };
-
-    const handleSaveClick = async () => {
-        if (!hasChanged || isSaving) return;
-
-        if (isPromotingToAdmin && saveState !== 'confirming') {
-            setSaveState('confirming');
-            return;
-        }
-
-        setSaveState('saving');
-        setErrorText(null);
-        try {
-            await onUpdateRole(user._id, draftRole);
-            setSaveState('success');
-            window.setTimeout(
-                () =>
-                    setSaveState((prev) =>
-                        prev === 'success' ? 'idle' : prev,
-                    ),
-                2500,
-            );
-        } catch (error) {
-            setSaveState('error');
-            setErrorText(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to update user role.',
-            );
-        }
-    };
-
-    return (
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3.5">
-            <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                    <UserCog className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                        Role management
-                    </p>
-                    <p className="text-sm font-semibold text-slate-700">
-                        Reassign this account's role
-                    </p>
-                </div>
-            </div>
-
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <select
-                    value={draftRole}
-                    onChange={(event) =>
-                        handleRoleSelect(event.target.value as UserRole)
-                    }
-                    disabled={isSaving}
-                    aria-label={`Change role for ${user.name}`}
-                    className="w-full flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 disabled:opacity-60 sm:w-auto"
-                >
-                    {ASSIGNABLE_ROLES.map((role) => (
-                        <option key={role} value={role}>
-                            {ROLE_CONFIG[role].label}
-                        </option>
-                    ))}
-                </select>
-
-                <button
-                    type="button"
-                    onClick={handleSaveClick}
-                    disabled={!hasChanged || isSaving}
-                    className={cn(
-                        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40',
-                        saveState === 'confirming'
-                            ? 'bg-amber-500 text-white hover:bg-amber-600'
-                            : 'bg-slate-900 text-white hover:bg-slate-800',
-                    )}
-                >
-                    {isSaving ? (
-                        <>
-                            <Loader2
-                                className="h-3.5 w-3.5 animate-spin"
-                                aria-hidden="true"
-                            />
-                            Saving
-                        </>
-                    ) : saveState === 'confirming' ? (
-                        <>
-                            <ShieldAlert
-                                className="h-3.5 w-3.5"
-                                aria-hidden="true"
-                            />
-                            Confirm Admin
-                        </>
-                    ) : (
-                        'Save role'
-                    )}
-                </button>
-            </div>
-
-            {saveState === 'confirming' ? (
-                <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-amber-700">
-                    <ShieldAlert
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                        aria-hidden="true"
-                    />
-                    This grants full administrator access. Click "Confirm Admin"
-                    again to proceed, or pick a different role to cancel.
-                </p>
-            ) : null}
-
-            {saveState === 'success' ? (
-                <p className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    Role updated successfully.
-                </p>
-            ) : null}
-
-            {saveState === 'error' && errorText ? (
-                <p className="mt-2.5 flex items-start gap-1.5 text-xs font-medium text-red-600">
-                    <AlertTriangle
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                        aria-hidden="true"
-                    />
-                    {errorText}
-                </p>
-            ) : null}
-        </div>
-    );
-}
-
-/* =============================================================================
  * User detail modal
  * ========================================================================== */
 
 function UserDetailModal({
     user,
     onOpenChange,
-    onUpdateRole,
+    onRequestBlock,
+    onRequestUnblock,
 }: {
     user: ApiUser | null;
     onOpenChange: (open: boolean) => void;
-    onUpdateRole: (userId: string, role: UserRole) => Promise<void>;
+    onRequestBlock: (user: ApiUser) => void;
+    onRequestUnblock: (user: ApiUser) => void;
 }) {
     const isOpen = user !== null;
     const memberSince = user ? formatUtc(user.createdAt) : null;
@@ -1241,8 +1231,8 @@ function UserDetailModal({
     const authProvider = user?.googleId
         ? 'Google'
         : user?.authProviderId
-          ? 'Direct sign-up'
-          : 'Unknown';
+            ? 'Direct sign-up'
+            : 'Unknown';
 
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
@@ -1285,17 +1275,56 @@ function UserDetailModal({
                             <div className="px-6 py-2">
                                 <div className="flex flex-wrap items-center gap-2 py-3">
                                     <RoleBadge role={user.role} />
-                                    <StatusBadge isActive={user.isActive} />
+                                    <AccessStatusBadge isActive={user.isActive} />
                                     <VerificationBadge
                                         isVerified={Boolean(user.isVerified)}
                                     />
                                 </div>
 
                                 <div className="pb-4">
-                                    <RoleManagementControl
-                                        user={user}
-                                        onUpdateRole={onUpdateRole}
-                                    />
+                                    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3.5">
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={cn(
+                                                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                                                    user.isActive
+                                                        ? 'bg-emerald-50 text-emerald-600'
+                                                        : 'bg-red-50 text-red-600',
+                                                )}
+                                            >
+                                                {user.isActive ? (
+                                                    <ShieldCheck
+                                                        className="h-4 w-4"
+                                                        aria-hidden="true"
+                                                    />
+                                                ) : (
+                                                    <ShieldOff
+                                                        className="h-4 w-4"
+                                                        aria-hidden="true"
+                                                    />
+                                                )}
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                                    Account access
+                                                </p>
+                                                <p className="text-sm font-semibold text-slate-700">
+                                                    {user.isActive
+                                                        ? 'This account can sign in normally'
+                                                        : 'This account is currently blocked'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3">
+                                            <AccessActionButton
+                                                user={user}
+                                                onRequestBlock={onRequestBlock}
+                                                onRequestUnblock={onRequestUnblock}
+                                                fullWidth
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="divide-y divide-slate-100 border-t border-slate-100">
@@ -1354,7 +1383,7 @@ function UserDetailModal({
                                         label="Phone number"
                                         value={
                                             user.phone_number &&
-                                            user.phone_number.length > 0
+                                                user.phone_number.length > 0
                                                 ? user.phone_number
                                                 : 'Not provided'
                                         }
@@ -1385,7 +1414,7 @@ function UserDetailModal({
 
                                     <DetailRow
                                         icon={History}
-                                        label="Last active"
+                                        label="Last updated"
                                         value={
                                             lastActive ? (
                                                 <span>
@@ -1411,6 +1440,198 @@ function UserDetailModal({
                                         Close
                                     </button>
                                 </Dialog.Close>
+                            </div>
+                        </>
+                    ) : null}
+                </Dialog.Content>
+            </Dialog.Portal>
+        </Dialog.Root>
+    );
+}
+
+/* =============================================================================
+ * Block / Unblock confirmation dialog
+ * -----------------------------------------------------------------------------
+ * The single place in this file that is allowed to call `blockUserByEmail`
+ * or `unblockUserByEmail`. It requires two distinct, deliberate clicks
+ * before the request fires:
+ *   1. The initial "Block account" / "Unblock account" button moves the
+ *      dialog into a `confirming` stage instead of acting immediately.
+ *   2. Only a second click on the now-relabeled "Yes, block/unblock this
+ *      account" button actually issues the request.
+ * Clicking "Cancel" at any point closes the dialog without side effects.
+ * Stacks above the profile modal (z-[60] vs. z-50) so it can be opened
+ * from within that modal as well as directly from the table or card list.
+ * ========================================================================== */
+
+function ConfirmAccessDialog({
+    pending,
+    onOpenChange,
+    onBlock,
+    onUnblock,
+}: {
+    pending: PendingAccessAction | null;
+    onOpenChange: (open: boolean) => void;
+    onBlock: (email: string) => Promise<void>;
+    onUnblock: (email: string) => Promise<void>;
+}) {
+    const isOpen = pending !== null;
+    const [stage, setStage] = useState<ConfirmStage>('review');
+    const [errorText, setErrorText] = useState<string | null>(null);
+
+    // Reset internal state every time a different action is requested, so a
+    // stale "confirming"/"error" state can never leak into the next dialog.
+    useEffect(() => {
+        setStage('review');
+        setErrorText(null);
+    }, [pending?.user._id, pending?.type]);
+
+    const isBlockAction = pending?.type === 'block';
+    const isSaving = stage === 'saving';
+
+    const handlePrimaryClick = async () => {
+        if (!pending) return;
+
+        if (stage === 'review') {
+            setStage('confirming');
+            return;
+        }
+
+        setStage('saving');
+        setErrorText(null);
+        try {
+            if (isBlockAction) {
+                await onBlock(pending.user.email);
+            } else {
+                await onUnblock(pending.user.email);
+            }
+            onOpenChange(false);
+        } catch (error) {
+            setStage('error');
+            setErrorText(
+                error instanceof Error
+                    ? error.message
+                    : `Failed to ${isBlockAction ? 'block' : 'unblock'} this account.`,
+            );
+        }
+    };
+
+    return (
+        <Dialog.Root
+            open={isOpen}
+            onOpenChange={(open) => {
+                if (!open && !isSaving) onOpenChange(false);
+            }}
+        >
+            <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-[1px] data-[state=open]:animate-in data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:fade-out" />
+                <Dialog.Content
+                    className="fixed inset-x-4 top-1/2 z-[60] -translate-y-1/2 rounded-2xl bg-white p-0 shadow-xl focus:outline-none sm:inset-x-auto sm:left-1/2 sm:w-full sm:max-w-sm sm:-translate-x-1/2"
+                    aria-describedby={undefined}
+                    onEscapeKeyDown={(event) => {
+                        if (isSaving) event.preventDefault();
+                    }}
+                    onInteractOutside={(event) => {
+                        if (isSaving) event.preventDefault();
+                    }}
+                >
+                    {pending ? (
+                        <>
+                            <div className="flex items-start gap-3 border-b border-slate-100 px-6 py-5">
+                                <span
+                                    className={cn(
+                                        'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                                        isBlockAction
+                                            ? 'bg-red-50 text-red-600'
+                                            : 'bg-emerald-50 text-emerald-600',
+                                    )}
+                                >
+                                    {isBlockAction ? (
+                                        <Ban className="h-5 w-5" aria-hidden="true" />
+                                    ) : (
+                                        <Unlock
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                </span>
+                                <div className="min-w-0">
+                                    <Dialog.Title className="text-base font-bold text-slate-900">
+                                        {isBlockAction
+                                            ? 'Block this account?'
+                                            : 'Unblock this account?'}
+                                    </Dialog.Title>
+                                    <p className="mt-0.5 truncate text-sm text-slate-500">
+                                        {pending.user.name} · {pending.user.email}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4">
+                                <p className="text-sm text-slate-600">
+                                    {isBlockAction
+                                        ? 'Blocking this account immediately signs the user out and prevents them from signing back in until an administrator unblocks them.'
+                                        : 'Unblocking this account restores normal sign-in access immediately.'}
+                                </p>
+
+                                {stage === 'confirming' ? (
+                                    <p className="mt-3 flex items-start gap-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                                        <ShieldAlert
+                                            className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                                            aria-hidden="true"
+                                        />
+                                        This takes effect immediately. Confirm
+                                        again to proceed.
+                                    </p>
+                                ) : null}
+
+                                {stage === 'error' && errorText ? (
+                                    <p className="mt-3 flex items-start gap-1.5 rounded-lg bg-red-50 px-3 py-2.5 text-xs font-medium text-red-600 ring-1 ring-inset ring-red-200">
+                                        <AlertTriangle
+                                            className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                                            aria-hidden="true"
+                                        />
+                                        {errorText}
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="flex items-center gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                                <button
+                                    type="button"
+                                    onClick={() => onOpenChange(false)}
+                                    disabled={isSaving}
+                                    className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handlePrimaryClick}
+                                    disabled={isSaving}
+                                    className={cn(
+                                        'inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                                        isBlockAction
+                                            ? 'bg-red-600 hover:bg-red-700'
+                                            : 'bg-emerald-600 hover:bg-emerald-700',
+                                    )}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <Loader2
+                                                className="h-3.5 w-3.5 animate-spin"
+                                                aria-hidden="true"
+                                            />
+                                            {isBlockAction
+                                                ? 'Blocking'
+                                                : 'Unblocking'}
+                                        </>
+                                    ) : stage === 'confirming' ? (
+                                        `Yes, ${isBlockAction ? 'block' : 'unblock'} this account`
+                                    ) : (
+                                        `${isBlockAction ? 'Block' : 'Unblock'} account`
+                                    )}
+                                </button>
                             </div>
                         </>
                     ) : null}
@@ -1449,9 +1670,11 @@ function RowSkeleton() {
 }
 
 function ErrorBanner({
+    title,
     message,
     onRetry,
 }: {
+    title: string;
     message: string;
     onRetry: () => void;
 }) {
@@ -1463,9 +1686,7 @@ function ErrorBanner({
                     aria-hidden="true"
                 />
                 <div>
-                    <p className="text-sm font-semibold text-red-800">
-                        Couldn't load the user directory
-                    </p>
+                    <p className="text-sm font-semibold text-red-800">{title}</p>
                     <p className="text-sm text-red-600">{message}</p>
                 </div>
             </div>
@@ -1481,7 +1702,31 @@ function ErrorBanner({
     );
 }
 
-function EmptyState({ hasQuery }: { hasQuery: boolean }) {
+function EmptyState({
+    activeTab,
+    hasQuery,
+}: {
+    activeTab: TabKey;
+    hasQuery: boolean;
+}) {
+    if (activeTab === 'blocked' && !hasQuery) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
+                <ShieldCheck
+                    className="h-8 w-8 text-emerald-300"
+                    aria-hidden="true"
+                />
+                <p className="text-sm font-semibold text-slate-700">
+                    No accounts are currently blocked
+                </p>
+                <p className="max-w-xs text-sm text-slate-500">
+                    Every account in the directory currently has normal sign-in
+                    access.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
             <Inbox className="h-8 w-8 text-slate-300" aria-hidden="true" />
@@ -1501,64 +1746,95 @@ function EmptyState({ hasQuery }: { hasQuery: boolean }) {
  * Root component
  * ========================================================================== */
 
-export default function UsersList() {
-    useTitle('Users Directory')
-    const { users, status, errorMessage, reload, updateUserRole } =
-        useAdminUsers();
+export default function BlockedUsers() {
+    useTitle('Blocked Users')
+    const {
+        allUsers,
+        allStatus,
+        allError,
+        reloadAll,
+        blockedUsers,
+        blockedStatus,
+        blockedError,
+        reloadBlocked,
+        blockUserByEmail,
+        unblockUserByEmail,
+    } = useAccessControlUsers();
+
+    const [activeTab, setActiveTab] = useState<TabKey>('all');
     const [query, setQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
-    // Track the selected user by id rather than by object reference. Deriving
-    // the live record from `users` on every render keeps the detail modal in
-    // sync automatically after a role update, without a second copy of state
-    // that could drift out of date.
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [pendingAction, setPendingAction] =
+        useState<PendingAccessAction | null>(null);
     const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
     const [currentPage, setCurrentPage] = useState<number>(1);
 
+    // The filter-pill set differs slightly per tab (see `filters` below); reset
+    // to "all" on tab switch so a pill that doesn't exist on the new tab can
+    // never remain silently selected.
+    useEffect(() => {
+        setActiveFilter('all');
+    }, [activeTab]);
+
+    const sourceUsers = activeTab === 'all' ? allUsers : blockedUsers;
+    const sourceStatus = activeTab === 'all' ? allStatus : blockedStatus;
+    const sourceError = activeTab === 'all' ? allError : blockedError;
+    const sourceReload = activeTab === 'all' ? reloadAll : reloadBlocked;
+
+    // The profile modal always resolves the selected user from whichever
+    // source list is active, so it reflects a block/unblock the instant
+    // local state updates.
     const selectedUser = useMemo(
         () =>
             selectedUserId
-                ? (users.find((u) => u._id === selectedUserId) ?? null)
+                ? (sourceUsers.find((u) => u._id === selectedUserId) ?? null)
                 : null,
-        [users, selectedUserId],
+        [sourceUsers, selectedUserId],
     );
 
-    const stats = useMemo(() => {
-        const total = users.length;
-        const active = users.filter((u) => u.isActive).length;
-        // Role comparisons go through normalizeRole() so casing differences,
-        // unexpected values, or (previously) the EDITOR role don't silently
-        // drop users out of every role-based count.
-        const admins = users.filter(
-            (u) => normalizeRole(u.role) === 'ADMIN',
-        ).length;
-        const publishers = users.filter(
-            (u) => normalizeRole(u.role) === 'PUBLISHER',
-        ).length;
-        const editors = users.filter(
-            (u) => normalizeRole(u.role) === 'EDITOR',
-        ).length;
-        const readers = users.filter(
-            (u) => normalizeRole(u.role) === 'READER',
-        ).length;
-        const verified = users.filter((u) => u.isVerified === true).length;
+    // KPI totals are always computed from the full directory, independent of
+    // which tab is active, so the top of the page always shows the whole
+    // picture.
+    const kpiStats = useMemo(() => {
+        const total = allUsers.length;
+        const active = allUsers.filter((u) => u.isActive).length;
+        const blocked = total - active;
+        const verified = allUsers.filter((u) => u.isVerified === true).length;
 
         return {
             total,
             active,
-            admins,
-            publishers,
-            editors,
-            readers,
+            blocked,
             verified,
-            suspended: total - active,
-            contentTeam: publishers + editors + readers,
             activePercent: total === 0 ? 0 : Math.round((active / total) * 100),
+            blockedPercent: total === 0 ? 0 : Math.round((blocked / total) * 100),
         };
-    }, [users]);
+    }, [allUsers]);
+
+    // Filter-pill counts are scoped to whichever list is currently active, so
+    // the numbers on the pills always match what pagination is drawing from.
+    const filterCounts = useMemo(() => {
+        const admins = sourceUsers.filter(
+            (u) => normalizeRole(u.role) === 'ADMIN',
+        ).length;
+        const publishers = sourceUsers.filter(
+            (u) => normalizeRole(u.role) === 'PUBLISHER',
+        ).length;
+        const editors = sourceUsers.filter(
+            (u) => normalizeRole(u.role) === 'EDITOR',
+        ).length;
+        const readers = sourceUsers.filter(
+            (u) => normalizeRole(u.role) === 'READER',
+        ).length;
+        const verified = sourceUsers.filter((u) => u.isVerified === true).length;
+        const blocked = sourceUsers.filter((u) => u.isActive === false).length;
+
+        return { admins, publishers, editors, readers, verified, blocked };
+    }, [sourceUsers]);
 
     const filteredUsers = useMemo(() => {
-        let list = users;
+        let list = sourceUsers;
 
         if (activeFilter === 'admin')
             list = list.filter((u) => normalizeRole(u.role) === 'ADMIN');
@@ -1570,7 +1846,7 @@ export default function UsersList() {
             list = list.filter((u) => normalizeRole(u.role) === 'READER');
         else if (activeFilter === 'verified')
             list = list.filter((u) => u.isVerified === true);
-        else if (activeFilter === 'suspended')
+        else if (activeFilter === 'blocked')
             list = list.filter((u) => u.isActive === false);
 
         const trimmedQuery = query.trim().toLowerCase();
@@ -1583,13 +1859,13 @@ export default function UsersList() {
         }
 
         return list;
-    }, [users, activeFilter, query]);
+    }, [sourceUsers, activeFilter, query]);
 
     // Reset back to page 1 whenever the underlying result set changes shape,
     // so the user never lands on a stale, now out-of-range page.
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeFilter, query, pageSize]);
+    }, [activeTab, activeFilter, query, pageSize]);
 
     const totalItems = filteredUsers.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -1623,14 +1899,17 @@ export default function UsersList() {
         if (!open) setSelectedUserId(null);
     }, []);
 
-    // Thin adapter so the modal / RoleManagementControl only need to know
-    // "update this id to this role", not how the hook's state is shaped.
-    const handleUpdateRole = useCallback(
-        async (userId: string, role: UserRole) => {
-            await updateUserRole(userId, role);
-        },
-        [updateUserRole],
-    );
+    const handleRequestBlock = useCallback((user: ApiUser) => {
+        setPendingAction({ user, type: 'block' });
+    }, []);
+
+    const handleRequestUnblock = useCallback((user: ApiUser) => {
+        setPendingAction({ user, type: 'unblock' });
+    }, []);
+
+    const handleConfirmDialogOpenChange = useCallback((open: boolean) => {
+        if (!open) setPendingAction(null);
+    }, []);
 
     const filters: Array<{
         key: FilterKey;
@@ -1639,29 +1918,39 @@ export default function UsersList() {
         icon?: typeof CheckCircle2;
         className?: string;
     }> = [
-        { key: 'all', label: 'All Accounts', count: stats.total },
-        { key: 'admin', label: 'Admins', count: stats.admins },
-        { key: 'publisher', label: 'Publishers', count: stats.publishers },
-        { key: 'editor', label: 'Editors', count: stats.editors },
-        { key: 'reader', label: 'Readers', count: stats.readers },
-        {
-            key: 'verified',
-            label: 'Verified',
-            count: stats.verified,
-            icon: CheckCircle2,
-            className: 'hidden md:inline-flex',
-        },
-        {
-            key: 'suspended',
-            label: 'Suspended',
-            count: stats.suspended,
-            icon: PauseCircle,
-            className: 'hidden md:inline-flex',
-        },
-    ];
+            {
+                key: 'all',
+                label: activeTab === 'blocked' ? 'All Blocked' : 'All Accounts',
+                count: sourceUsers.length,
+            },
+            { key: 'admin', label: 'Admins', count: filterCounts.admins },
+            { key: 'publisher', label: 'Publishers', count: filterCounts.publishers },
+            { key: 'editor', label: 'Editors', count: filterCounts.editors },
+            { key: 'reader', label: 'Readers', count: filterCounts.readers },
+            {
+                key: 'verified',
+                label: 'Verified',
+                count: filterCounts.verified,
+                icon: CheckCircle2,
+                className: 'hidden md:inline-flex',
+            },
+            // The "Blocked" pill is only meaningful on the "All Users" tab — on
+            // the "Blocked Users" tab every row already matches it.
+            ...(activeTab === 'all'
+                ? [
+                    {
+                        key: 'blocked' as FilterKey,
+                        label: 'Blocked',
+                        count: filterCounts.blocked,
+                        icon: Ban,
+                        className: 'hidden md:inline-flex',
+                    },
+                ]
+                : []),
+        ];
 
-    const isLoading = status === 'loading';
-    const isError = status === 'error';
+    const isLoading = sourceStatus === 'loading';
+    const isError = sourceStatus === 'error';
     const hasActiveQueryOrFilter =
         query.trim().length > 0 || activeFilter !== 'all';
 
@@ -1675,24 +1964,21 @@ export default function UsersList() {
                     <div>
                         <div className="flex flex-wrap items-center gap-2.5">
                             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                                User Directory
+                                Access Control
                             </h1>
-                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
-                                {stats.total} Members
+                            <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
+                                {kpiStats.blocked} Blocked
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-slate-500">
-                            Inspect registered team accounts, manage role
-                            privileges, and review activity status.
+                            Review every account's sign-in access and block or
+                            unblock accounts as needed.
                         </p>
                     </div>
 
                     <span className="inline-flex items-center gap-1.5 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                        <UserCog
-                            className="h-4 w-4 text-slate-400"
-                            aria-hidden="true"
-                        />
-                        Role Management Enabled
+                        <Lock className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                        Access Control Enabled
                     </span>
                 </div>
 
@@ -1701,16 +1987,21 @@ export default function UsersList() {
                 {/* ---------------------------------------------------------------- */}
                 {isError ? (
                     <ErrorBanner
-                        message={errorMessage ?? 'Something went wrong.'}
-                        onRetry={reload}
+                        title={
+                            activeTab === 'blocked'
+                                ? "Couldn't load blocked accounts"
+                                : "Couldn't load the user directory"
+                        }
+                        message={sourceError ?? 'Something went wrong.'}
+                        onRetry={sourceReload}
                     />
                 ) : null}
 
                 {/* ---------------------------------------------------------------- */}
-                {/* KPI stat cards                                                  */}
+                {/* KPI stat cards (always reflect the full directory)              */}
                 {/* ---------------------------------------------------------------- */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {isLoading ? (
+                    {allStatus === 'loading' ? (
                         <>
                             <StatSkeleton />
                             <StatSkeleton />
@@ -1723,7 +2014,7 @@ export default function UsersList() {
                         <>
                             <StatCard
                                 label="Total Accounts"
-                                value={stats.total}
+                                value={kpiStats.total}
                                 icon={UsersIcon}
                                 iconWrapperClass="bg-slate-100"
                                 iconClass="text-slate-600"
@@ -1739,9 +2030,9 @@ export default function UsersList() {
                                 label="Active Users"
                                 value={
                                     <>
-                                        {stats.active}
+                                        {kpiStats.active}
                                         <span className="ml-2 align-middle text-sm font-semibold text-emerald-600">
-                                            {stats.activePercent}% Active
+                                            {kpiStats.activePercent}% Active
                                         </span>
                                     </>
                                 }
@@ -1751,53 +2042,44 @@ export default function UsersList() {
                                 footer={
                                     <span className="inline-flex items-center gap-1.5">
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        {stats.suspended} suspended or
-                                        deactivated
+                                        Can sign in normally
                                     </span>
                                 }
                             />
 
                             <StatCard
-                                label="Administrators"
-                                value={stats.admins}
-                                icon={ShieldCheck}
-                                iconWrapperClass="bg-indigo-50"
-                                iconClass="text-indigo-600"
+                                label="Blocked Accounts"
+                                value={
+                                    <>
+                                        {kpiStats.blocked}
+                                        <span className="ml-2 align-middle text-sm font-semibold text-red-600">
+                                            {kpiStats.blockedPercent}%
+                                        </span>
+                                    </>
+                                }
+                                icon={Ban}
+                                iconWrapperClass="bg-red-50"
+                                iconClass="text-red-600"
                                 footer={
                                     <span className="inline-flex items-center gap-1.5">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                                        with elevated rights
+                                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                        Sign-in currently restricted
                                     </span>
                                 }
                             />
 
                             <div className="hidden lg:block">
                                 <StatCard
-                                    label="Content Team"
-                                    value={
-                                        <span className="text-xl">
-                                            {stats.publishers}
-                                            <span className="mx-1 text-sm font-medium text-slate-400">
-                                                Pub
-                                            </span>
-                                            · {stats.editors}
-                                            <span className="mx-1 text-sm font-medium text-slate-400">
-                                                Edit
-                                            </span>
-                                            · {stats.readers}
-                                            <span className="ml-1 text-sm font-medium text-slate-400">
-                                                Read
-                                            </span>
-                                        </span>
-                                    }
-                                    icon={PenSquare}
-                                    iconWrapperClass="bg-amber-50"
-                                    iconClass="text-amber-600"
+                                    label="Verified Accounts"
+                                    value={kpiStats.verified}
+                                    icon={BadgeCheck}
+                                    iconWrapperClass="bg-blue-50"
+                                    iconClass="text-blue-600"
                                     footer={
                                         <span className="inline-flex items-center gap-1.5">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                            {stats.contentTeam} publisher,
-                                            editor & reader accounts
+                                            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                            {kpiStats.total - kpiStats.verified}{' '}
+                                            pending verification
                                         </span>
                                     }
                                 />
@@ -1805,6 +2087,15 @@ export default function UsersList() {
                         </>
                     )}
                 </div>
+
+                {/* ---------------------------------------------------------------- */}
+                {/* Tabs                                                            */}
+                {/* ---------------------------------------------------------------- */}
+                <SectionTabs
+                    active={activeTab}
+                    counts={{ all: allUsers.length, blocked: kpiStats.blocked }}
+                    onChange={setActiveTab}
+                />
 
                 {/* ---------------------------------------------------------------- */}
                 {/* Filters + search                                                */}
@@ -1841,13 +2132,13 @@ export default function UsersList() {
                 {/* Desktop table                                                   */}
                 {/* ---------------------------------------------------------------- */}
                 <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-                    <div className="grid grid-cols-[2.2fr_0.9fr_1fr_1fr_1fr_1fr] gap-4 border-b border-slate-200 bg-slate-50/70 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="grid grid-cols-[2.2fr_0.9fr_1fr_1fr_1fr_0.9fr] gap-4 border-b border-slate-200 bg-slate-50/70 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <span>User Profile</span>
                         <span>Role</span>
-                        <span>Account Status</span>
+                        <span>Account Access</span>
                         <span>Verification</span>
                         <span className="text-right">Member Since</span>
-                        <span className="text-right">Last Active</span>
+                        <span className="text-right">Actions</span>
                     </div>
 
                     {isLoading ? (
@@ -1858,13 +2149,18 @@ export default function UsersList() {
                             <RowSkeleton />
                         </>
                     ) : paginatedUsers.length === 0 ? (
-                        <EmptyState hasQuery={hasActiveQueryOrFilter} />
+                        <EmptyState
+                            activeTab={activeTab}
+                            hasQuery={hasActiveQueryOrFilter}
+                        />
                     ) : (
                         paginatedUsers.map((user) => (
                             <DesktopUserRow
                                 key={user._id}
                                 user={user}
                                 onSelect={handleSelectUser}
+                                onRequestBlock={handleRequestBlock}
+                                onRequestUnblock={handleRequestUnblock}
                             />
                         ))
                     )}
@@ -1894,7 +2190,10 @@ export default function UsersList() {
                         </>
                     ) : paginatedUsers.length === 0 ? (
                         <div className="rounded-2xl border border-slate-200 bg-white">
-                            <EmptyState hasQuery={hasActiveQueryOrFilter} />
+                            <EmptyState
+                                activeTab={activeTab}
+                                hasQuery={hasActiveQueryOrFilter}
+                            />
                         </div>
                     ) : (
                         paginatedUsers.map((user) => (
@@ -1902,6 +2201,8 @@ export default function UsersList() {
                                 key={user._id}
                                 user={user}
                                 onSelect={handleSelectUser}
+                                onRequestBlock={handleRequestBlock}
+                                onRequestUnblock={handleRequestUnblock}
                             />
                         ))
                     )}
@@ -1927,8 +2228,8 @@ export default function UsersList() {
                 {/* ---------------------------------------------------------------- */}
                 <div className="hidden items-center justify-between text-xs text-slate-400 md:flex">
                     <span>
-                        Directory reflects verified authentication records
-                        synchronized across all active organizations.
+                        Blocking an account takes effect immediately across all
+                        active sessions.
                     </span>
                     <span>System Timestamp · UTC Standard</span>
                 </div>
@@ -1937,75 +2238,16 @@ export default function UsersList() {
             <UserDetailModal
                 user={selectedUser}
                 onOpenChange={handleModalOpenChange}
-                onUpdateRole={handleUpdateRole}
+                onRequestBlock={handleRequestBlock}
+                onRequestUnblock={handleRequestUnblock}
+            />
+
+            <ConfirmAccessDialog
+                pending={pendingAction}
+                onOpenChange={handleConfirmDialogOpenChange}
+                onBlock={blockUserByEmail}
+                onUnblock={unblockUserByEmail}
             />
         </div>
     );
 }
-
-/* =============================================================================
- * Change log (this pass)
- * -----------------------------------------------------------------------------
- * EDITOR role support (fixes "Unknown role" for editors)
- * 1. `UserRole` now includes "EDITOR" alongside "ADMIN" | "PUBLISHER" |
- *    "READER", matching the updated `IUser.role` union on the backend model.
- * 2. `normalizeRole()` now recognizes "EDITOR" (any casing/whitespace), so
- *    editor accounts resolve to a real role instead of falling through to
- *    `UNKNOWN_ROLE_CONFIG` — this was the root cause of editors showing an
- *    "Unknown role" badge.
- * 3. Added a dedicated `ROLE_CONFIG.EDITOR` entry (Editor label, FilePenLine
- *    icon, teal badge) visually distinct from Publisher (amber) and Reader
- *    (slate).
- * 4. Editors are now counted in KPI stats (`stats.editors`), included in the
- *    "Content Team" KPI card (renamed from "Publishers & Readers"), and have
- *    their own filter pill.
- *
- * Role-update API integration (POST /admin/user/role/:userId)
- * 5. `useAdminUsers()` now also returns `updateUserRole(userId, role)`, which
- *    POSTs to `/admin/user/role/:userId` with `{ role }`, validates the
- *    `{ success, user }` response shape, and patches the affected user's
- *    record in local state on success (no full reload required). Errors are
- *    normalized via `extractErrorMessage()` and re-thrown with a
- *    display-ready message.
- * 6. Added `RoleManagementControl`, rendered inside `UserDetailModal`,
- *    providing an inline role selector + save action:
- *      - Accounts whose current role is ADMIN render a protected, read-only
- *        notice and cannot be reassigned from this view, per the requirement
- *        that admins can update anyone's role *except* other admins'.
- *      - All other accounts can be reassigned to READER / PUBLISHER / EDITOR
- *        / ADMIN.
- *      - Selecting ADMIN as the new role requires a second "Confirm Admin"
- *        click before the request fires, to guard against accidental
- *        privilege escalation.
- *      - Surfaces saving / success / error states inline, and disables the
- *        Save action until the selection actually differs from the user's
- *        current role.
- * 7. `selectedUser` is now derived from `users` via `selectedUserId` instead
- *    of being stored as a standalone object, so the modal automatically
- *    reflects a role change the instant local state updates — no separate
- *    sync logic required, and no risk of the modal showing a stale role
- *    after a successful save.
- *
- * Filtering enhancements
- * 8. Added an "Editors" filter pill (role = EDITOR).
- * 9. Added a new "Suspended" filter pill (isActive === false) — a
- *    previously-unavailable way to isolate deactivated accounts, in addition
- *    to the existing role and verification filters.
- * 10. The search bar (`query`, matched against name/email) is untouched and
- *     continues to compose with whichever filter pill is active, exactly as
- *     before.
- *
- * Carried over from the previous pass (unchanged)
- * 11. `ApiUser.role` remains `string` (not the strict union), since the API
- *     is still the runtime source of truth; all comparisons go through
- *     `normalizeRole()`.
- * 12. `getInitials` / `paletteFor` remain guarded against a missing `name` /
- *     `_id`.
- * 13. Search filter still guards `u.name` / `u.email` with `?? ""` before
- *     `.toLowerCase()`.
- * 14. `h-[18px] w-[18px]` icon sizing (StatCard icon, modal close button)
- *     preserved as-is.
- * 15. Pagination (10/25 rows, page windowing, range text), responsive
- *     desktop-table / mobile-card layouts, loading skeletons, error banner
- *     with retry, and the empty state are all unchanged in behavior.
- * ========================================================================== */
