@@ -90,8 +90,10 @@ blogRouter.get("/published-by-type", async (req, res) => {
       blogs,
       pagination: { page: 1, totalPages: 1, hasMore: false },
     });
+    return;
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
+    return;
   }
 });
 
