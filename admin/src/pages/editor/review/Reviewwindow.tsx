@@ -19,6 +19,7 @@ import {
 import { apiClient } from '@/api/api-client';
 import { cn } from '@/lib/utils';
 import useTitle from '@/hooks/useTitle';
+import { toast } from '@/components/ui/toast';
 
 // =====================================================================
 // Types based on the backend Models
@@ -157,12 +158,16 @@ export default function ReviewWindow() {
 
             if (response.data.success) {
                 setBlog({ ...blog, status: newStatus });
+                toast.add({
+                    type: 'success',
+                    description: `Manuscript status updated to: ${newStatus.toUpperCase()}`
+                })
             }
         } catch (err: any) {
-            alert(
-                'Failed to update status: ' +
-                (err.response?.data?.message || err.message),
-            );
+            toast.add({
+                type: 'error',
+                description: `Failed to update status`
+            })
         } finally {
             setIsUpdatingStatus(false);
         }

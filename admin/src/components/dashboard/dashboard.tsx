@@ -26,10 +26,11 @@
  *   - "Views over Time"   -> "Views by Blog" area chart, real per-blog views
  *   - "Device Breakdown"  -> "Access Breakdown" (Editors / Publishers / Blocked)
  *
- * The "7 Days / 30 Days / All Time" pill control mirrors the reference
- * UI but is presentational only — there is no backend date-range filter
- * to wire it to yet. The download/refresh icon buttons ARE wired to the
- * real export + refetch behavior.
+ * The "7 Days / 30 Days / All Time" pill control is applied client-side
+ * using each blog's createdAt timestamp because the backend does not expose
+ * a date-range parameter and only returns cumulative per-blog view counts.
+ * Current-state access metrics (blocked users, editors, publishers) remain
+ * unfiltered because they are not historical time-series metrics.
  *
  * If/when the backend adds real visitor-session, read-time, or device
  * analytics, swap the derived sections below for direct API-backed
@@ -153,6 +154,22 @@ function truncateLabel(label: string, max = 10): string {
     return label.length > max ? `${label.slice(0, max)}…` : label;
 }
 
+function filterBlogsByRange(
+    blogs: BlogAnalyticsItem[],
+    range: RangeOption,
+    now = Date.now(),
+): BlogAnalyticsItem[] {
+    if (range === 'All Time') return blogs;
+
+    const days = range === '7 Days' ? 7 : 30;
+    const cutoff = now - days * 24 * 60 * 60 * 1000;
+
+    return blogs.filter((blog) => {
+        const createdAt = new Date(blog.createdAt).getTime();
+        return !Number.isNaN(createdAt) && createdAt >= cutoff;
+    });
+}
+
 // =====================================================================
 // Data hook
 // =====================================================================
@@ -213,8 +230,8 @@ function useDashboardData() {
             const blockedCount =
                 blockedRes.status === 'fulfilled'
                     ? (blockedRes.value.data.count ??
-                      blockedRes.value.data.users?.length ??
-                      0)
+                        blockedRes.value.data.users?.length ??
+                        0)
                     : 0;
 
             const editorCount =
@@ -259,7 +276,7 @@ function useDashboardData() {
 }
 
 // =====================================================================
-// Range pill control (presentational only — no backend date filter yet)
+// Range pill control
 // =====================================================================
 
 const RANGE_OPTIONS = ['7 Days', '30 Days', 'All Time'] as const;
@@ -583,7 +600,7 @@ function TopBlogsList({ blogs }: { blogs: BlogAnalyticsItem[] }) {
                         Top Performing Blogs
                     </h3>
                     <p className="mt-0.5 text-xs text-slate-500">
-                        Ranked by total views
+                        Ranked by total views within the selected range
                     </p>
                 </div>
                 {sorted.length > 3 && (
@@ -677,9 +694,25 @@ export default function Dashboard() {
     useTitle('Dashboard')
     const [range, setRange] = React.useState<RangeOption>('7 Days');
 
+    const filteredBlogs = React.useMemo(
+        () => filterBlogsByRange(data?.blogs ?? [], range),
+        [data?.blogs, range],
+    );
+
+    const filteredTotalViews = React.useMemo(
+        () =>
+            filteredBlogs.reduce(
+                (total, blog) => total + Math.max(0, blog.views ?? 0),
+                0,
+            ),
+        [filteredBlogs],
+    );
+
+    const filteredTotalBlogs = filteredBlogs.length;
+
     const avgViewsPerBlog =
-        data && data.totalBlogs > 0
-            ? Math.round(data.totalViews / data.totalBlogs)
+        filteredTotalBlogs > 0
+            ? Math.round(filteredTotalViews / filteredTotalBlogs)
             : 0;
 
     return (
@@ -705,8 +738,8 @@ export default function Dashboard() {
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => data && exportBlogsToCsv(data.blogs)}
-                        disabled={!data || data.blogs.length === 0}
+                        onClick={() => data && exportBlogsToCsv(filteredBlogs)}
+                        disabled={!data || filteredBlogs.length === 0}
                         aria-label="Export"
                         className="h-9 w-9 rounded-lg border-slate-200 bg-white text-slate-500 shadow-sm"
                     >
@@ -741,12 +774,12 @@ export default function Dashboard() {
                     <>
                         <StatCard
                             label="Total Views"
-                            value={formatCompact(data.totalViews)}
+                            value={formatCompact(filteredTotalViews)}
                             icon={Eye}
                         />
                         <StatCard
                             label="Total Blogs"
-                            value={preciseFormatter.format(data.totalBlogs)}
+                            value={preciseFormatter.format(filteredTotalBlogs)}
                             icon={FileText}
                         />
                         <StatCard
@@ -771,7 +804,7 @@ export default function Dashboard() {
                             Views by Blog
                         </h3>
                         <p className="mt-0.5 text-xs text-slate-500">
-                            Real per-blog view counts, highest first
+                            View counts for blogs published in the selected range
                         </p>
                     </div>
                 </div>
@@ -779,7 +812,10 @@ export default function Dashboard() {
                     {isLoading || !data ? (
                         <Skeleton className="h-[280px] w-full rounded-xl" />
                     ) : (
-                        <ViewsByBlogChart blogs={data.blogs} />
+                        <ViewsByBlogChart
+                            key={`${range}-${filteredBlogs.map((blog) => `${blog._id}:${blog.views}`).join('|')}`}
+                            blogs={filteredBlogs}
+                        />
                     )}
                 </div>
             </div>
@@ -827,7 +863,7 @@ export default function Dashboard() {
                         ))}
                     </div>
                 ) : (
-                    <TopBlogsList blogs={data.blogs} />
+                    <TopBlogsList blogs={filteredBlogs} />
                 )}
             </div>
         </div>

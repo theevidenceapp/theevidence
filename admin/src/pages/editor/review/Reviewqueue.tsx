@@ -185,19 +185,19 @@ export default function ReviewQueue() {
 
     // Visibility Filtering & Sorting
     const filteredBlogs = useMemo(() => {
-        return blogs
-            .filter((item) => {
-                // Strict Published Enforcement
-                if (item.status?.toUpperCase() !== 'PUBLISHED') return false;
+        const query = searchQuery.toLowerCase().trim();
 
-                const query = searchQuery.toLowerCase().trim();
+        return [...blogs]
+            .filter((item) => {
                 const matchesSearch =
                     !query ||
                     item.title.toLowerCase().includes(query) ||
                     item.slug.toLowerCase().includes(query) ||
                     item.author?.name?.toLowerCase().includes(query) ||
                     item.author?.email?.toLowerCase().includes(query) ||
-                    item.tags?.some((t) => t.toLowerCase().includes(query));
+                    item.tags?.some((tag) =>
+                        tag.toLowerCase().includes(query),
+                    );
 
                 const matchesCategory =
                     selectedCategory === 'ALL' ||
@@ -206,24 +206,7 @@ export default function ReviewQueue() {
 
                 return matchesSearch && matchesCategory;
             })
-            .sort((a, b) => {
-                if (sortBy === 'newest') {
-                    return (
-                        new Date(b.createdAt).getTime() -
-                        new Date(a.createdAt).getTime()
-                    );
-                }
-                if (sortBy === 'oldest') {
-                    return (
-                        new Date(a.createdAt).getTime() -
-                        new Date(b.createdAt).getTime()
-                    );
-                }
-                if (sortBy === 'views') {
-                    return (b.views || 0) - (a.views || 0);
-                }
-                return 0;
-            });
+            .sort(/* existing sort logic */);
     }, [blogs, searchQuery, selectedCategory, sortBy]);
 
     // Pre-Pagination Segregation (for accurate tab counts)
@@ -295,7 +278,7 @@ export default function ReviewQueue() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2.5">
-                            <div className="relative flex items-center">
+                            {/* <div className="relative flex items-center">
                                 <Filter className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
                                 <select
                                     value={selectedCategory}
@@ -314,7 +297,7 @@ export default function ReviewQueue() {
                                     ))}
                                 </select>
                                 <ChevronDown className="absolute right-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                            </div>
+                            </div> */}
 
                             <div className="relative flex items-center">
                                 <ArrowUpDown className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />

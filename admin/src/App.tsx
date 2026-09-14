@@ -17,6 +17,7 @@ import ReviewWindow from '@/pages/editor/review/Reviewwindow';
 import ReviewQueue from '@/pages/editor/review/Reviewqueue';
 import BlockedUsers from '@/pages/user/BlockedUsers';
 import UnauthorizedAccess from '@/components/route/UnauthorizedAccess';
+import { Toaster } from '@/components/ui/toast';
 
 function EditorOverviewRoute() {
     const navigate = useNavigate();
@@ -61,81 +62,80 @@ const App = () => {
     }, []);
 
     return (
-        <BrowserRouter>
-            <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<SignIn />} />
-                <Route path="/auth/login" element={<AdminAccessDenied />} />
-                <Route path="/verify-token" element={<VerifyToken />} />
+        <div>
+            <Toaster />
+            <BrowserRouter>
+                <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<SignIn />} />
+                    <Route path="/auth/login" element={<AdminAccessDenied />} />
+                    <Route path="/verify-token" element={<VerifyToken />} />
 
-                {/* Admin-only routes */}
-                <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-                    <Route
-                        path="/admin/dashboard"
-                        element={
-                            <AdminPanelLayout>
-                                <Dashboard />
-                            </AdminPanelLayout>
-                        }
-                    />
-                    <Route
-                        path="/admin/users"
-                        element={
-                            <AdminPanelLayout>
-                                <UsersList />
-                            </AdminPanelLayout>
-                        }
-                    />
-                    <Route
-                        path="/admin/app-content"
-                        element={
-                            <AdminPanelLayout>
-                                <UsersList />
-                            </AdminPanelLayout>
-                        }
-                    />
-                    <Route
-                        path="/admin/blocked-users"
-                        element={
-                            <AdminPanelLayout>
-                                <BlockedUsers />
-                            </AdminPanelLayout>
-                        }
-                    />
-                    <Route
-                        path="/admin/users/:id"
-                        element={<AdminPanelLayout></AdminPanelLayout>}
-                    />
-                </Route>
+                    {/* Admin-only routes */}
+                    <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+                        <Route
+                            path="/admin/dashboard"
+                            element={
+                                <AdminPanelLayout>
+                                    <Dashboard />
+                                </AdminPanelLayout>
+                            }
+                        />
+                        <Route
+                            path="/admin/users"
+                            element={
+                                <AdminPanelLayout>
+                                    <UsersList />
+                                </AdminPanelLayout>
+                            }
+                        />
+                        <Route
+                            path="/admin/app-content"
+                            element={
+                                <AdminPanelLayout>
+                                    <UsersList />
+                                </AdminPanelLayout>
+                            }
+                        />
+                        <Route
+                            path="/admin/blocked-users"
+                            element={
+                                <AdminPanelLayout>
+                                    <BlockedUsers />
+                                </AdminPanelLayout>
+                            }
+                        />
+                    </Route>
 
-                {/* Editor-only routes */}
-                <Route element={<ProtectedRoute allowedRoles={["EDITOR", "ADMIN"]} />}>
-                    <Route
-                        path="/editor/overview"
-                        element={<EditorOverviewRoute />}
-                    />
-                    <Route
-                        path="/editor/review/queue"
-                        element={
-                            <AdminPanelLayout>
-                                <ReviewQueue />
-                            </AdminPanelLayout>
-                        }
-                    />
-                    <Route
-                        path="/editor/review/:slug"
-                        element={
-                            <AdminPanelLayout>
-                                <ReviewWindow />
-                            </AdminPanelLayout>
-                        }
-                    />
-                </Route>
+                    {/* Editor-only routes */}
+                    <Route element={<ProtectedRoute allowedRoles={["EDITOR", "ADMIN"]} />}>
+                        <Route
+                            path="/editor/overview"
+                            element={<EditorOverviewRoute />}
+                        />
+                        <Route
+                            path="/editor/review/queue"
+                            element={
+                                <AdminPanelLayout>
+                                    <ReviewQueue />
+                                </AdminPanelLayout>
+                            }
+                        />
+                        <Route
+                            path="/editor/review/:slug"
+                            element={
+                                <AdminPanelLayout>
+                                    <ReviewWindow />
+                                </AdminPanelLayout>
+                            }
+                        />
+                    </Route>
 
-                <Route path="/unauthorized-access" element={<UnauthorizedAccess />} />
-                <Route path="*" element={<AdminNotFound />} />
-            </Routes>
-        </BrowserRouter>
+                    <Route path="/unauthorized-access" element={<UnauthorizedAccess />} />
+                    <Route path="*" element={<AdminNotFound />} />
+                </Routes>
+            </BrowserRouter>
+        </div>
     );
 };
 

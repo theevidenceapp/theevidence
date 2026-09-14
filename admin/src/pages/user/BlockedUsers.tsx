@@ -103,6 +103,7 @@ import {
 // NOTE: adjust this import to match your project's folder structure.
 import { apiClient } from '@/api/api-client';
 import useTitle from '@/hooks/useTitle';
+import { toast } from '@/components/ui/toast';
 
 /* =============================================================================
  * Types
@@ -477,6 +478,11 @@ function useAccessControlUsers() {
                     `${BLOCK_USER_ENDPOINT}/${email}`,
                 );
 
+                toast.add({
+                    type: 'success',
+                    description: 'User blocked successfully.'
+                })
+
                 if (!response.data?.success) {
                     throw new Error(
                         response.data?.msg || 'Failed to block this account.',
@@ -508,6 +514,10 @@ function useAccessControlUsers() {
 
                 if (!serverUser) reloadBlocked();
             } catch (error) {
+                toast.add({
+                    type: 'error',
+                    description: 'Failed to block this account. Please try again.'
+                })
                 throw new Error(
                     extractErrorMessage(
                         error,
@@ -527,6 +537,11 @@ function useAccessControlUsers() {
                     `${UNBLOCK_USER_ENDPOINT}/${email}`,
                 );
 
+                toast.add({
+                    type: 'success',
+                    description: 'User unblocked successfully.'
+                })
+
                 if (!response.data?.success) {
                     throw new Error(
                         response.data?.msg || 'Failed to unblock this account.',
@@ -544,6 +559,10 @@ function useAccessControlUsers() {
                 );
                 setBlockedUsers((prev) => prev.filter((u) => u.email !== email));
             } catch (error) {
+                toast.add({
+                    type: 'error',
+                    description: 'Failed to unblock this account. Please try again.'
+                })
                 throw new Error(
                     extractErrorMessage(
                         error,

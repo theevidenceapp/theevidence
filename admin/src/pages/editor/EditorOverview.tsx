@@ -394,12 +394,6 @@ async function fetchAuthorRecord(
             `/admin/user/${userId}`,
         );
 
-        // TEMPORARY DIAGNOSTIC — remove once shape is confirmed.
-        console.log(
-            `[authorDirectory] /admin/user/${userId} raw response:`,
-            response,
-        );
-
         // Defensive: handle both "apiClient unwraps to body" and
         // "apiClient returns full Axios response" conventions, since
         // I don't yet know which one your apiClient uses.
