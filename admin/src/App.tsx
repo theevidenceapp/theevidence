@@ -34,9 +34,11 @@ function EditorOverviewRoute() {
 }
 
 const App = () => {
+
     const isPublicBootstrapRoute = ['/verify-token', '/auth/login', '/'].includes(
         window.location.pathname,
     );
+    
     useEffect(() => {
         if (isPublicBootstrapRoute) {
             useAuthStore.getState().setLoading(false);
