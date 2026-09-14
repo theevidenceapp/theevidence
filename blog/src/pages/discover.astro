@@ -76,8 +76,16 @@ try {
           Math.ceil((finalExcerpt.length || 500) / 400),
         );
 
-        const rawType = String(b.docType || b.type || "").trim().toUpperCase();
-        const finalDocType = rawType.includes("BLOG") || rawType.includes("THOUGHT") ? "BLOG" : "RESEARCH";
+        const rawType = String(b.docType ?? b.type ?? b.postType ?? "").trim().toUpperCase();
+        let finalDocType: string;
+        if (rawType.includes("BLOG") || rawType.includes("THOUGHT")) {
+          finalDocType = "BLOG";
+        } else if (rawType.includes("RESEARCH") || rawType.includes("PAPER")) {
+          finalDocType = "RESEARCH";
+        } else {
+          console.warn("[discover] Unrecognized docType:", JSON.stringify(rawType), "raw fields:", { docType: b.docType, type: b.type, postType: b.postType }, "id:", b._id);
+          finalDocType = "RESEARCH";
+        }
 
         const authorObj = b.author || {};
         const authorName = authorObj.name || "Researcher";
@@ -1281,11 +1289,10 @@ papers.forEach((p) => {
           cards.forEach((card) => papersFeed.appendChild(card));
         }
 
-        function setDocType(docType: string) {
+          function setDocType(docType: string, skipAnimation = false) {
           activeDocType = docType.toUpperCase();
-          showLoadingOverlay();
 
-          setTimeout(() => {
+          const runUpdate = () => {
             doctypeTabs.forEach((tab) => {
               const tabType = tab.getAttribute("data-doctype");
               const isMobile = tab.classList.contains("doctype-tab-mobile");
@@ -1311,7 +1318,14 @@ papers.forEach((p) => {
             applyFilters();
             applySort();
             hideLoadingOverlay();
-          }, 250);
+          };
+
+          if (skipAnimation) {
+            runUpdate();
+          } else {
+            showLoadingOverlay();
+            setTimeout(runUpdate, 250);
+          }
         }
 
         doctypeTabs.forEach((tab) => {
@@ -1543,8 +1557,16 @@ papers.forEach((p) => {
                     b.coverImage?.url ||
                     "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
                   
-                  const rawType = String(b.docType || b.type || "").trim().toUpperCase();
-                  const docType = rawType.includes("BLOG") || rawType.includes("THOUGHT") ? "BLOG" : "RESEARCH";
+                  const rawType = String(b.docType ?? b.type ?? b.postType ?? "").trim().toUpperCase();
+                  let docType: string;
+                  if (rawType.includes("BLOG") || rawType.includes("THOUGHT")) {
+                    docType = "BLOG";
+                  } else if (rawType.includes("RESEARCH") || rawType.includes("PAPER")) {
+                    docType = "RESEARCH";
+                  } else {
+                    console.warn("[discover] Unrecognized docType (page load):", JSON.stringify(rawType), "id:", b._id);
+                    docType = "RESEARCH";
+                  }
                   const authorId = b.author?._id || b.author || "";
 
                   const gradients = [
@@ -1680,9 +1702,9 @@ papers.forEach((p) => {
         const areaParam = urlParams.get("area");
         const typeParam = urlParams.get("type");
         if (typeParam === "BLOG" || typeParam === "blog") {
-          setDocType("BLOG");
+          setDocType("BLOG", true);
         } else {
-          setDocType("RESEARCH");
+          setDocType("RESEARCH", true);
         }
         if (areaParam) {
           setCategory(areaParam);
