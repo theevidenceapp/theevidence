@@ -1,32 +1,44 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, type UserRole } from '@/store/adminAuthStore';
 import useTitle from '@/hooks/useTitle';
+
+const roleRedirectMap: Record<UserRole, string> = {
+    ADMIN: '/admin/dashboard',
+    EDITOR: '/editor/overview',
+    RESEARCHER: '/unauthorized-access',
+    READER: '/unauthorized-access',
+};
+
+const isValidRole = (value: string | null): value is UserRole => {
+    return !!value && value in roleRedirectMap;
+};
 
 const VerifyToken = () => {
     const navigate = useNavigate();
-    useTitle('Verifying...')
+    useTitle('Verifying...');
 
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
+    const setRole = useAuthStore((state) => state.setRole);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-
         const token = params.get('token');
+        const role = params.get('role');
 
-        if (!token) {
-            console.error('No token found');
+        if (!token || !isValidRole(role)) {
+            console.error('Missing or invalid token/role');
+            navigate('/auth/login', { replace: true });
             return;
         }
 
-        // Store token in memory
         setAccessToken(token);
+        setRole(role);
 
-        // Remove token from URL
-        navigate('/admin/dashboard', { replace: true });
-    }, [navigate, setAccessToken]);
+        navigate(roleRedirectMap[role], { replace: true });
+    }, [navigate, setAccessToken, setRole]);
 
-    return <div>Verifying...</div>;
+    return <div className='h-screen place-content-center flex justify-center'>Verifying...</div>;
 };
 
 export default VerifyToken;

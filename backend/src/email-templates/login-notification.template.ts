@@ -49,7 +49,7 @@ const buildLoginNotificationMarkup = ({
 
             <div class="d-flex justify-content-between align-items-center px-4 px-md-5 pt-4 pb-3 border-bottom border-2 border-dark">
               <span class="fs-4 fw-bold text-dark">The Evidence</span>
-              <a href="#" class="fw-bold text-dark text-decoration-none small">Settings</a>
+              <a href="#" class="fw-bold text-dark text-decoration-none small">Portal</a>
             </div>
 
             <div class="text-center px-4 px-md-5 py-5">

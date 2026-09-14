@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/api/api-client';
 import { cn } from '@/lib/utils';
+import { useAuthStore, type UserRole } from '@/store/adminAuthStore';
 
 // =====================================================================
 // Types
@@ -36,6 +37,14 @@ interface NavItem {
     active?: boolean;
     badge?: NavBadge;
     navigateTo?: string;
+    /**
+     * Roles allowed to see this item. Mirrors ProtectedRoute's
+     * allowedRoles — keep these in sync with the router's actual guards
+     * so the sidebar never advertises a link the user can't open.
+     * Omit for items with no route (e.g. "Settings") — those show for
+     * everyone since there's no destination to protect.
+     */
+    allowedRoles?: UserRole[];
 }
 
 interface AdminSidebarProps {
@@ -51,12 +60,9 @@ interface AdminSidebarProps {
 // Default nav config — pass `navItems` prop to wire in real counts
 // (e.g. live user/content/blocked totals) without touching this file.
 //
-// NOTE: "Content" and "Blocked Users" both currently point to
-// "/users-list". With URL-driven active-state detection (see
-// `isPathActive` below), both entries will highlight together whenever
-// that route is active — this is very likely a copy/paste typo in the
-// original routes rather than intended behavior, and worth pointing one
-// of them at its actual destination.
+// allowedRoles here must match the ProtectedRoute allowedRoles wrapping
+// the corresponding route in App.tsx — this list is presentation only,
+// it doesn't enforce anything; the router is still the real guard.
 // =====================================================================
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
@@ -64,30 +70,35 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
         label: 'Dashboard Overview',
         icon: LayoutGrid,
         navigateTo: '/admin/dashboard',
+        allowedRoles: ['ADMIN'],
     },
     {
         label: 'Editor Overview',
         icon: FileText,
         badge: { label: '', tone: 'indigo' },
         navigateTo: '/editor/overview',
+        allowedRoles: ['EDITOR', 'ADMIN'],
     },
     {
         label: 'Review Queue',
         icon: Paperclip,
         badge: { label: '', tone: 'indigo' },
         navigateTo: '/editor/review/queue',
+        allowedRoles: ['EDITOR', 'ADMIN'],
     },
     {
         label: 'User Role Management',
         icon: Users,
         badge: { label: '', tone: 'slate' },
         navigateTo: '/admin/users',
+        allowedRoles: ['ADMIN'],
     },
     {
         label: 'Blocked Users',
         icon: Ban,
         badge: { label: '', tone: 'rose' },
         navigateTo: '/admin/blocked-users',
+        allowedRoles: ['ADMIN'],
     },
     { label: 'Settings', icon: Settings },
 ];
@@ -123,6 +134,15 @@ function isPathActive(pathname: string, target?: string): boolean {
     );
 }
 
+/**
+ * An item with no allowedRoles is unrestricted (e.g. "Settings").
+ * Otherwise the current role must appear in the item's allowed list.
+ */
+function isItemVisible(item: NavItem, role: UserRole): boolean {
+    if (!item.allowedRoles) return true;
+    return item.allowedRoles.includes(role);
+}
+
 // =====================================================================
 // Component
 // =====================================================================
@@ -134,10 +154,21 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
     const navigate = useNavigate();
     const location = useLocation();
+    const role = useAuthStore((s) => s.role);
+    const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
+
+    const visibleNavItems = navItems.filter((item) => isItemVisible(item, role));
 
     const handleLogout = async () => {
-        const res = await apiClient.get('/user/logout');
-        if (res.status === 200) navigate('/');
+        try {
+            const res = await apiClient.get('/user/logout');
+            if (res.status === 200) {
+                clearAccessToken();
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Logout failed', error);
+        }
     };
 
     return (
@@ -190,7 +221,7 @@ export default function AdminSidebar({
                         Navigation
                     </p>
                     <nav className="space-y-1">
-                        {navItems.map(
+                        {visibleNavItems.map(
                             ({
                                 label,
                                 icon: Icon,

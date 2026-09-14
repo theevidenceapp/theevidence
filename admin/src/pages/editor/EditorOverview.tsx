@@ -68,7 +68,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/adminAuthStore';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useTitle from '@/hooks/useTitle';
 
