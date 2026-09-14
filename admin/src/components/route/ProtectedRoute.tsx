@@ -13,7 +13,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   if (isLoading) {
     return (
-      <div className="h-screen justify-center place-content-center text-xl">
+      <div className="h-screen flex items-center justify-center place-content-center text-xl">
         Loading...
       </div>
     )
