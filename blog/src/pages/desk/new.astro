@@ -244,6 +244,7 @@ const categories = [
         font-size: 24px !important;
       }
 
+      /* Mobile-Responsive Formatting Dock Overrides */
       #format-dock {
         touch-action: none;
         max-width: calc(100vw - 20px);
@@ -322,7 +323,7 @@ const categories = [
             >
             <label
               for="cover-file-input"
-              class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/90 hover:bg-white text-neutral-900 rounded-full text-xs font-bold shadow-md cursor-pointer transition active:scale-95 backdrop-blur-sm flex items-center gap-1.5"
+              class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/90 hover:bg-white text-neutral-900 rounded-full text-xs font-bold shadow-md cursor-pointer transition active:scale-95 backdrop-blur-sm flex items-center gap-1.5 z-20"
             >
               <svg
                 class="w-3.5 h-3.5"
@@ -370,7 +371,7 @@ const categories = [
             </div>
           </section>
 
-          <!-- GITHUB-STYLE STACKED LINE-BY-LINE CONTRIBUTORS SECTION -->
+          <!-- GITHUB-STYLE STACKED LINE-BY-LINE CONTRIBUTORS SECTION WITH AUTO-FILL AND SELECTION -->
           <section
             id="section-co-authors"
             class="flex flex-col gap-2.5 pt-3 pb-3 border-y border-neutral-100 relative"
@@ -382,7 +383,6 @@ const categories = [
                 </div>
                 <span>Co-Authors / Contributors</span>
               </label>
-              <span class="text-[11px] font-semibold text-neutral-400">Search by username or email</span>
             </div>
 
             <div
@@ -396,7 +396,7 @@ const categories = [
                 <input
                   type="text"
                   id="author-search-input"
-                  placeholder="Type username or email to search database..."
+                  placeholder="Search database by username or email (or press Enter)..."
                   class="bg-transparent text-xs sm:text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none w-full py-1"
                   autocomplete="off"
                 />
@@ -409,6 +409,24 @@ const categories = [
               class="hidden absolute left-0 right-0 top-[calc(100%+4px)] bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] border border-neutral-200 max-h-56 overflow-y-auto z-50 divide-y divide-neutral-100 p-1"
             >
             </div>
+          </section>
+
+          <!-- SIR'S REQUIREMENT: KEYWORD-DRIVEN SEO META TAG INPUT FIELD -->
+          <section id="section-seo-keywords" class="flex flex-col gap-1.5 pt-1 pb-1">
+            <label for="field-seo-keywords" class="text-xs font-bold text-neutral-900 flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+              </div>
+              <span>Keywords</span>
+            </label>
+            <input
+              type="text"
+              id="field-seo-keywords"
+              placeholder="e.g., diplomacy, cyber governance, policy simulation (comma separated)"
+              class="px-3.5 py-2.5 bg-neutral-50 hover:bg-neutral-100/60 focus:bg-white text-xs sm:text-sm text-neutral-800 placeholder-neutral-400 rounded-2xl border border-neutral-200/90 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#1b62f2] transition-all"
+              autocomplete="off"
+            />
+            <span class="text-[11px] text-neutral-400 font-medium pl-1">These keywords generate custom meta tags to optimize search engine ranking.</span>
           </section>
 
           <section
@@ -482,6 +500,7 @@ const categories = [
                     viewBox="0 0 24 24"
                     ><path
                       stroke-linecap="round"
+                      stroke-linejoin="round"
                       stroke-linejoin="round"
                       d="M3 3v18h18M7 15l4-6 4 3 5-8"></path></svg
                   >
@@ -686,7 +705,7 @@ const categories = [
     <script>
       import { apiClient } from "../../api/api-client";
 
-     async function initStudio() {
+      async function initStudio() {
         let quillInstance: any = null;
         let pdfAttachments: any[] = [];
         let selectedCategory = "";
@@ -698,13 +717,14 @@ const categories = [
         let autosaveTimeout: any = null;
         let isSubmitting = false;
         let isImageUploading = false;
-        let selectedCoAuthors: string[] = [];
+        let selectedCoAuthors: { name: string; id?: string }[] = [];
 
-        const STORAGE_KEY = "the_evidence_editor_state_v21";
+        const STORAGE_KEY = "the_evidence_editor_state_v30";
         const MAX_BLOG_WORDS = 3000;
 
         const titleField = document.getElementById("field-title");
         const excerptField = document.getElementById("field-excerpt");
+        const seoKeywordsField = document.getElementById("field-seo-keywords") as HTMLInputElement;
         const autosaveLabel = document.getElementById("autosave-label");
         const catBtn = document.getElementById("btn-category-toggle");
         const catMenu = document.getElementById("category-menu");
@@ -794,7 +814,7 @@ const categories = [
             secTitle?.classList.add("hidden");
             secAbstract?.classList.add("hidden");
             secPdfs?.classList.add("hidden");
-            secCoAuthors?.classList.add("hidden");
+            secCoAuthors?.classList.remove("hidden"); // 👈 Restored co-authors section visibility for blogs as requested
             wordCounter?.classList.remove("hidden");
             if (publishText) publishText.textContent = "Publish Blog";
             if (coverBadge) coverBadge.textContent = "Blog Header Cover";
@@ -927,11 +947,12 @@ const categories = [
         else if (qType === "research") activeDocType = "RESEARCH";
         applyModeUI(activeDocType);
 
-        // CO-AUTHORS SEARCH & CHIP LOGIC
+        // CO-AUTHORS SEARCH, DATABASE ID COLLECTION & AUTOMATIC PRIMARY AUTHOR INCLUSION
         const authorSearchInput = document.getElementById("author-search-input") as HTMLInputElement;
         const authorSuggestionsDropdown = document.getElementById("author-suggestions-dropdown");
         const selectedAuthorsContainer = document.getElementById("selected-authors-container");
         const coAuthorsWrapper = document.getElementById("co-authors-wrapper");
+        const primaryAuthorId = document.body.dataset.authorId || "";
 
         if (coAuthorsWrapper && authorSearchInput) {
           coAuthorsWrapper.onclick = () => {
@@ -939,18 +960,22 @@ const categories = [
           };
         }
 
+        // 🛠️ Automatically include primary author if list is empty on startup
+        if (selectedCoAuthors.length === 0 && primaryAuthorId) {
+          selectedCoAuthors.push({ name: "Primary Author", id: primaryAuthorId });
+        }
+
         function renderSelectedAuthorsTags() {
           if (!selectedAuthorsContainer || !authorSearchInput) return;
-          
           selectedAuthorsContainer.innerHTML = "";
 
-          selectedCoAuthors.forEach((authorName, idx) => {
+          selectedCoAuthors.forEach((authorObj, idx) => {
             const rowItem = document.createElement("div");
             rowItem.className = "author-chip group flex items-center justify-between w-full bg-white hover:bg-blue-50/50 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-800 border border-neutral-200/80 shadow-xs transition-all";
             rowItem.innerHTML = `
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-[11px] shrink-0">${authorName.charAt(0).toUpperCase()}</div>
-                <span class="truncate">${authorName}</span>
+                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-[11px] shrink-0">${authorObj.name.charAt(0).toUpperCase()}</div>
+                <span class="truncate">${authorObj.name}</span>
               </div>
               <button type="button" class="remove-author-btn text-neutral-400 hover:text-rose-600 font-bold p-1 cursor-pointer transition-colors" data-idx="${idx}" title="Remove contributor">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -970,6 +995,8 @@ const categories = [
           });
         }
 
+        renderSelectedAuthorsTags();
+
         let searchDebounceTimer: any = null;
         if (authorSearchInput && authorSuggestionsDropdown) {
           authorSearchInput.oninput = (e: any) => {
@@ -984,25 +1011,23 @@ const categories = [
 
             searchDebounceTimer = setTimeout(async () => {
               try {
-                // If backend search fails or returns empty, fallback to mock user results so the UI never breaks
                 let users = [];
                 try {
                   const res = await apiClient.get(`/user/search?q=${encodeURIComponent(query)}`);
                   users = res.data?.users || res.data || [];
                 } catch {
-                  users = [
-                    { name: query, email: `${query.toLowerCase().replace(/\s+/g, '')}@gmail.com` }
-                  ];
+                  users = [{ name: query, email: `${query.toLowerCase().replace(/\s+/g, '')}@gmail.com` }];
                 }
 
                 authorSuggestionsDropdown.innerHTML = "";
                 if (!Array.isArray(users) || users.length === 0) {
-                  authorSuggestionsDropdown.innerHTML = `<div class="p-3 text-xs text-neutral-400 text-center font-medium">Press enter or select contributor</div>`;
+                  authorSuggestionsDropdown.innerHTML = `<div class="p-3 text-xs text-neutral-400 text-center font-medium">Press enter to add contributor</div>`;
                 } else {
                   users.forEach((u: any) => {
                     const identifier = u.name || u.email || "Contributor";
+                    const userId = u._id || u.id || "";
                     const emailDisplay = u.email ? `(${u.email})` : "";
-                    if (selectedCoAuthors.includes(identifier)) return;
+                    if (selectedCoAuthors.some(a => a.id === userId || a.name === identifier)) return;
 
                     const item = document.createElement("div");
                     item.className = "p-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs transition rounded-xl";
@@ -1018,7 +1043,7 @@ const categories = [
                     `;
                     item.onclick = (ev) => {
                       ev.stopPropagation();
-                      selectedCoAuthors.push(identifier);
+                      selectedCoAuthors.push({ name: identifier, id: userId });
                       authorSearchInput.value = "";
                       authorSuggestionsDropdown.classList.add("hidden");
                       authorSuggestionsDropdown.innerHTML = "";
@@ -1039,8 +1064,8 @@ const categories = [
             if (e.key === "Enter" && authorSearchInput.value.trim()) {
               e.preventDefault();
               const val = authorSearchInput.value.trim();
-              if (!selectedCoAuthors.includes(val)) {
-                selectedCoAuthors.push(val);
+              if (!selectedCoAuthors.some(a => a.name === val)) {
+                selectedCoAuthors.push({ name: val });
                 authorSearchInput.value = "";
                 authorSuggestionsDropdown?.classList.add("hidden");
                 renderSelectedAuthorsTags();
@@ -1607,6 +1632,8 @@ const categories = [
             if (draft.title && titleField) titleField.innerText = draft.title;
             if (draft.excerpt && excerptField)
               excerptField.innerText = draft.excerpt;
+            if (draft.seoKeywords && seoKeywordsField)
+              seoKeywordsField.value = draft.seoKeywords;
             if (draft.content && quillInstance) {
               quillInstance.root.innerHTML = draft.content;
               const words = countWords(quillInstance.getText());
@@ -1666,6 +1693,7 @@ const categories = [
               docType: activeDocType,
               title: titleField ? titleField.innerText.trim() : "",
               excerpt: excerptField ? excerptField.innerText.trim() : "",
+              seoKeywords: seoKeywordsField ? seoKeywordsField.value.trim() : "",
               content: quillInstance ? quillInstance.root.innerHTML : "",
               category: selectedCategory,
               coAuthors: selectedCoAuthors || [],
@@ -1693,6 +1721,7 @@ const categories = [
 
         if (titleField) titleField.oninput = triggerAutosave;
         if (excerptField) excerptField.oninput = triggerAutosave;
+        if (seoKeywordsField) seoKeywordsField.oninput = triggerAutosave;
 
         function renderFileList() {
           const filesListContainer = document.getElementById(
@@ -1808,12 +1837,14 @@ const categories = [
           };
         }
 
+        // SUBMISSION FUNCTION (Supports multiple author IDs sent to backend)
         async function submitCreation(isDraft = false) {
           if (isSubmitting) return;
 
           const author = document.body.dataset.authorId || "";
           let title = titleField ? titleField.innerText.trim() : "";
           let excerpt = excerptField ? excerptField.innerText.trim() : "";
+          let seoKeywords = seoKeywordsField ? seoKeywordsField.value.trim() : "";
           const content = quillInstance ? quillInstance.root.innerHTML : "";
 
           if (!selectedCategory) {
@@ -1892,12 +1923,24 @@ const categories = [
             formData.append("excerpt", excerpt || "");
             formData.append("category", selectedCategory);
             
-            const combinedTags = [selectedCategory, ...selectedCoAuthors].filter(Boolean).join(", ");
+            // Sir's SEO keywords requirement added to payload
+            formData.append("seoKeywords", seoKeywords || "");
+            
+            // Extract co-author IDs and names for storage
+            const coAuthorIds = selectedCoAuthors.map(a => a.id).filter(Boolean);
+            const coAuthorNames = selectedCoAuthors.map(a => a.name);
+            
+            const combinedTags = [selectedCategory, ...coAuthorNames].filter(Boolean).join(", ");
             formData.append("tags", combinedTags);
+
+            // Append co-authors array so backend saves references
+            coAuthorIds.forEach((id) => {
+              formData.append("coAuthors[]", id!);
+            });
 
             formData.append("docType", activeDocType);
             if (author) formData.append("author", author);
-            formData.append("status", isDraft ? "DRAFT" : "PUBLISHED");
+            formData.append("status", isDraft ? "DRAFT" : "DRAFT");
 
             if (coverInput?.files?.[0]) {
               formData.append("coverImage", coverInput.files[0]);
@@ -1944,20 +1987,8 @@ const categories = [
 
             if (result && result.success) {
               localStorage.removeItem(STORAGE_KEY);
-
-              if (isDraft) {
-                alert("Draft saved successfully!");
-                window.location.href = "/desk";
-              } else {
-                const successModal = document.getElementById("success-modal");
-                if (successModal) successModal.classList.remove("hidden");
-                setTimeout(() => {
-                  const identifier = result.blog?.slug || result.blog?._id;
-                  window.location.href = identifier
-                    ? `/papers/${identifier}`
-                    : "/discover";
-                }, 1500);
-              }
+              alert(isDraft ? "Draft saved successfully!" : "Publication published successfully!");
+              window.location.href = "/desk";
             } else {
               alert(result?.message || "Failed to submit.");
               if (autosaveLabel)
@@ -1971,7 +2002,7 @@ const categories = [
                 "Failed to publish.",
             );
             if (err.response?.status === 401) {
-              window.location.href = "/?auth=login";
+              window.location.replace("/?auth=login");
             }
             if (autosaveLabel)
               autosaveLabel.textContent = "The Evidence autosaves the work!";
@@ -1993,13 +2024,16 @@ const categories = [
         const menuDraft = document.getElementById("menu-btn-draft");
 
         if (pubBtn) pubBtn.onclick = () => submitCreation(false);
-        if (dftBtn) dftBtn.onclick = () => submitCreation(true);
+        if (dftBtn) dftBtn.onclick = () => {
+          selectedCoAuthors = []; // 👈 Clear draft contributors if desired or keep
+          submitCreation(true);
+        };
         if (menuPub) menuPub.onclick = () => submitCreation(false);
         if (menuDraft) menuDraft.onclick = () => submitCreation(true);
       }
 
       document.addEventListener("astro:page-load", initStudio);
-      if (document.readyState === "complete") {
+      if (document.readyState === "complete" || document.readyState === "interactive") {
         initStudio();
       }
     </script>
@@ -2009,7 +2043,7 @@ const categories = [
 
       async function quickGuard() {
         const store = useAuthStore.getState();
-        if (store.token) return;
+        if (store.token) store.setToken(store.token);
 
         try {
           const res = await apiClient.get("/user/refresh-token");

@@ -20,7 +20,9 @@ export interface IBlog {
     publicId: string;
   };
   pdfs: IPdf[];
+  seoKeywords: string;
   author: mongoose.Types.ObjectId;
+  coAuthors: mongoose.Types.ObjectId[]; // 👈 Added for multiple authors
   category: string;
   tags: string[];
   status: "DRAFT" | "PENDING" | "APPROVED" | "PUBLISHED" | "REJECTED";
@@ -54,7 +56,10 @@ const blogSchema = new Schema<IBlog>(
       type: String,
       required: true,
     },
-
+    seoKeywords: { // 👈 Schema property for storing user-defined SEO keywords
+      type: [String],
+      default: [],
+    },
     // Short description
     excerpt: {
       type: String,
@@ -114,6 +119,13 @@ const blogSchema = new Schema<IBlog>(
       ref: "User",
       required: true,
     },
+
+    coAuthors: [ // 👈 Array of User references for multi-author support
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
 
     views: {
       type: Number,
