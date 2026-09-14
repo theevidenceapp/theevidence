@@ -20,7 +20,7 @@ export interface IBlog {
     publicId: string;
   };
   pdfs: IPdf[];
-  seoKeywords: string;
+  seoKeywords: string[];
   author: mongoose.Types.ObjectId;
   coAuthors: mongoose.Types.ObjectId[]; // 👈 Added for multiple authors
   category: string;
@@ -56,8 +56,8 @@ const blogSchema = new Schema<IBlog>(
       type: String,
       required: true,
     },
-    seoKeywords: { // 👈 Schema property for storing user-defined SEO keywords
-      type: [String],
+    seoKeywords: {
+      type: [String], // 👈 Correct Mongoose array schema syntax
       default: [],
     },
     // Short description
