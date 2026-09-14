@@ -23,15 +23,30 @@ const safeUnlink = (filePath?: string) => {
 // ----------------------------------------------------
 export const createBlog = async (req: Request, res: Response) => {
   try {
-    const docType = req.body.docType ? req.body.docType.toUpperCase() : "RESEARCH";
+    const docType = req.body.docType
+      ? req.body.docType.toUpperCase()
+      : "RESEARCH";
     const authorId = (req as any).user?._id;
-    const { title, slug, content, excerpt, category, tags, status, coAuthors, seoKeywords } = req.body;
+    const {
+      title,
+      slug,
+      content,
+      excerpt,
+      category,
+      tags,
+      status,
+      coAuthors,
+      seoKeywords,
+    } = req.body;
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
 
     const cleanupUploadedFiles = () => {
       if (files) {
-        if (files.coverImage) files.coverImage.forEach((f) => safeUnlink(f.path));
+        if (files.coverImage)
+          files.coverImage.forEach((f) => safeUnlink(f.path));
         if (files.csv) files.csv.forEach((f) => safeUnlink(f.path));
         if (files.pdfs) files.pdfs.forEach((f) => safeUnlink(f.path));
       }
@@ -39,12 +54,19 @@ export const createBlog = async (req: Request, res: Response) => {
 
     if (!authorId) {
       cleanupUploadedFiles();
-      return res.status(401).json({ success: false, message: "No user found in token" });
+      return res
+        .status(401)
+        .json({ success: false, message: "No user found in token" });
     }
 
     if (!title || !slug || !content) {
       cleanupUploadedFiles();
-      return res.status(400).json({ success: false, message: "Title, slug, and content are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Title, slug, and content are required",
+        });
     }
 
     let coverImage = {
@@ -52,13 +74,17 @@ export const createBlog = async (req: Request, res: Response) => {
       publicId: "default",
     };
     let csv = { url: "" };
-    let pdfs: Array<{ url: string; publicId: string; originalName: string }> = [];
+    let pdfs: Array<{ url: string; publicId: string; originalName: string }> =
+      [];
 
     if (files) {
       if (files.coverImage && files.coverImage[0]) {
         const coverResult = await uploadoncloudinary(files.coverImage[0].path);
         if (coverResult) {
-          coverImage = { url: coverResult.secure_url, publicId: coverResult.public_id };
+          coverImage = {
+            url: coverResult.secure_url,
+            publicId: coverResult.public_id,
+          };
         }
       }
       if (files.csv && files.csv[0]) {
@@ -71,7 +97,11 @@ export const createBlog = async (req: Request, res: Response) => {
         const pdfUploadPromises = files.pdfs.map(async (file) => {
           const pdfResult = await uploadoncloudinary(file.path);
           if (pdfResult) {
-            return { url: pdfResult.secure_url, publicId: pdfResult.public_id, originalName: file.originalname };
+            return {
+              url: pdfResult.secure_url,
+              publicId: pdfResult.public_id,
+              originalName: file.originalname,
+            };
           }
           return null;
         });
@@ -83,28 +113,36 @@ export const createBlog = async (req: Request, res: Response) => {
     const parsedTags = Array.isArray(tags)
       ? tags
       : typeof tags === "string"
-        ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+        ? tags
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter(Boolean)
         : [];
 
     // 🛠️ Parse Sir's SEO keywords from comma-separated string to array
     const parsedSeoKeywords = Array.isArray(seoKeywords)
       ? seoKeywords
       : typeof seoKeywords === "string"
-        ? seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+        ? seoKeywords
+            .split(",")
+            .map((k: string) => k.trim())
+            .filter(Boolean)
         : [];
 
     // Safely parse coAuthors array of IDs from FormData or request body
     let parsedCoAuthors: mongoose.Types.ObjectId[] = [];
     const rawCoAuthors = coAuthors || req.body["coAuthors[]"];
     if (rawCoAuthors) {
-      const coAuthorArray = Array.isArray(rawCoAuthors) ? rawCoAuthors : [rawCoAuthors];
+      const coAuthorArray = Array.isArray(rawCoAuthors)
+        ? rawCoAuthors
+        : [rawCoAuthors];
       parsedCoAuthors = coAuthorArray
         .filter((id) => mongoose.Types.ObjectId.isValid(id))
         .map((id) => new mongoose.Types.ObjectId(id));
     }
 
     const finalStatus = status === "DRAFT" ? "DRAFT" : "DRAFT";
-    const publishedAt = finalStatus === "PUBLISHED" ? new Date() : null;
+    const publishedAt = new Date();
 
     const blog = await Blog.create({
       title,
@@ -143,7 +181,9 @@ export const createBlog = async (req: Request, res: Response) => {
 export const getBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.find()
-      .select("title slug excerpt seoKeywords coverImage category status tags publishedAt createdAt author coAuthors")
+      .select(
+        "title slug excerpt seoKeywords coverImage category status tags publishedAt createdAt author coAuthors",
+      )
       .populate("author", "name email avatar")
       .populate("coAuthors", "name email avatar")
       .sort({ createdAt: -1 })
@@ -252,7 +292,9 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
 
     const [blogs, totalBlogs] = await Promise.all([
       Blog.find(filter)
-        .select("title slug excerpt seoKeywords coverImage category tags publishedAt author coAuthors views createdAt docType")
+        .select(
+          "title slug excerpt seoKeywords coverImage category tags publishedAt author coAuthors views createdAt docType",
+        )
         .populate("author", "name email avatar")
         .populate("coAuthors", "name email avatar")
         .sort({ publishedAt: -1, createdAt: -1 })
@@ -266,7 +308,10 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalBlogs / perPage);
     const hasMore = currentPage < totalPages;
 
-    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=60, stale-while-revalidate=120",
+    );
 
     return res.status(200).json({
       success: true,
@@ -289,7 +334,6 @@ export const getPublishedBlogs = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getDeskOverview = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?._id;
@@ -299,7 +343,9 @@ export const getDeskOverview = async (req: Request, res: Response) => {
     }
 
     // Query blogs belonging to this researcher
-    const userBlogs = await Blog.find({ author: userId }).sort({ createdAt: -1 });
+    const userBlogs = await Blog.find({ author: userId }).sort({
+      createdAt: -1,
+    });
 
     const drafts = userBlogs.filter((b) => b.status === "DRAFT");
     const published = userBlogs.filter((b) => b.status === "PUBLISHED");
